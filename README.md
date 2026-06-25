@@ -12,7 +12,7 @@ Multi-tenencia · Multi-sucursal · Multi-nicho (alta cocina, fast food, cafeter
 |------|-----------|
 | **Frontend** | React 19 + TypeScript + Vite + Tailwind CSS 3 |
 | **Backend** | Node.js + Express + TypeScript |
-| **Database** | PostgreSQL + Prisma ORM |
+| **Database** | PostgreSQL (Prisma Postgres cloud) + Prisma ORM |
 | **Cache** | Redis |
 | **Analítica** | Python + FastAPI (Pandas, scikit-learn) |
 | **Infra** | Docker · Docker Compose · GitHub Actions |
@@ -59,61 +59,51 @@ gastrocore_saas_platform/
 │   │
 │   ├── backend/               # API REST (Node.js + Express + Prisma)
 │   │   ├── prisma/
-│   │   │   ├── schema.prisma  # 30 modelos de datos
-│   │   │   └── seed.ts        # Datos de prueba
+│   │   │   └── schema.prisma  # 24 modelos de datos
 │   │   └── src/
 │   │       ├── config/        # App, DB, Redis, Env, Logger
-│   │       ├── common/        # Guards, filtros, interceptors
-│   │       └── modules/       # 10 módulos funcionales
-│   │           ├── auth/          # JWT, registro, login
-│   │           ├── tenants/       # Config multi-tenant, feature flags
-│   │           ├── pos/           # Órdenes, menú, mesas, pagos
-│   │           ├── inventory/     # Ingredientes, recetas, stock
-│   │           ├── hr/            # Empleados, turnos, comisiones
-│   │           ├── analytics/     # Ventas, BCG Matrix, rendimiento
-│   │           ├── crm/           # Clientes, segmentos, lealtad
-│   │           ├── onboarding/    # Wizard 4 pasos
-│   │           └── subscriptions/ # Planes, facturas
+│   │       ├── common/        # Guards, filtros, interceptors, validate middleware
+│   │       └── modules/       # 10 módulos funcionales con Zod validation
 │   │
-│   ├── frontend/              # SPA (React + Vite + Tailwind)
-│   │   └── src/
-│   │       ├── app/           # Store (Zustand), hooks, routing
-│   │       ├── lib/           # API client (Axios + interceptors)
-│   │       ├── layouts/       # Dashboard, Auth layouts
-│   │       ├── shared/        # Componentes UI reutilizables
-│   │       └── features/      # 8 features con páginas
-│   │           ├── auth/      # Login, Register
-│   │           ├── dashboard/ # Stats, gráficas
-│   │           ├── pos/       # Órdenes, mapa de mesas
-│   │           ├── inventory/ # Stock, escandallos
-│   │           ├── hr/        # Personal, turnos
-│   │           ├── analytics/ # BCG Matrix, horas pico
-│   │           ├── crm/       # Clientes, loyalty
-│   │           ├── onboarding/# Wizard 4 pasos
-│   │           └── settings/  # Config del tenant
+│   ├── frontend/
+│   │   ├── src/               # SPA React + Vite + Tailwind
+│   │   │   ├── features/      # 8 features (auth, pos, inventory, hr, crm, etc.)
+│   │   │   ├── layouts/       # Dashboard, Auth layouts
+│   │   │   ├── app/           # Store (Zustand), hooks
+│   │   │   └── lib/           # API client (Axios)
+│   │   │
+│   │   └── prototypes/        # Prototipos HTML modulares por módulo
+│   │       ├── shared/
+│   │       │   └── design-tokens.js   # Config Tailwind central
+│   │       ├── pos/
+│   │       │   ├── vista/     # 4 HTML (solo estructura + clases)
+│   │       │   ├── css/       # 4 CSS específicos por prototipo
+│   │       │   ├── js/        # 4 JS (data arrays + renderizado DOM)
+│   │       │   └── *.png      # Screenshots de referencia
+│   │       ├── onboarding/    # 4 prototipos (misma estructura)
+│   │       ├── analytics/     # 3 prototipos
+│   │       ├── crm/           # 3 prototipos
+│   │       ├── hr/            # 2 prototipos
+│   │       ├── integrations/  # 2 prototipos
+│   │       └── inventory/     # 1 prototipo
 │   │
 │   └── analytics/             # Microservicio Python (FastAPI)
 │       ├── main.py            # BCG Matrix, forecasting
 │       └── requirements.txt
 │
+├── prisma.config.ts           # Config Prisma con dotenv
 ├── infrastructure/
-│   ├── docker/
-│   │   ├── docker-compose.dev.yml
-│   │   ├── Dockerfile.backend (multi-stage)
-│   │   ├── Dockerfile.frontend (dev + nginx)
-│   │   ├── Dockerfile.analytics
-│   │   └── nginx.conf
-│   └── k8s/                   # (preparado para Kubernetes)
+│   └── docker/                # Docker Compose + Nginx + Dockerfiles multi-stage
 │
-├── .github/workflows/ci.yml   # CI/CD: lint → typecheck → test → build → docker
-├── turbo.json                  # Turborepo pipeline
+├── eslint.config.js           # ESLint flat config (root)
+├── turbo.json                 # Turborepo v2 pipeline
 ├── pnpm-workspace.yaml
-└── package.json                # Scripts del monorepo
+└── package.json
 ```
 
 ---
 
-## 🗄️ Modelo de Datos (30 modelos)
+## 🗄️ Modelo de Datos (24 modelos)
 
 ### Multi-tenencia
 - **Tenant** — núcleo del negocio con configuración por tenant
@@ -197,59 +187,59 @@ Flujo de onboarding:
 ### Prerrequisitos
 - Node.js >= 20
 - pnpm >= 9
-- Docker Desktop (para PostgreSQL y Redis)
+- Docker Desktop (para Redis local)
 - Python 3.12+ (para analytics)
 
-### 1. Instalar dependencias
+### 1. Clonar e instalar
 ```bash
+git clone https://github.com/jesus3131/gastrocore_saas_platform.git
+cd gastrocore_saas_platform
 pnpm install
 ```
 
-### 2. Iniciar infraestructura
+### 2. Configurar base de datos (Prisma Postgres cloud)
 ```bash
-docker compose -f infrastructure/docker/docker-compose.dev.yml up postgres redis -d
+# El archivo .env ya contiene DATABASE_URL de Prisma Postgres
+# Si usas PostgreSQL local, edita .env:
+# DATABASE_URL="postgresql://user:pass@localhost:5432/gastrocore?schema=public"
 ```
 
-### 3. Configurar variables de entorno
+### 3. Generar Prisma Client y sincronizar schema
 ```bash
-cp .env.example .env
-# Editar .env si es necesario
+npx prisma generate
+npx prisma db push
 ```
 
-### 4. Generar Prisma Client y sembrar DB
-```bash
-pnpm db:generate
-pnpm db:seed
-```
-> Credenciales seed: `admin@lacocina.com` / `admin123`
-
-### 5. Iniciar desarrollo
+### 4. Iniciar desarrollo
 ```bash
 pnpm dev
 ```
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:4000
 - Health check: http://localhost:4000/health
-- DB Admin: http://localhost:8080
+
+### Prototipos HTML (vista previa directa)
+Los prototipos se abren directamente en el navegador (sin build):
+```
+packages/frontend/prototypes/pos/vista/pos-order-taking.html
+```
 
 ---
 
 ## 🧪 Scripts Disponibles
 
 ```bash
-pnpm dev          # Inicia frontend + backend en modo desarrollo
+pnpm dev          # Frontend + backend en modo desarrollo
 pnpm build        # Build de producción
 pnpm lint         # ESLint en todos los paquetes
 pnpm typecheck    # TypeScript type checking
 pnpm test         # Tests (Vitest)
-pnpm format       # Prettier
 
 # Base de datos
-pnpm db:generate  # Generar Prisma Client
-pnpm db:migrate   # Ejecutar migraciones
-pnpm db:push      # Push schema a DB
-pnpm db:seed      # Sembrar datos de prueba
-pnpm db:studio    # Abrir Prisma Studio
+npx prisma generate   # Generar Prisma Client
+npx prisma db push    # Push schema a DB
+npx prisma db seed    # Sembrar datos de prueba
+npx prisma studio     # Abrir Prisma Studio UI
 
 # Docker
 pnpm docker:dev   # Entorno completo via Docker Compose
@@ -294,7 +284,7 @@ pnpm docker:dev   # Entorno completo via Docker Compose
 | GET | `/api/v1/analytics/performance` | Comparativa mensual |
 | GET | `/api/v1/analytics/peak-hours` | Horas pico |
 
-Y muchos más — ver `packages/backend/src/config/routes.ts`
+Ver todos en `packages/backend/src/config/routes.ts`
 
 ---
 
@@ -308,25 +298,9 @@ docker compose -f infrastructure/docker/docker-compose.dev.yml up -d
 ### Producción
 El CI/CD (GitHub Actions) ejecuta: `lint → typecheck → test → build → docker build`
 
-Para despliegue cloud:
-```bash
-# Construir imágenes
-docker compose -f infrastructure/docker/docker-compose.prod.yml build
-
-# Push a registry
-docker tag gastrocore-api:latest registry.example.com/gastrocore-api:latest
-docker push registry.example.com/gastrocore-api:latest
-```
-
 ---
 
 ## 🧠 Servicio de Analítica (Python)
-
-El microservicio Python (`packages/analytics/`) maneja procesamiento pesado:
-
-- **BCG Matrix** — clasifica platos en Estrella/Vaca/Interrogante/Perro
-- **Sales Forecasting** — predicción de ventas (media móvil, preparado para Prophet/LSTM)
-- Escalable horizontalmente, independiente del API principal
 
 ```bash
 cd packages/analytics
@@ -334,37 +308,21 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
+- **BCG Matrix** — clasifica platos en Estrella/Vaca/Interrogante/Perro
+- **Sales Forecasting** — predicción de ventas (media móvil)
+
 ---
 
-## 📈 Roadmap
+## 🛠️ Mejoras Recientes
 
-### MVP (3-5 meses)
-- [x] Autenticación y multi-tenencia
-- [x] POS básico (tomar órdenes, pagos)
-- [x] Mapa de mesas interactivo
-- [x] Menú y categorías
-- [x] Feature flags y onboarding
-- [ ] Dashboard básico con ventas
-
-### Fase 2 (6-8 meses)
-- [ ] Inventario y escandallos completo
-- [ ] KDS (Kitchen Display System)
-- [ ] Integración con pasarelas de pago
-- [ ] Reportes básicos
-
-### Fase 3 (9-12 meses)
-- [ ] RRHH: turnos, comisiones, roles
-- [ ] CRM: segmentación, loyalty program
-- [ ] Integración delivery (Rappi, Uber Eats)
-- [ ] BCG Matrix y analítica avanzada
-- [ ] Multi-sucursal
+- **Prototipos HTML refactorizados**: 19 prototipos migrados a estructura modular (`vista/`, `css/`, `js/` por módulo). Sin datos estáticos ni CSS/JS inline. Config Tailwind compartida via `design-tokens.js`.
+- **Prisma Postgres**: Base de datos cloud linkeda via `prisma bootstrap`. Schema con 24 modelos pushado y generado.
+- **Zod validation**: Schemas de validación en 7 módulos + middleware `validate()` en todas las rutas.
+- **ESLint flat config**: Configuración moderna con `typescript-eslint` y `eslint-plugin-react-hooks`.
+- **Tests config**: Vitest configurado para backend (node) y frontend (jsdom + React).
 
 ---
 
 ## 📄 Licencia
 
 Proyecto privado — GastroCore SaaS Platform.
-
----
-
-> **Nota:** Los HTML originales del prototipo UI se mantienen en sus directorios como referencia de diseño visual para el desarrollo frontend.
