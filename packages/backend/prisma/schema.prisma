@@ -1,12 +1,11 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema", "postgresqlExtensions"]
 }
 
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [postgresqlExtensions, uuid_ossp, citext]
+  // extensions = [citext]
 }
 
 // ─── ENUMS ────────────────────────────────────────────────────
