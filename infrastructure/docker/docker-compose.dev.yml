@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # ─── PostgreSQL ─────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: gastrocore-db
+    environment:
+      POSTGRES_USER: gastrocore
+      POSTGRES_PASSWORD: gastrocore
+      POSTGRES_DB: gastrocore
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gastrocore"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ──────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: gastrocore-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend API ────────────────────────────────────────────
+  backend:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.backend
+      target: development
+    container_name: gastrocore-api
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://gastrocore:gastrocore@postgres:5432/gastrocore?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-secret-change-in-production-min-32-chars
+      PORT: 4000
+      FRONTEND_URL: http://localhost:5173
+    volumes:
+      - ../../packages/backend/src:/app/packages/backend/src
+      - ../../packages/shared/src:/app/packages/shared/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── Frontend ───────────────────────────────────────────────
+  frontend:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.frontend
+      target: development
+    container_name: gastrocore-web
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:4000
+    volumes:
+      - ../../packages/frontend/src:/app/packages/frontend/src
+    depends_on:
+      - backend
+
+  # ─── Python Analytics Service ──────────────────────────────
+  analytics:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.analytics
+    container_name: gastrocore-analytics
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+  # ─── Adminer (DB GUI) ───────────────────────────────────────
+  adminer:
+    image: adminer:latest
+    container_name: gastrocore-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres-data:

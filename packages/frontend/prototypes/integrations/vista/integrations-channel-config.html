@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Channel Integration &amp; Mapping - RestoPro</title>
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/integrations-channel-config.css">
+<script src="../js/integrations-channel-config.js"></script>
+</head>
+<body class="bg-background text-on-background font-body-md h-screen flex overflow-hidden">
+<!-- SideNavBar (Predicted Component) -->
+<nav class="bg-surface-container-low dark:bg-inverse-surface h-screen w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline flex flex-col py-lg px-md z-40">
+<div class="mb-xl">
+<h1 class="text-headline-md font-headline-md font-bold text-primary dark:text-inverse-primary">OmniChannel Hub</h1>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1">Global Delivery Ops</p>
+</div>
+<ul class="flex-1 space-y-2">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors rounded-lg text-label-md font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors rounded-lg text-label-md font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+                    Orders
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg font-bold text-label-md font-label-md scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="hub" data-weight="fill">hub</span>
+                    Integrations
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors rounded-lg text-label-md font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+                    Revenue
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors rounded-lg text-label-md font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+                    Support
+                </a>
+</li>
+</ul>
+<div class="mt-auto space-y-4">
+<button class="w-full bg-primary-container text-on-primary font-label-md text-label-md py-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Integration
+            </button>
+<ul class="space-y-2 border-t border-outline-variant pt-4">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                        Settings
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                        Logout
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-64 flex flex-col h-full bg-surface overflow-hidden">
+<!-- TopAppBar (Predicted Component) -->
+<header class="bg-surface dark:bg-surface-dim docked full-width top-0 sticky z-50 border-b border-outline-variant dark:border-outline flex justify-between items-center h-16 px-xl shrink-0">
+<div class="flex items-center gap-4">
+<div class="text-headline-md font-headline-md font-black text-primary dark:text-primary-fixed-dim">Pro-Service Delivery</div>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<nav aria-label="Breadcrumb" class="flex text-body-sm font-body-sm text-on-surface-variant">
+<ol class="inline-flex items-center space-x-1 md:space-x-2">
+<li class="inline-flex items-center">
+<a class="hover:text-primary transition-colors" href="#">Settings</a>
+</li>
+<li>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<span class="text-on-surface font-medium">Integrations</span>
+</div>
+</li>
+</ol>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-primary-container text-on-primary px-4 py-2 rounded-lg text-label-md font-label-md hover:opacity-90 transition-opacity">
+                    Sync Menus
+                </button>
+<button class="text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-full p-2 transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-full p-2 transition-colors">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-surface-container-highest border border-outline-variant overflow-hidden ml-2">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a restaurant manager in a brightly lit, modern office space. The lighting is crisp and the background is slightly blurred." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAn75nqlaJu_jdvNXXdEFmOrAC8EDnN_vF8E0-Ga5vSxSptj36M_h7oDftlpkdR2jWZacr_QQSl8kQ_VvZS-2ezRbmegjJnDXT5RtpBajIOw2_zlp6gXKENg0fZyzjjusU7DpbVkobmQEOEX4nXqkwoAh2PUiXAfLCiVdPBytCasgASU7tky3mdoXl21FAfwgWdvsDOHGa8FDXsqgr64ev4TLfB4Cx0hx-mQ3V6fgYGMGHfGOBxid9D3bDzhGItHtit-uhE60Btd257"/>
+</div>
+</div>
+</header>
+<!-- Scrollable Canvas -->
+<div class="flex-1 overflow-y-auto p-xl">
+<div class="max-w-container-max mx-auto space-y-lg">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-6">
+<div>
+<h2 class="text-headline-lg font-headline-lg text-on-surface">Channel Integrations</h2>
+<p class="text-body-md font-body-md text-on-surface-variant mt-2 max-w-2xl">Manage your delivery platform connections, configure automatic menu syncing, and adjust price markups per channel to optimize margins.</p>
+</div>
+</div>
+<!-- Integration Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter mb-xl">
+</div>
+<!-- Detailed View: Mapping Table (Selected: UberEats) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="bg-surface-container-low px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+<div>
+<h3 class="text-headline-md font-headline-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">sync_alt</span>
+                                Menu Mapping: UberEats
+                            </h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1">Map your internal categories to the platform's taxonomy.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 bg-surface border border-outline-variant rounded-lg px-3 py-1.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">percent</span>
+<input class="bg-transparent border-none p-0 w-12 text-right text-data-mono font-data-mono text-on-surface focus:ring-0" placeholder="0" type="number" value="15"/>
+<span class="text-label-md font-label-md text-on-surface-variant">Markup</span>
+</div>
+<button class="bg-surface text-primary border border-outline-variant px-4 py-2 rounded-lg text-label-md font-label-md hover:bg-surface-container-high transition-colors">
+                                Save Mapping
+                            </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface border-b border-outline-variant">
+<th class="px-6 py-3 text-label-md font-label-md text-on-surface-variant font-semibold">RestoPro Category</th>
+<th class="px-6 py-3 text-label-md font-label-md text-on-surface-variant font-semibold">Items</th>
+<th class="px-6 py-3 text-label-md font-label-md text-on-surface-variant font-semibold">Platform Category (UberEats)</th>
+<th class="px-6 py-3 text-label-md font-label-md text-on-surface-variant font-semibold text-right">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/50 text-body-md font-body-md"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+(function() {
+  var grid = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3.xl\\:grid-cols-4');
+
+  // Integration cards
+  var activeIdx = 0;
+  channelIntegrations.forEach(function(ch, idx) {
+    var isConnected = ch.status === 'connected';
+    var isActive = idx === 0;
+    var cardBorder = isActive ? 'border-2 border-primary' : 'border border-outline-variant';
+    var cardShadow = isActive ? 'shadow-sm' : 'hover:shadow-md';
+
+    var card = document.createElement('div');
+    card.className = 'bg-surface-container-lowest ' + cardBorder + ' rounded-xl p-6 relative overflow-hidden transition-all ' + cardShadow;
+
+    // Status badge
+    var badgeHtml = '';
+    if (isConnected) {
+      badgeHtml = '<div class="absolute top-0 right-0 p-3"><div class="bg-tertiary-fixed/20 text-tertiary-fixed text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed animate-pulse"></span> Connected</div></div>';
+    } else {
+      badgeHtml = '<div class="absolute top-0 right-0 p-3"><div class="bg-error/10 text-error text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider flex items-center gap-1"> Disconnected</div></div>';
+    }
+
+    var idText = ch.id ? 'ID: ' + ch.id : 'Not configured';
+
+    var syncHtml = '';
+    if (isConnected) {
+      syncHtml = '<div class="flex justify-between items-center py-2 border-t border-outline-variant/30"><span class="text-label-md font-label-md text-on-surface-variant">Auto Sync</span><label class="relative inline-flex items-center cursor-pointer"><input ' + (ch.autoSync ? 'checked="" ' : '') + 'class="sr-only peer" type="checkbox" value=""/><div class="w-9 h-5 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div></label></div>';
+    } else {
+      syncHtml = '<div class="flex justify-between items-center py-2 border-t border-outline-variant/30"><span class="text-label-md font-label-md text-outline">Auto Sync</span><label class="relative inline-flex items-center cursor-pointer opacity-50"><input class="sr-only peer" disabled="" type="checkbox" value=""/><div class="w-9 h-5 bg-outline-variant rounded-full after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-4 after:w-4"></div></label></div>';
+    }
+
+    var btnHtml = ch.hasConfigure
+      ? '<button class="w-full bg-primary-container text-on-primary py-2 rounded-lg text-label-md font-label-md hover:opacity-90 transition-opacity">Configure</button>'
+      : '<button class="w-full bg-surface text-primary border border-outline-variant py-2 rounded-lg text-label-md font-label-md hover:bg-surface-container-high transition-colors">Connect Account</button>';
+
+    card.innerHTML = badgeHtml + '<div class="flex items-center gap-4 mb-4"><div class="w-12 h-12 rounded-lg" style="background-color:' + ch.bgColor + ';display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="color:' + ch.textColor + ';font-weight:bold;font-size:1.25rem">' + ch.initials + '</span></div><div><h3 class="text-headline-md font-headline-md text-on-surface leading-tight">' + ch.name + '</h3><p class="text-body-sm font-body-sm text-on-surface-variant">' + idText + '</p></div></div><div class="space-y-4">' + syncHtml + btnHtml + '</div>';
+
+    grid.appendChild(card);
+  });
+
+  // Update markup value
+  var markupInput = document.querySelector('input[type="number"][value="15"]');
+  if (markupInput && channelIntegrations[0]) markupInput.value = channelIntegrations[0].markups;
+
+  // Menu mapping table
+  var mtbody = document.querySelector('.overflow-x-auto table tbody');
+  menuMappings.forEach(function(m) {
+    var isUnmapped = m.status === 'unmapped';
+    var tr = document.createElement('tr');
+    tr.className = 'hover:bg-surface-container-lowest transition-colors group' + (isUnmapped ? ' bg-error-container/10' : '');
+
+    var selectHtml = '';
+    if (isUnmapped) {
+      selectHtml = '<select class="w-full bg-surface border border-error rounded-md py-1.5 px-3 text-body-sm font-body-sm text-on-surface focus:border-error focus:ring-1 focus:ring-error"><option disabled="" selected="" value="">Select category...</option><option>Specials</option><option>Limited Time Offers</option></select>';
+    } else {
+      selectHtml = '<select class="w-full bg-surface border border-outline-variant rounded-md py-1.5 px-3 text-body-sm font-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary">' +
+        (m.platformCategory === 'Starters' ? '<option selected="">Starters</option><option>Snacks</option><option>Small Plates</option>' : '') +
+        (m.platformCategory === 'Burgers' ? '<option selected="">Burgers</option><option>Sandwiches</option><option>Mains</option>' : '') +
+        (m.platformCategory === 'Beverages' ? '<option>Drinks</option><option selected="">Beverages</option><option>Alcoholic Drinks</option>' : '') +
+        '</select>';
+    }
+
+    var statusHtml = isUnmapped
+      ? '<span class="inline-flex items-center gap-1 text-error text-label-md font-label-md"><span class="material-symbols-outlined text-[16px]">error</span> Unmapped</span>'
+      : '<span class="inline-flex items-center gap-1 text-tertiary-fixed text-label-md font-label-md"><span class="material-symbols-outlined text-[16px]">check_circle</span> Mapped</span>';
+
+    tr.innerHTML = '<td class="px-6 py-4 font-medium text-on-surface">' + m.category + '</td><td class="px-6 py-4 text-on-surface-variant text-data-mono font-data-mono">' + m.items + '</td><td class="px-6 py-4">' + selectHtml + '</td><td class="px-6 py-4 text-right">' + statusHtml + '</td>';
+    mtbody.appendChild(tr);
+  });
+})();
+</script>
+</body></html>

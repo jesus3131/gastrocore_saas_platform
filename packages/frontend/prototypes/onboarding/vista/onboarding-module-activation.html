@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RestoFlow B2B - Module Selection</title>
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/onboarding-module-activation.css">
+<script src="../js/onboarding-module-activation.js"></script>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-surface-container-lowest border-b border-outline-variant">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[32px]">restaurant</span>
+<span class="font-headline-md text-headline-md font-bold text-primary">RestoFlow B2B</span>
+</div>
+<div class="flex items-center gap-md text-primary">
+<button class="hover:bg-surface-container-low p-sm rounded-full transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help</span>
+</button>
+<button class="hover:bg-surface-container-low p-sm rounded-full transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar & Main Content Wrapper -->
+<div class="flex pt-16 h-screen">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col w-64 h-full bg-surface-container-low py-md border-r border-outline-variant fixed left-0 top-16 bottom-0">
+<div class="px-lg mb-xl">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Onboarding</h2>
+<p class="font-label-md text-label-md text-secondary mt-xs">Setup Progress</p>
+</div>
+<ul class="flex flex-col w-full">
+<li>
+<a class="flex items-center gap-md px-lg py-sm text-secondary hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">storefront</span>
+                        Business Profile
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-lg py-sm text-secondary hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">grid_view</span>
+                        Service Area
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-lg py-sm text-primary font-bold border-r-4 border-primary bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">extension</span>
+                        Modules
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-lg py-sm text-secondary hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">verified</span>
+                        Final Review
+                    </a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-64 p-lg md:p-xl overflow-y-auto">
+<div class="max-w-[1000px] mx-auto">
+<!-- Header & Progress -->
+<div class="mb-xl">
+<div class="flex items-center justify-between mb-sm">
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Module Selection</h1>
+<span class="font-label-md text-label-md text-secondary">Step 3 of 4</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+                        Customize RestoFlow to fit your operational needs. Select the core modules required for your restaurant. You can always add or remove these later in your settings.
+                    </p>
+<!-- Progress Bar -->
+<div class="w-full h-2 bg-surface-container-high rounded-full mt-md overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-500 ease-in-out" style="width: 75%;"></div>
+</div>
+</div>
+<!-- Modules Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md md:gap-lg" id="module-grid"></div>
+<!-- Bottom Actions -->
+<div class="mt-xl pt-lg border-t border-outline-variant flex justify-between items-center">
+<button class="px-lg py-sm rounded-lg border border-outline text-secondary font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                        Back
+                    </button>
+<button class="px-lg py-sm rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs shadow-sm">
+                        Continue to Final Review
+                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+</body></html>

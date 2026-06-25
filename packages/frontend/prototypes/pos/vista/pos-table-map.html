@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mapa de Mesas Interactivo - GastroEnterprise</title>
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/pos-table-map.css">
+<script src="../js/pos-table-map.js"></script>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md antialiased overflow-x-hidden flex h-screen">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low dark:bg-inverse-surface flex flex-col h-full py-md z-50 border-r border-outline-variant/30 hidden md:flex">
+<div class="px-lg mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined font-bold">restaurant</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary dark:text-inverse-primary font-bold leading-none tracking-tight">GastroEnterprise</h1>
+<p class="font-label-md text-label-md text-on-surface-variant opacity-80 mt-1">Enterprise Management</p>
+</div>
+</div>
+<div class="flex flex-col gap-1 px-sm">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-inverse-primary font-bold border-r-4 border-primary dark:border-inverse-primary bg-surface-container-high dark:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">point_of_sale</span>
+<span>POS</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span>Personnel</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<div class="mt-auto px-lg pb-4">
+<div class="flex items-center gap-3 p-3 rounded-lg border border-outline-variant bg-surface-container">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A small circular avatar of a professional restaurant manager in a crisp white shirt against a neutral grey background. High resolution, bright studio lighting, realistic photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA61SZNax6GIruBx0eIN4aaRUov03GKgiiXEIjD4Y5nqBBCON2UDmZS24r65AjxRLtfy7RAjxRx8hVg7WDRKKpuHPMOB8jht8cipBo_tC5jtiWeDNuhV-bJgDOeciId6Oq6PJVycBp9c0EoJCSOFAOAuziWkSvu7p43LezD_B2FNMaX46JR5un6y2O0ppctGYzn1HBivucQ0YHaNUiwIRhPvtm742456dvAvMj11mJaTHAJBPRZERGmDWkDdAwaU8O5fL5WwC5J8wSH"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold">Admin User</span>
+<span class="font-label-md text-label-md text-on-surface-variant opacity-70">Shift Supervisor</span>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-64 min-h-screen relative">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 sticky z-40 bg-surface dark:bg-surface-container-lowest flex justify-between items-center h-16 px-lg border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 w-64 transition-all" placeholder="Search tables, orders..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-all p-2 rounded-full hover:bg-surface-container-high relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-all p-2 rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined">storefront</span>
+</button>
+<div class="w-px h-6 bg-outline-variant mx-2"></div>
+<img class="w-8 h-8 rounded-full object-cover border border-outline-variant cursor-pointer hover:opacity-80 transition-all" data-alt="A small circular avatar of a professional restaurant manager in a crisp white shirt against a neutral grey background. High resolution, bright studio lighting, realistic photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVt6qPitS08adJo6ah3KZGhqVkF5ClsOJAO7_k1wtUQL3yqFOa5-j24ySYFakZGnRfzzKCl4eo_Tfy4XCVmc8SQ7TlXMGz3bVjXcvlnYPAVPH6QHcHXdYiX3r5-GqGUQOdq0daUKyiwTh22jt5ExzMYQc_b6kXSVgXgMYsPLr8oDxCEyY8Dquz96ICqLmuJOHbF7uyFO58kroWFm1EEHJCkSYk2K4bOC1GZJCOApmGYEgt9f76b46oNzS_Ofz4YQDsASqdC0O_7Nxi"/>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 p-lg bg-background flex gap-lg overflow-hidden h-[calc(100vh-64px)]">
+<!-- Floor Map Area -->
+<div class="flex-1 flex flex-col bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<!-- Toolbar -->
+<div class="flex justify-between items-center p-md border-b border-outline-variant bg-surface-container-low/50">
+  <div id="room-filters" class="flex items-center gap-2 bg-surface-container-high p-1 rounded-lg"></div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3">
+<span class="flex items-center gap-1 font-label-md text-label-md text-on-surface-variant"><div class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></div> Available</span>
+<span class="flex items-center gap-1 font-label-md text-label-md text-on-surface-variant"><div class="w-2 h-2 rounded-full bg-primary-container"></div> Occupied</span>
+<span class="flex items-center gap-1 font-label-md text-label-md text-on-surface-variant"><div class="w-2 h-2 rounded-full bg-yellow-500"></div> Bill Req</span>
+<span class="flex items-center gap-1 font-label-md text-label-md text-on-surface-variant"><div class="w-2 h-2 rounded-full bg-surface-variant"></div> Reserved</span>
+</div>
+<button class="flex items-center justify-center p-2 rounded-md border border-outline-variant text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Interactive Map Canvas -->
+<div class="flex-1 relative bg-surface-bright overflow-auto p-8" id="map-canvas">
+<!-- Subtle Grid Background -->
+<div class="absolute inset-0" style="background-image: radial-gradient(#c5c5d3 1px, transparent 1px); background-size: 24px 24px; opacity: 0.3;"></div>
+  <div class="relative w-full h-full min-w-[800px] min-h-[600px]">
+    <!-- Kitchen Entrance -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-8 bg-surface-variant rounded-b-lg flex items-center justify-center border border-outline-variant border-t-0 shadow-sm">
+      <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Kitchen</span>
+    </div>
+    <div id="tables-map"></div>
+  </div>
+</div>
+</div>
+<!-- Side Status Panel -->
+<aside class="w-80 flex flex-col gap-4">
+<!-- Status Summary Card -->
+  <div id="room-status" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm">
+    <h2 class="font-headline-md text-headline-md-mobile text-on-surface font-bold mb-4">Room Status</h2>
+  </div>
+<!-- Waitstaff on Duty -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm flex-1 overflow-auto">
+<div class="flex justify-between items-center mb-4">
+<h2 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-bold">Staff on Section</h2>
+<button class="text-primary hover:bg-primary-container/10 p-1 rounded transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+  <div id="waitstaff-list" class="space-y-2"></div>
+<!-- Quick Action Button -->
+<button class="w-full mt-6 bg-primary-container text-on-primary-container font-body-sm text-body-sm font-semibold py-3 rounded-lg shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+                        New Walk-in Walk-in
+                    </button>
+</div>
+</aside>
+</main>
+</div>
+</body></html>

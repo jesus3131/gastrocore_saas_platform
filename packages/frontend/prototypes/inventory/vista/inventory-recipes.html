@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Inventario y Escandallos - RestoPro</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/inventory-recipes.css">
+<script src="../js/inventory-recipes.js"></script>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex antialiased">
+<!-- SideNavBar Component -->
+<nav class="bg-surface-container dark:bg-surface-container-low h-screen w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline flex flex-col py-md px-sm z-50">
+<!-- Brand/Logo Area -->
+<div class="px-md mb-xl mt-sm flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-primary">restaurant</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed leading-tight">RestoPro Enterprise</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Administrador</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 space-y-sm">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">point_of_sale</span>
+<span class="font-body-md text-body-md font-medium">POS</span>
+</a>
+<!-- Active State: Inventario -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold transition-colors duration-200 scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined fill-icon">inventory_2</span>
+<span class="font-body-md text-body-md">Inventario</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-md text-body-md font-medium">Analítica</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span class="font-body-md text-body-md font-medium">Personal</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md font-medium">Configuración</span>
+</a>
+</div>
+<!-- CTA Bottom -->
+<div class="mt-auto pt-md">
+<button class="w-full bg-primary-container text-on-primary-container font-label-md text-label-md py-md rounded-lg flex items-center justify-center gap-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add</span>
+                Nuevo Pedido
+            </button>
+</div>
+</nav>
+<!-- Main Content Area Wrapper -->
+<div class="flex-1 flex flex-col ml-64 min-w-0">
+<!-- TopAppBar Component -->
+<header class="bg-surface-container-lowest dark:bg-surface-container-lowest docked full-width top-0 sticky z-40 border-b border-outline-variant dark:border-outline flex justify-between items-center h-16 px-lg">
+<!-- Context/Breadcrumb Area -->
+<div class="flex items-center gap-xl">
+<h2 class="font-headline-md text-headline-md font-extrabold text-on-surface dark:text-on-surface">RestoPro</h2>
+<!-- Tab Links Top -->
+<nav class="hidden md:flex space-x-lg h-full">
+<a class="h-16 flex items-center text-primary dark:text-primary-fixed font-bold border-b-2 border-primary transition-opacity opacity-80 font-label-md text-label-md" href="#">Sucursal Principal</a>
+<a class="h-16 flex items-center text-on-surface-variant dark:text-surface-variant hover:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-lg px-sm font-label-md text-label-md" href="#">Sucursal Norte</a>
+<a class="h-16 flex items-center text-on-surface-variant dark:text-surface-variant hover:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-lg px-sm font-label-md text-label-md" href="#">Sucursal Sur</a>
+</nav>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-md text-primary dark:text-primary-fixed-dim">
+<button class="p-sm hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-sm hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-full transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-secondary-container overflow-hidden ml-sm border border-outline-variant">
+<img alt="Avatar de Usuario" class="w-full h-full object-cover" data-alt="A professional headshot of a restaurant manager in a modern kitchen setting, bright lighting, high quality corporate portrait." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBq2UQQ3jSTYPjn_xA4HV4gR_hFgObzjxhVwtExgxrxiYpDkw125t3C642EtN7EMgtgaQghU78tt8fnrlyFvELlgp0QWRrrDtzLxxj1Y6Gzd2j80u8aXhflrUcWSffzm8abm8a4dQvN9paz4FFa0cRTEcRcbIfUPjDDaQw-KFgBM7LZdYtvruELvAo4KtDcGcw3beXr8rOd8vA12fQO9kPXpkTnAjbe3Mx4nmXO4TzwmS3G-gVmRld4UvX11RVBOzsxp3h-jLAymri3"/>
+</div>
+</div>
+</header>
+<!-- Main Dashboard Canvas -->
+<main class="flex-1 p-lg bg-surface">
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-lg max-w-[container-max] mx-auto">
+<!-- Left Column: Inventory Table (Takes 8 cols on large screens) -->
+<div class="xl:col-span-8 space-y-md">
+<!-- Section Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-md mb-md">
+<div>
+<h3 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Gestión de Inventario</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Monitoreo en tiempo real de insumos y materias primas.</p>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-sm bg-surface-container-lowest border border-outline text-secondary font-label-md text-label-md rounded-lg flex items-center gap-xs hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">balance</span>
+                                Ajuste de Mermas
+                            </button>
+<button class="px-md py-sm bg-[#1E3A8A] text-on-primary font-label-md text-label-md rounded-lg flex items-center gap-xs hover:opacity-90 transition-opacity shadow-sm">
+<span class="material-symbols-outlined text-[18px]">local_shipping</span>
+                                Realizar Pedido
+                            </button>
+</div>
+</div>
+<!-- Data Table Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<!-- Table Filters/Search -->
+<div class="p-md border-b border-surface-container flex gap-md items-center bg-surface-container-low">
+<div class="relative flex-1 max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-sm border border-outline-variant rounded-lg font-body-sm text-body-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 transition-all outline-none bg-surface-container-lowest" placeholder="Buscar ingrediente o SKU..." type="text"/>
+</div>
+<button class="p-sm text-on-surface-variant hover:bg-surface-container rounded-lg">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+<!-- Table Content -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold">Ingrediente / Insumo</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold">Categoría</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold text-right">Stock Actual</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold text-right">Costo Unit.</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold text-center">Estado</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-sm text-body-sm"></tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Right Column: Escandallo Detail (Takes 4 cols) -->
+<div class="xl:col-span-4">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm h-full flex flex-col">
+<!-- Header -->
+<div class="p-md border-b border-surface-container bg-surface-container-low flex justify-between items-center">
+<h4 class="font-headline-md text-[18px] font-semibold text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">receipt_long</span>
+                                Escandallo de Plato
+                            </h4>
+<button class="text-primary hover:bg-primary-container/20 p-xs rounded">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</div>
+<!-- Content Body -->
+<div class="p-md flex-1 flex flex-col">
+<!-- Dish Identity -->
+<div class="flex items-start gap-md mb-lg">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-outline-variant">
+<div class="bg-cover bg-center w-full h-full" data-alt="A highly appetizing, professional food photography shot of a gourmet beef burger with melted cheddar, fresh brioche bun, and crisp vegetables on a dark slate board, studio lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCJJxnXXsXJuW-kRXtxkTQTmwCa3emt7ZVVP5vbjPjDYWETmXKrPs78z6R7a2DqKxmS3VblTCuxWPe7IvsQpMXmThBsGs0YIvkkp2--jdwTrwgyLDmktstu3ElbmfGFmoq68X1wkABJW1-WkyYpTdM5obRB8DQ_Tt2pDd8Sg628G27kOjRFur01KtUtziWXj0hQi9cJtDwb6-UCXbZ0DPpglH-hTry5ye2fuGLQqSGNNiZOoifDEbnLODaFyHWVysTzUt4Gp5z-Vfpt')"></div>
+</div>
+<div>
+<h5 class="font-headline-md text-[20px] font-bold text-on-surface leading-tight">Hamburguesa Gourmet</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Categoría: Principales</p>
+<div class="mt-sm flex gap-xs">
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-md text-[10px] uppercase">Activo en Menú</span>
+</div>
+</div>
+</div>
+<!-- Ingredients Breakdown List -->
+<h6 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-sm">Desglose de Ingredientes (Porción)</h6>
+<div class="space-y-sm flex-1"></div>
+<!-- Financial Summary Box -->
+<div class="mt-lg p-md bg-surface-container-low rounded-lg border border-outline-variant space-y-sm">
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Costo Total Ingredientes</span>
+<span class="font-data-mono text-data-mono font-bold">$4.72</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Margen Deseado (Food Cost)</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container-highest text-on-surface font-data-mono text-[12px] font-bold">30%</span>
+</div>
+<div class="pt-sm mt-sm border-t border-outline-variant/50 flex justify-between items-center">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Precio Sugerido Venta</span>
+<span class="font-data-mono text-[18px] text-[#1E3A8A] font-extrabold">$15.73</span>
+</div>
+<div class="flex justify-between items-center mt-xs">
+<span class="font-label-md text-label-md text-on-surface-variant">Precio Actual en Menú</span>
+<span class="font-data-mono text-data-mono text-on-surface line-through decoration-error/50">$14.50</span>
+</div>
+<!-- Alert Indicator if margin is off -->
+<div class="mt-sm p-sm bg-error-container/20 rounded border border-error-container flex items-start gap-sm">
+<span class="material-symbols-outlined text-error text-[16px] mt-0.5">warning</span>
+<p class="font-label-md text-[11px] text-error leading-tight">El precio actual no cumple con el margen objetivo. Se sugiere un ajuste de $1.23.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+(function() {
+  // Inventory table
+  var tbody = document.querySelector('.overflow-x-auto table tbody');
+  var statusMap = {
+    optimal: { label: 'Óptimo', classes: 'bg-tertiary-fixed-dim/20 text-tertiary-container' },
+    critical: { label: 'Crítico', classes: 'bg-error-container text-on-error-container', icon: '<span class="material-symbols-outlined text-[14px]">warning</span> ' },
+    reorder: { label: 'Por Pedir', classes: 'bg-[#1E3A8A]/10 text-[#1E3A8A]' }
+  };
+  inventoryItems.forEach(function(item) {
+    var s = statusMap[item.status] || statusMap.optimal;
+    var isCritical = item.status === 'critical';
+    var tr = document.createElement('tr');
+    tr.className = 'hover:bg-surface-container transition-colors group cursor-pointer' + (isCritical ? ' bg-error-container/10' : '');
+    var stockHtml = isCritical
+      ? '<span class="font-data-mono text-data-mono font-bold text-error">' + item.stock + ' <span class="text-on-surface-variant">' + item.unit + '</span></span>'
+      : '<span class="font-data-mono text-data-mono">' + item.stock + ' <span class="text-on-surface-variant">' + item.unit + '</span></span>';
+    tr.innerHTML = '<td class="p-md"><div class="font-medium text-on-surface">' + item.name + '</div><div class="text-on-surface-variant text-[11px] mt-0.5">SKU: ' + item.sku + '</div></td><td class="p-md text-on-surface-variant">' + item.category + '</td><td class="p-md text-right">' + stockHtml + '</td><td class="p-md text-right font-data-mono text-data-mono">$' + item.cost.toFixed(2) + '</td><td class="p-md text-center"><span class="inline-flex items-center ' + (s.icon ? 'gap-1 ' : '') + 'px-2 py-1 rounded-full ' + s.classes + ' font-label-md text-[11px]">' + (s.icon || '') + s.label + '</span></td>';
+    tbody.appendChild(tr);
+  });
+
+  // Recipe detail header
+  var detail = recipeDetail;
+  var imgDiv = document.querySelector('.bg-cover.bg-center');
+  if (imgDiv) {
+    imgDiv.setAttribute('data-alt', detail.imageAlt);
+    imgDiv.style.backgroundImage = "url('" + detail.image + "')";
+  }
+  var h5 = document.querySelector('.xl\\:col-span-4 h5');
+  if (h5) h5.textContent = detail.name;
+  var catP = document.querySelector('.xl\\:col-span-4 .font-body-sm.text-body-sm.text-on-surface-variant.mt-xs');
+  if (catP) catP.textContent = 'Categor\u00eda: ' + detail.category;
+  var statusSpan = document.querySelector('.xl\\:col-span-4 .px-2.py-0\\.5.rounded');
+  if (statusSpan) statusSpan.textContent = detail.menuStatus;
+
+  // Ingredients list
+  var ingContainer = document.querySelector('.space-y-sm.flex-1');
+  detail.ingredients.forEach(function(ing) {
+    var div = document.createElement('div');
+    div.className = 'flex justify-between items-center py-xs border-b border-surface-container border-dashed';
+    div.innerHTML = '<div class="flex flex-col"><span class="font-body-sm text-body-sm font-medium">' + ing.name + '</span><span class="font-label-md text-[11px] text-on-surface-variant">' + ing.quantity + '</span></div><span class="font-data-mono text-data-mono font-medium">$' + ing.cost.toFixed(2) + '</span>';
+    ingContainer.appendChild(div);
+  });
+
+  // Financial summary
+  var summaryBox = document.querySelector('.bg-surface-container-low.rounded-lg');
+  if (summaryBox) {
+    var dataSpans = summaryBox.querySelectorAll('.font-data-mono');
+    // dataSpans[0] = total cost, dataSpans[1] = margin %, dataSpans[2] = suggested price, dataSpans[3] = current price
+    if (dataSpans[0]) dataSpans[0].textContent = '$' + detail.totalCost.toFixed(2);
+    if (dataSpans[1]) dataSpans[1].textContent = detail.desiredMargin + '%';
+    if (dataSpans[2]) dataSpans[2].textContent = '$' + detail.suggestedPrice.toFixed(2);
+    if (dataSpans[3]) dataSpans[3].textContent = '$' + detail.currentPrice.toFixed(2);
+
+    // Alert text
+    var alertP = summaryBox.querySelector('.font-label-md.text-\\[11px\\].text-error');
+    if (alertP) alertP.textContent = 'El precio actual no cumple con el margen objetivo. Se sugiere un ajuste de $' + detail.marginAdjustment.toFixed(2) + '.';
+  }
+})();
+</script>
+</body></html>

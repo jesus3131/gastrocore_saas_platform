@@ -1,0 +1,22 @@
+# Especificaciones del Módulo POS y Mapa de Mesas
+
+## 1. Mapa de Mesas Interactivo
+- **Zonificación:** Capacidad de alternar entre diferentes áreas (Terraza, Salón Principal, Barra).
+- **Estados de Mesa:** 
+  - Disponible (Verde/Outline)
+  - Ocupada (Azul con indicador de tiempo)
+  - Cuenta Solicitada (Amarillo parpadeante o distintivo)
+  - Reservada (Gris/Icono calendario)
+- **Interacciones:** Drag and drop para unir mesas, clic para abrir el detalle del pedido.
+
+## 2. Interfaz de Toma de Pedidos (POS)
+- **Categorías Rápidas:** Menú lateral o superior con iconos para acceso veloz (Bebidas, Entradas, Platos Fuertes, Postres).
+- **Buscador de Platos:** Barra de búsqueda optimizada para teclado o táctil.
+- **Modificadores:** Pop-up para términos de cocción, alergias o extras (ej. "Sin cebolla", "Término medio").
+- **Gestión de Comanda:** Lista lateral derecha con el resumen del pedido actual, subtotal, impuestos y botón de "Enviar a Cocina".
+
+## 3. Flujo de Pago (Split Bill)
+- Botón de "Pagar" que abre modal con opciones de:
+  - Dividir por partes iguales.
+  - Dividir por artículos seleccionados.
+  - Métodos de pago múltiples (Efectivo + Tarjeta).

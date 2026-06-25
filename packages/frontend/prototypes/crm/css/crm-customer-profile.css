@@ -1,0 +1,11 @@
+.material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Subtle ambient shadow for specific elevated cards */
+        .ambient-shadow {
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }

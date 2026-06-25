@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Loyalty Program & Rewards Management</title>
+<!-- Google Fonts & Material Symbols -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/crm-loyalty-program.css">
+<script src="../js/crm-loyalty-program.js"></script>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<div class="flex h-screen overflow-hidden w-full">
+<!-- Shared Component: SideNavBar -->
+<nav class="bg-surface-container-lowest w-64 h-screen sticky left-0 top-0 border-r border-outline-variant flex flex-col p-md hidden md:flex shrink-0 z-10">
+<!-- Header / Brand -->
+<div class="mb-xl flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold shadow-sm">
+                PS
+            </div>
+<div>
+<h1 class="font-headline-md text-body-md font-bold text-primary">Pro-Service Hospitality</h1>
+<p class="font-body-sm text-label-md text-on-surface-variant">Enterprise CRM v2.4</p>
+</div>
+</div>
+<!-- Navigation Tabs -->
+<ul class="flex flex-col gap-sm flex-1">
+<li>
+<a class="flex items-center gap-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-lg">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-lg">group</span>
+<span class="font-body-md text-body-md">Customers</span>
+</a>
+</li>
+<!-- Active Tab -->
+<li>
+<a class="flex items-center gap-md px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-semibold opacity-90 scale-[0.98] transition-all" href="#">
+<span class="material-symbols-outlined text-lg icon-fill">military_tech</span>
+<span class="font-body-md text-body-md">Loyalty Program</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-lg">campaign</span>
+<span class="font-body-md text-body-md">Campaigns</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</li>
+</ul>
+<!-- Footer / CTA -->
+<div class="mt-auto pt-lg border-t border-outline-variant flex flex-col gap-sm">
+<button class="w-full bg-primary-container text-on-primary-container font-label-md text-label-md py-2 rounded-lg hover:bg-primary-fixed-dim transition-colors mb-sm">
+                Quick Action
+            </button>
+<a class="flex items-center gap-md px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-md">help_outline</span>
+<span class="font-body-sm text-body-sm">Support</span>
+</a>
+<a class="flex items-center gap-md px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-md">notifications</span>
+<span class="font-body-sm text-body-sm">Notifications</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto bg-surface">
+<div class="max-w-container-max mx-auto p-lg md:p-xl flex flex-col gap-xl">
+<!-- Page Header -->
+<header class="flex flex-col md:flex-row md:items-center justify-between gap-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Loyalty Management</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Configure points, manage reward tiers, and track campaign performance.</p>
+</div>
+<div class="flex items-center gap-md">
+<button class="px-4 py-2 bg-surface-container-lowest border border-outline-variant text-on-surface-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                        Export Report
+                    </button>
+<button class="px-4 py-2 bg-primary-container text-on-primary-container rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-sm">
+<span class="material-symbols-outlined text-sm">add</span>
+                        New Reward Tier
+                    </button>
+</div>
+</header>
+<!-- Analytics Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-lg" data-container="analytics"></section>
+<!-- Configuration & Tiers -->
+<section class="grid grid-cols-1 xl:grid-cols-3 gap-lg">
+<!-- Reward Tiers (Left - Spans 2 cols) -->
+<div class="xl:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
+<div class="bg-surface-container-low p-md border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-md text-body-lg font-semibold text-on-surface">Reward Tiers</h3>
+<button class="text-primary hover:text-on-primary-fixed transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant bg-surface-bright">
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold">Reward Name</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold">Cost (Points)</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold">Type</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold">Status</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface" data-container="rewards"></tbody>
+</table>
+</div>
+</div>
+<!-- Points System Engine (Right - Spans 1 col) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col">
+<div class="bg-surface-container-low p-md border-b border-outline-variant">
+<h3 class="font-headline-md text-body-lg font-semibold text-on-surface">Points Engine</h3>
+<p class="font-body-sm text-label-md text-on-surface-variant mt-xs">Configure baseline earning rules.</p>
+</div>
+<div class="p-md flex flex-col gap-lg">
+<div class="flex flex-col gap-sm">
+<label class="font-label-md text-label-md text-on-surface-variant">Earning Ratio (Base)</label>
+<div class="flex items-center gap-sm">
+<input class="w-20 rounded border-outline-variant bg-surface px-3 py-2 font-data-mono text-data-mono text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all" type="number" value="1"/>
+<span class="font-body-md text-body-md text-on-surface-variant">Points per</span>
+<span class="font-data-mono text-data-mono text-on-surface">$1.00</span>
+<span class="font-body-md text-body-md text-on-surface-variant">spent</span>
+</div>
+</div>
+<div class="flex flex-col gap-sm">
+<label class="font-label-md text-label-md text-on-surface-variant">Points Expiry</label>
+<select class="rounded border-outline-variant bg-surface px-3 py-2 font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all w-full">
+<option>Never Expire</option>
+<option selected="">12 Months Inactivity</option>
+<option>24 Months Inactivity</option>
+</select>
+</div>
+<div class="mt-auto pt-lg border-t border-outline-variant">
+<button class="w-full bg-surface border border-outline-variant text-on-surface font-label-md text-label-md py-2 rounded-lg hover:bg-surface-container-low transition-colors">
+                                Save Engine Config
+                            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Active Campaigns Section (Bento style cards) -->
+<section class="flex flex-col gap-md">
+<div class="flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-on-surface">Active Campaigns</h3>
+<a class="text-primary font-label-md text-label-md hover:underline" href="#">View All</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg" data-container="campaigns"></div>
+</section>
+</div>
+</main>
+</div>
+<script>
+(function() {
+  var aEl = document.querySelector('[data-container="analytics"]');
+  if (aEl) {
+    aEl.innerHTML = loyaltyData.analytics.map(function(a) {
+      var changeIcon = a.hasTrendIcon ? '<span class="material-symbols-outlined text-sm">trending_up</span>' : '';
+      var borderClass = a.hasBorder ? 'pt-sm border-t border-outline-variant' : '';
+      return '<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col gap-sm">' +
+        '<div class="flex justify-between items-center text-on-surface-variant">' +
+        '<span class="font-body-md text-body-md font-semibold">' + a.label + '</span>' +
+        '<span class="material-symbols-outlined text-md">' + a.icon + '</span>' +
+        '</div>' +
+        '<div class="font-display-lg text-display-lg ' + a.valueClass + ' font-data-mono mt-sm">' + a.value + '</div>' +
+        '<div class="flex items-center gap-xs ' + a.changeColor + ' font-label-md text-label-md mt-auto ' + borderClass + '">' +
+        changeIcon +
+        '<span>' + a.change + '</span>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+  }
+  var rEl = document.querySelector('[data-container="rewards"]');
+  if (rEl) {
+    rEl.innerHTML = loyaltyData.rewards.map(function(r) {
+      var nameClass = r.paused ? 'text-on-surface-variant' : '';
+      var fadedClass = r.paused ? 'text-on-surface-variant' : '';
+      var editBtn = '<button class="text-on-surface-variant hover:text-primary mx-1"><span class="material-symbols-outlined text-sm">edit</span></button>';
+      var deleteBtn = r.paused ? '' : '<button class="text-on-surface-variant hover:text-error mx-1"><span class="material-symbols-outlined text-sm">delete</span></button>';
+      return '<tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors group">' +
+        '<td class="p-md font-semibold ' + nameClass + '">' + r.name + '</td>' +
+        '<td class="p-md font-data-mono text-data-mono ' + fadedClass + '">' + r.cost + '</td>' +
+        '<td class="p-md ' + fadedClass + '">' + r.type + '</td>' +
+        '<td class="p-md"><span class="inline-flex items-center px-2 py-1 rounded-full ' + r.statusClass + ' font-label-md text-[10px] uppercase tracking-wider">' + r.status + '</span></td>' +
+        '<td class="p-md text-right opacity-0 group-hover:opacity-100 transition-opacity">' + editBtn + deleteBtn + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+  var cEl = document.querySelector('[data-container="campaigns"]');
+  if (cEl) {
+    cEl.innerHTML = loyaltyData.campaigns.map(function(c) {
+      var mediaHtml = c.imgType === 'icon'
+        ? '<div class="w-24 h-24 rounded-lg bg-surface-container-low overflow-hidden shrink-0 flex items-center justify-center bg-secondary/10"><span class="material-symbols-outlined text-4xl text-secondary">' + c.icon + '</span></div>'
+        : '<div class="w-24 h-24 rounded-lg bg-surface-container-low overflow-hidden shrink-0 relative"><img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" src="' + c.img + '"/></div>';
+      return '<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex gap-md items-start group hover:border-primary-fixed-dim transition-colors cursor-pointer">' +
+        mediaHtml +
+        '<div class="flex flex-col flex-1 h-full">' +
+        '<div class="flex justify-between items-start">' +
+        '<h4 class="font-body-lg text-body-lg font-semibold text-on-surface">' + c.title + '</h4>' +
+        '<span class="material-symbols-outlined text-on-surface-variant">more_vert</span>' +
+        '</div>' +
+        '<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs line-clamp-2">' + c.desc + '</p>' +
+        '<div class="mt-auto pt-sm flex justify-between items-center">' +
+        '<span class="font-data-mono text-data-mono text-primary text-xs bg-primary/10 px-2 py-1 rounded">' + c.badge + '</span>' +
+        '<span class="font-label-md text-label-md text-tertiary-container flex items-center gap-xs">' +
+        '<span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span> ' + c.status +
+        '</span>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+  }
+})();
+</script>
+</body></html>

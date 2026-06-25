@@ -1,0 +1,588 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgresqlExtensions, uuid_ossp, citext]
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────
+
+enum BusinessType {
+  fine_dining
+  fast_food
+  cafe
+  food_truck
+  bar
+  franchise
+  bakery
+  ghost_kitchen
+}
+
+enum SubscriptionPlan {
+  basic
+  pro
+  enterprise
+}
+
+enum SubscriptionStatus {
+  active
+  trial
+  past_due
+  canceled
+  paused
+}
+
+enum OrderStatus {
+  pending
+  preparing
+  ready
+  served
+  paid
+  canceled
+}
+
+enum PaymentMethod {
+  cash
+  card
+  transfer
+  mercadopago
+  stripe
+}
+
+enum EmployeeRole {
+  admin
+  manager
+  chef
+  waiter
+  cashier
+  host
+  delivery
+}
+
+enum ShiftStatus {
+  scheduled
+  checked_in
+  on_break
+  checked_out
+  absent
+}
+
+// ─── TENANT (Multi-tenant Core) ───────────────────────────────
+
+model Tenant {
+  id               String           @id @default(uuid()) @db.Uuid
+  name             String           @db.VarChar(255)
+  slug             String           @unique @db.VarChar(100)
+  businessType     BusinessType
+  subscriptionPlan SubscriptionPlan @default(basic)
+  subscriptionStatus SubscriptionStatus @default(trial)
+  locale           String           @default("es-MX") @db.VarChar(10)
+  timezone         String           @default("America/Mexico_City") @db.VarChar(50)
+  currency         String           @default("MXN") @db.VarChar(3)
+  settings         Json             @default("{}")
+  customFields     Json             @default("{}")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  // Relations
+  users          User[]
+  branches       Branch[]
+  menuCategories MenuCategory[]
+  orders         Order[]
+  customers      Customer[]
+  employees      Employee[]
+  ingredients    Ingredient[]
+  menuItems      MenuItem[]
+  featureFlags   TenantFeatureFlag[]
+  subscriptions  Subscription[]
+  loyaltyPrograms LoyaltyProgram[]
+
+  @@map("tenants")
+}
+
+// ─── USERS & AUTH ─────────────────────────────────────────────
+
+model User {
+  id             String       @id @default(uuid()) @db.Uuid
+  tenantId       String       @db.Uuid
+  email          String       @db.VarChar(255)
+  passwordHash   String       @db.VarChar(255)
+  name           String       @db.VarChar(255)
+  role           EmployeeRole @default(waiter)
+  isActive       Boolean      @default(true)
+  lastLoginAt    DateTime?
+  refreshToken   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+  @@map("users")
+}
+
+// ─── BRANCHES (Multi-sucursal) ────────────────────────────────
+
+model Branch {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @db.Uuid
+  name       String   @db.VarChar(255)
+  address    String?  @db.Text
+  phone      String?  @db.VarChar(20)
+  email      String?  @db.VarChar(255)
+  isActive   Boolean  @default(true)
+  settings   Json     @default("{}")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tables  Table[]
+  areas   ServiceArea[]
+
+  @@map("branches")
+}
+
+// ─── SERVICE AREAS & TABLES ───────────────────────────────────
+
+model ServiceArea {
+  id        String   @id @default(uuid()) @db.Uuid
+  branchId  String   @db.Uuid
+  name      String   @db.VarChar(255)
+  type      String   @default("dining") @db.VarChar(50) // dining, bar, terrace, private
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  tables Table[]
+
+  @@map("service_areas")
+}
+
+model Table {
+  id        String   @id @default(uuid()) @db.Uuid
+  branchId  String   @db.Uuid
+  areaId    String   @db.Uuid
+  label     String   @db.VarChar(50)
+  capacity  Int      @default(2)
+  status    String   @default("available") @db.VarChar(20) // available, occupied, reserved, closed
+  xPos      Float?
+  yPos      Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  area   ServiceArea  @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("tables")
+}
+
+// ─── MENU ─────────────────────────────────────────────────────
+
+model MenuCategory {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  name      String   @db.VarChar(255)
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  menuItems  MenuItem[]
+  modifiers  ModifierGroup[]
+
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  categoryId  String   @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(10, 2)
+  cost        Decimal? @db.Decimal(10, 2)
+  imageUrl    String?  @db.VarChar(500)
+  available   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category MenuCategory  @relation(fields: [categoryId], references: [id])
+  recipes  Recipe[]
+
+  @@map("menu_items")
+}
+
+model ModifierGroup {
+  id            String   @id @default(uuid()) @db.Uuid
+  categoryId    String   @db.Uuid
+  name          String   @db.VarChar(255)
+  required      Boolean  @default(false)
+  maxSelections Int      @default(1)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  category MenuCategory    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  options  ModifierOption[]
+
+  @@map("modifier_groups")
+}
+
+model ModifierOption {
+  id        String   @id @default(uuid()) @db.Uuid
+  groupId   String   @db.Uuid
+  name      String   @db.VarChar(255)
+  price     Decimal  @default(0) @db.Decimal(10, 2)
+  sortOrder Int      @default(0)
+
+  group ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("modifier_options")
+}
+
+// ─── POS: ORDERS ──────────────────────────────────────────────
+
+model Order {
+  id            String      @id @default(uuid()) @db.Uuid
+  tenantId      String      @db.Uuid
+  branchId      String?     @db.Uuid
+  tableId       String?     @db.Uuid
+  customerId    String?     @db.Uuid
+  userId        String?     @db.Uuid    // who took the order
+  status        OrderStatus @default(pending)
+  type          String      @default("dine_in") @db.VarChar(20) // dine_in, takeout, delivery, online
+  subtotal      Decimal     @db.Decimal(10, 2)
+  tax           Decimal     @default(0) @db.Decimal(10, 2)
+  discount      Decimal     @default(0) @db.Decimal(10, 2)
+  total         Decimal     @db.Decimal(10, 2)
+  paymentMethod PaymentMethod?
+  notes         String?     @db.Text
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  tenant   Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  table    Table?      @relation(fields: [tableId], references: [id])
+  customer Customer?   @relation(fields: [customerId], references: [id])
+  items    OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(uuid()) @db.Uuid
+  orderId    String   @db.Uuid
+  menuItemId String   @db.Uuid
+  name       String   @db.VarChar(255)
+  quantity   Int      @default(1)
+  unitPrice  Decimal  @db.Decimal(10, 2)
+  totalPrice Decimal  @db.Decimal(10, 2)
+  notes      String?  @db.Text
+  status     String   @default("pending") @db.VarChar(20)
+
+  order    Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  modifiers OrderItemModifier[]
+
+  @@map("order_items")
+}
+
+model OrderItemModifier {
+  id           String @id @default(uuid()) @db.Uuid
+  orderItemId  String @db.Uuid
+  groupId      String @db.Uuid
+  optionId     String @db.Uuid
+  name         String @db.VarChar(255)
+  price        Decimal @db.Decimal(10, 2)
+
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@map("order_item_modifiers")
+}
+
+// ─── PAYMENTS ─────────────────────────────────────────────────
+
+model Payment {
+  id          String        @id @default(uuid()) @db.Uuid
+  orderId     String        @db.Uuid
+  method      PaymentMethod
+  amount      Decimal       @db.Decimal(10, 2)
+  reference   String?       @db.VarChar(255)
+  status      String        @default("completed") @db.VarChar(20)
+  metadata    Json          @default("{}")
+  createdAt   DateTime      @default(now())
+
+  @@map("payments")
+}
+
+// ─── INVENTORY ────────────────────────────────────────────────
+
+model Ingredient {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @db.Uuid
+  name         String   @db.VarChar(255)
+  sku          String   @db.VarChar(100)
+  category     String   @db.VarChar(100)
+  unit         String   @db.VarChar(20) // kg, l, units
+  currentStock Decimal  @default(0) @db.Decimal(10, 3)
+  minimumStock Decimal  @default(0) @db.Decimal(10, 3)
+  unitCost     Decimal  @default(0) @db.Decimal(10, 4)
+  supplier     String?  @db.VarChar(255)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  recipes   RecipeIngredient[]
+  movements StockMovement[]
+
+  @@unique([tenantId, sku])
+  @@map("ingredients")
+}
+
+model Recipe {
+  id            String   @id @default(uuid()) @db.Uuid
+  menuItemId    String   @db.Uuid
+  name          String   @db.VarChar(255)
+  servings      Int      @default(1)
+  wastePercentage Decimal @default(0) @db.Decimal(5, 2)
+  instructions  String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  menuItem    MenuItem           @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  ingredients RecipeIngredient[]
+
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  id           String  @id @default(uuid()) @db.Uuid
+  recipeId     String  @db.Uuid
+  ingredientId String  @db.Uuid
+  quantity     Decimal @db.Decimal(10, 3)
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@map("recipe_ingredients")
+}
+
+model StockMovement {
+  id           String   @id @default(uuid()) @db.Uuid
+  ingredientId String   @db.Uuid
+  type         String   @db.VarChar(20) // in, out, adjustment, waste
+  quantity     Decimal  @db.Decimal(10, 3)
+  reference    String?  @db.VarChar(255) // order id, invoice, etc
+  notes        String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@map("stock_movements")
+}
+
+// ─── HR & STAFF ──────────────────────────────────────────────
+
+model Employee {
+  id           String       @id @default(uuid()) @db.Uuid
+  tenantId     String       @db.Uuid
+  name         String       @db.VarChar(255)
+  email        String       @db.VarChar(255)
+  phone        String?      @db.VarChar(20)
+  role         EmployeeRole
+  pinCode      String?      @db.VarChar(6)
+  isActive     Boolean      @default(true)
+  hourlyRate   Decimal?     @db.Decimal(10, 2)
+  commissionPct Decimal?    @db.Decimal(5, 2)
+  hireDate     DateTime     @default(now())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  shifts Shift[]
+  commissions Commission[]
+
+  @@unique([tenantId, email])
+  @@map("employees")
+}
+
+model Shift {
+  id         String      @id @default(uuid()) @db.Uuid
+  employeeId String      @db.Uuid
+  date       DateTime    @db.Date
+  startTime  DateTime
+  endTime    DateTime?
+  status     ShiftStatus @default(scheduled)
+  notes      String?     @db.Text
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("shifts")
+}
+
+model Commission {
+  id         String   @id @default(uuid()) @db.Uuid
+  employeeId String   @db.Uuid
+  orderId    String?  @db.Uuid
+  amount     Decimal  @db.Decimal(10, 2)
+  rate       Decimal  @db.Decimal(5, 2)
+  status     String   @default("pending") @db.VarChar(20)
+  createdAt  DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("commissions")
+}
+
+// ─── CRM ──────────────────────────────────────────────────────
+
+model Customer {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @db.Uuid
+  name         String   @db.VarChar(255)
+  email        String?  @db.VarChar(255)
+  phone        String?  @db.VarChar(20)
+  totalVisits  Int      @default(0)
+  totalSpent   Decimal  @default(0) @db.Decimal(10, 2)
+  loyaltyPoints Int     @default(0)
+  loyaltyTier  String   @default("bronze") @db.VarChar(20)
+  lastVisitAt  DateTime?
+  segment      String   @default("regular") @db.VarChar(50)
+  tags         String[] @default([])
+  notes        String?  @db.Text
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orders     Order[]
+  redemptions LoyaltyRedemption[]
+
+  @@map("customers")
+}
+
+model LoyaltyProgram {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  name        String   @db.VarChar(255)
+  pointsPerUnit Decimal @default(10) @db.Decimal(10, 2) // points per currency unit spent
+  unitPerPoint Decimal  @default(1) @db.Decimal(10, 2)  // currency units needed per point
+  isActive    Boolean  @default(true)
+  tiers       Json     @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  redemptions LoyaltyRedemption[]
+
+  @@map("loyalty_programs")
+}
+
+model LoyaltyRedemption {
+  id         String   @id @default(uuid()) @db.Uuid
+  customerId String   @db.Uuid
+  programId  String   @db.Uuid
+  points     Int
+  reward     String   @db.VarChar(255)
+  status     String   @default("redeemed") @db.VarChar(20)
+  createdAt  DateTime @default(now())
+
+  program  LoyaltyProgram @relation(fields: [programId], references: [id])
+  customer Customer       @relation(fields: [customerId], references: [id])
+
+  @@map("loyalty_redemptions")
+}
+
+// ─── FEATURE FLAGS ────────────────────────────────────────────
+
+model TenantFeatureFlag {
+  id        String  @id @default(uuid()) @db.Uuid
+  tenantId  String  @db.Uuid
+  feature   String  @db.VarChar(100)
+  enabled   Boolean @default(true)
+  config    Json    @default("{}")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, feature])
+  @@map("tenant_feature_flags")
+}
+
+// ─── SUBSCRIPTIONS ────────────────────────────────────────────
+
+model Subscription {
+  id            String           @id @default(uuid()) @db.Uuid
+  tenantId      String           @db.Uuid
+  plan          SubscriptionPlan
+  status        SubscriptionStatus @default(trial)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  trialEndsAt   DateTime?
+  canceledAt    DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  tenant   Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoices SubscriptionInvoice[]
+
+  @@map("subscriptions")
+}
+
+model SubscriptionInvoice {
+  id             String           @id @default(uuid()) @db.Uuid
+  subscriptionId String           @db.Uuid
+  amount         Decimal          @db.Decimal(10, 2)
+  currency       String           @default("MXN") @db.VarChar(3)
+  status         String           @default("pending") @db.VarChar(20) // pending, paid, failed, refunded
+  stripeInvoiceId String?         @db.VarChar(255)
+  periodStart    DateTime
+  periodEnd      DateTime
+  paidAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@map("subscription_invoices")
+}
+
+// ─── INTEGRATIONS ─────────────────────────────────────────────
+
+model Integration {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  provider  String   @db.VarChar(100) // rappi, uber_eats, didi, mercado_pago
+  type      String   @db.VarChar(50)  // delivery, payment
+  enabled   Boolean  @default(true)
+  config    Json     @default("{}")   // encrypted API keys, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, provider])
+  @@map("integrations")
+}
+
+// ─── AUDIT LOG ────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  userId    String?  @db.Uuid
+  action    String   @db.VarChar(100)
+  entity    String   @db.VarChar(100)
+  entityId  String?  @db.Uuid
+  oldValue  Json?
+  newValue  Json?
+  ipAddress String?  @db.VarChar(45)
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, createdAt])
+  @@map("audit_logs")
+}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Payment Success - Pro-Service Hospitality</title>
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/pos-payment-success.css">
+<script src="../js/pos-payment-success.js"></script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex items-center justify-center p-md md:p-lg antialiased">
+<!-- Main Container -->
+<main class="w-full max-w-[600px] mx-auto">
+<!-- Success Card -->
+<div class="bg-surface-container-lowest rounded-xl border border-surface-variant shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden flex flex-col items-center animate-slide-up">
+<!-- Header Status -->
+<div class="w-full bg-surface-container-low p-xl flex flex-col items-center border-b border-surface-variant text-center">
+<div class="w-20 h-20 bg-tertiary-container/10 rounded-full flex items-center justify-center mb-md success-pulse">
+<span class="material-symbols-outlined fill text-[40px] text-tertiary-container" data-icon="check_circle">check_circle</span>
+</div>
+<h1 class="font-headline-lg md:font-headline-lg text-headline-lg md:text-headline-lg text-on-surface mb-sm">Pago Completado con Éxito</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">La transacción se ha procesado correctamente.</p>
+</div>
+<!-- Transaction Summary -->
+<div class="w-full p-lg md:p-xl flex flex-col gap-lg animate-slide-up delay-100">
+<div class="bg-surface-bright rounded-lg border border-surface-variant p-md flex flex-col gap-sm">
+<div class="flex justify-between items-center py-xs border-b border-surface-variant border-dashed">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Monto Total</span>
+<span id="txn-total" class="font-headline-md text-headline-md text-on-surface"></span>
+</div>
+<div class="flex justify-between items-center py-xs border-b border-surface-variant border-dashed">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Método de Pago</span>
+<div class="flex items-center gap-xs">
+<span id="txn-method-icon" class="material-symbols-outlined text-on-surface-variant text-[18px]" data-icon="credit_card">credit_card</span>
+<span id="txn-method" class="font-data-mono text-data-mono text-on-surface"></span>
+</div>
+</div>
+<div class="flex justify-between items-center py-xs border-b border-surface-variant border-dashed">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Fecha y Hora</span>
+<span id="txn-date" class="font-data-mono text-data-mono text-on-surface"></span>
+</div>
+<div class="flex justify-between items-center py-xs">
+<span class="font-body-sm text-body-sm text-on-surface-variant">ID de Transacción</span>
+<span id="txn-id" class="font-data-mono text-data-mono text-on-surface"></span>
+</div>
+</div>
+<!-- Invoice Options -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-sm w-full animate-slide-up delay-200">
+<button class="flex items-center justify-center gap-xs bg-surface-container-lowest border border-outline-variant hover:bg-surface-container-low text-on-surface font-label-md text-label-md py-sm px-md rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="print">print</span>
+                        Imprimir Recibo
+                    </button>
+<button class="flex items-center justify-center gap-xs bg-surface-container-lowest border border-outline-variant hover:bg-surface-container-low text-on-surface font-label-md text-label-md py-sm px-md rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="mail">mail</span>
+                        Enviar por Email
+                    </button>
+<button class="flex items-center justify-center gap-xs bg-surface-container-lowest border border-outline-variant hover:bg-surface-container-low text-on-surface font-label-md text-label-md py-sm px-md rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+                        Descargar PDF
+                    </button>
+</div>
+<!-- Primary Action -->
+<div class="w-full pt-md animate-slide-up delay-300">
+<button class="w-full flex items-center justify-center gap-sm bg-primary-container hover:bg-primary text-on-primary font-body-md text-body-md py-md rounded-lg transition-colors">
+<span class="material-symbols-outlined" data-icon="table_restaurant">table_restaurant</span>
+                        Volver al Mapa de Mesas
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<script>
+  document.getElementById('txn-total').textContent = '$' + transaction.total.toFixed(2);
+  document.getElementById('txn-method-icon').textContent = transaction.method.icon;
+  document.getElementById('txn-method').textContent = transaction.method.label;
+  document.getElementById('txn-date').textContent = transaction.date;
+  document.getElementById('txn-id').textContent = transaction.id;
+</script>
+</body></html>

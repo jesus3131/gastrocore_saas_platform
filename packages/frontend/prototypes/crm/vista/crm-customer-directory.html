@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Customer Directory - RestoPro CRM</title>
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/crm-customer-directory.css">
+<script src="../js/crm-customer-directory.js"></script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="w-64 h-screen sticky left-0 top-0 bg-surface-container-lowest border-r border-outline-variant flex flex-col p-md z-40 hidden md:flex">
+<!-- Header -->
+<div class="mb-xl px-sm">
+<div class="flex items-center gap-sm mb-lg">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-lg">
+                    PS
+                </div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary truncate" title="Pro-Service Hospitality">Pro-Service Hospitality</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Enterprise CRM v2.4</p>
+</div>
+</div>
+<button class="w-full bg-primary-container text-on-primary font-label-md text-label-md py-sm px-md rounded-lg flex items-center justify-center gap-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Quick Action
+            </button>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 flex flex-col gap-xs overflow-y-auto">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg bg-secondary-container text-on-secondary-container font-semibold opacity-90 scale-[0.98] transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-body-md text-body-md">Customers</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">military_tech</span>
+<span class="font-body-md text-body-md">Loyalty Program</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="font-body-md text-body-md">Campaigns</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</div>
+<!-- Footer Links -->
+<div class="pt-md border-t border-outline-variant flex flex-col gap-xs mt-auto">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-body-md text-body-md">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">notifications</span>
+<span class="font-body-md text-body-md">Notifications</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="w-full h-16 sticky top-0 z-30 bg-surface border-b border-outline-variant flex justify-between items-center px-xl">
+<!-- Left: Brand / Title (Mobile) & Search -->
+<div class="flex items-center gap-lg flex-1">
+<div class="md:hidden font-headline-md text-headline-md font-bold text-primary">
+                    CRM &amp; Loyalty Manager
+                </div>
+<div class="hidden md:flex relative w-64">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full pl-[36px] pr-sm py-sm bg-surface-container-lowest border border-outline-variant rounded-lg font-body-sm text-body-sm focus:border-primary-container focus:ring-2 focus:ring-primary focus:ring-opacity-20 transition-all outline-none" placeholder="Search customers..." type="text"/>
+</div>
+</div>
+<!-- Center: Navigation Links (Web) -->
+<nav class="hidden md:flex items-center gap-lg absolute left-1/2 -translate-x-1/2 h-full">
+<a class="h-full flex items-center text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md transition-colors duration-150" href="#">Directory</a>
+<a class="h-full flex items-center text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors duration-150 font-label-md text-label-md" href="#">Segments</a>
+<a class="h-full flex items-center text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors duration-150 font-label-md text-label-md" href="#">Rewards</a>
+<a class="h-full flex items-center text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors duration-150 font-label-md text-label-md" href="#">History</a>
+</nav>
+<!-- Right: Actions -->
+<div class="flex items-center gap-md">
+<div class="hidden lg:flex items-center gap-sm">
+<button aria-label="Filter" class="p-sm text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">tune</span>
+</button>
+<button aria-label="Sync" class="p-sm text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">sync</span>
+</button>
+</div>
+<button class="hidden md:flex px-md py-sm bg-surface-container-lowest border border-outline text-on-surface-variant font-label-md text-label-md rounded-lg hover:bg-surface-container-high transition-colors">
+                    Export Data
+                </button>
+<button class="px-md py-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:opacity-90 transition-opacity">
+                    Add Customer
+                </button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-sm cursor-pointer">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a restaurant manager in a modern, well-lit office setting. Corporate modern aesthetic, crisp focus, neutral background, high resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLTyiYxrDvTOIyYMY27q8iIU0k04wispdZG_UGULBN4Vd75UquT1Wnaw761jh-D_E1QF2VuVn96tB1rYMBiU4NUQ3VBj0LdWMT_Lfbh7nChLXaAsxJPYsooJ3VqnWO0_9PyM3L9Xi_07cy7pVBu9p0Nywltbh_6e8ie1orhrq2lhKIfgAmop2VNyyXcmenOxze_7RRNNXn6b4ccxTnbViUotVMsTUA7xVzqfqsvT8cgO64LItEpE9HKVlUll4SdT9tufpvvtPISlnc"/>
+</div>
+</div>
+</header>
+<!-- Page Canvas -->
+<main class="flex-1 p-xl max-w-container-max mx-auto w-full">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-lg gap-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-xs">Customer Directory</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage and segment your <span data-field="enrolledCount"></span> enrolled customers.</p>
+</div>
+</div>
+<!-- Segment Breakdown Cards (Bento Grid Style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md mb-xl" data-container="segments"></div>
+<!-- Data Table Section -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-xl overflow-hidden ambient-shadow flex flex-col">
+<!-- Table Toolbar -->
+<div class="p-md border-b border-surface-container-high bg-surface-container-lowest flex flex-col sm:flex-row justify-between items-center gap-md">
+<div class="relative w-full sm:w-80">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full pl-[36px] pr-sm py-2 bg-surface border border-outline-variant rounded-lg font-body-sm text-body-sm focus:border-primary-container focus:ring-2 focus:ring-primary focus:ring-opacity-20 transition-all outline-none" placeholder="Search by name, email, or phone..." type="text"/>
+</div>
+<div class="flex gap-sm w-full sm:w-auto">
+<button class="px-sm py-2 bg-surface border border-outline-variant text-on-surface-variant font-label-md text-label-md rounded-lg hover:bg-surface-container-high transition-colors flex items-center gap-xs flex-1 sm:flex-none justify-center">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                            Filter
+                        </button>
+<button class="px-sm py-2 bg-surface border border-outline-variant text-on-surface-variant font-label-md text-label-md rounded-lg hover:bg-surface-container-high transition-colors flex items-center gap-xs flex-1 sm:flex-none justify-center">
+<span class="material-symbols-outlined text-[18px]">sort</span>
+                            Sort
+                        </button>
+</div>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead>
+<tr class="bg-surface-container-low border-b border-surface-container-high text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+<th class="px-md py-sm font-semibold">Customer</th>
+<th class="px-md py-sm font-semibold">Status/Tag</th>
+<th class="px-md py-sm font-semibold">Last Visit</th>
+<th class="px-md py-sm font-semibold text-right">Total Spent</th>
+<th class="px-md py-sm font-semibold text-right">Points</th>
+<th class="px-md py-sm font-semibold text-center w-16">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm divide-y divide-surface-container-high" data-container="customerRows"></tbody>
+</table>
+</div>
+<!-- Table Pagination -->
+<div class="p-sm border-t border-surface-container-high bg-surface-container-low flex justify-between items-center font-body-sm text-body-sm text-on-surface-variant">
+<div><span data-field="showingFrom"></span> to <span data-field="showingTo"></span> of <span data-field="totalEntries"></span> entries</div>
+<div class="flex items-center gap-xs">
+<button class="p-1 hover:bg-surface-container-high rounded transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<span class="px-2 font-data-mono"><span data-field="currentPage"></span> / <span data-field="totalPages"></span></span>
+<button class="p-1 hover:bg-surface-container-high rounded transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+(function() {
+  document.querySelector('[data-field="enrolledCount"]').textContent = directoryData.enrolledCount;
+  document.querySelector('[data-field="showingFrom"]').textContent = directoryData.showingFrom;
+  document.querySelector('[data-field="showingTo"]').textContent = directoryData.showingTo;
+  document.querySelector('[data-field="totalEntries"]').textContent = directoryData.totalEntries.toLocaleString();
+  document.querySelector('[data-field="currentPage"]').textContent = directoryData.currentPage;
+  document.querySelector('[data-field="totalPages"]').textContent = directoryData.totalPages.toLocaleString();
+  var segEl = document.querySelector('[data-container="segments"]');
+  if (segEl) {
+    segEl.innerHTML = directoryData.segments.map(function(s) {
+      var badgeHtml = s.badge ? '<span class="bg-[' + s.badge.bg + '] text-[' + s.badge.color + '] px-2 py-1 rounded font-label-md text-[10px] uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 bg-[' + s.badge.color + '] rounded-full"></span> ' + s.badge.text + '</span>' : '';
+      return '<div class="bg-surface-container-lowest border border-surface-container-high rounded-xl p-md flex flex-col justify-between hover:-translate-y-[2px] transition-transform duration-200 ambient-shadow">' +
+        '<div class="flex justify-between items-start mb-md">' +
+        '<div class="w-10 h-10 rounded-lg ' + s.iconBg + ' ' + s.iconColor + ' flex items-center justify-center">' +
+        '<span class="material-symbols-outlined' + (s.icon === 'star' ? '" style="font-variation-settings: \'FILL\' 1;"' : '"') + '>' + s.icon + '</span>' +
+        '</div>' +
+        badgeHtml +
+        '</div>' +
+        '<div>' +
+        '<p class="font-body-sm text-body-sm text-on-surface-variant mb-xs">' + s.label + '</p>' +
+        '<div class="flex items-baseline gap-sm">' +
+        '<h3 class="font-headline-md text-headline-md">' + s.count + '</h3>' +
+        '<span class="font-data-mono text-[12px] ' + s.changeClass + '">' + s.change + '</span>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+  }
+  var rowEl = document.querySelector('[data-container="customerRows"]');
+  if (rowEl) {
+    rowEl.innerHTML = directoryData.customers.map(function(c) {
+      var avatarHtml = c.avatar
+        ? '<img class="w-8 h-8 rounded-full object-cover" src="' + c.avatar + '"/>'
+        : '<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-bold text-xs">' + c.initials + '</div>';
+      return '<tr class="table-row-hover group transition-colors">' +
+        '<td class="px-md py-3"><div class="flex items-center gap-sm">' + avatarHtml +
+        '<div><p class="font-semibold text-on-background">' + c.name + '</p><p class="text-on-surface-variant text-[12px]">' + c.email + '</p></div></div></td>' +
+        '<td class="px-md py-3"><span class="inline-flex items-center gap-1 px-2 py-1 rounded ' + c.tagBg + ' ' + c.tagColor + ' font-label-md text-[10px] uppercase">' + c.tag + '</span></td>' +
+        '<td class="px-md py-3 ' + (c.lastVisitClass || 'text-on-surface-variant') + '">' + c.lastVisit + '</td>' +
+        '<td class="px-md py-3 font-data-mono text-right">' + c.totalSpent + '</td>' +
+        '<td class="px-md py-3 font-data-mono text-right text-tertiary-container">' + c.points + '</td>' +
+        '<td class="px-md py-3 text-center"><button class="text-on-surface-variant hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[20px]">more_vert</span></button></td>' +
+        '</tr>';
+    }).join('');
+  }
+})();
+</script>
+</body></html>

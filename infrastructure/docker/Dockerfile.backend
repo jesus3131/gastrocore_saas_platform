@@ -1,0 +1,31 @@
+# ─── Base ─────────────────────────────────────────────────────
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+WORKDIR /app
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+
+# ─── Dependencies ────────────────────────────────────────────
+FROM base AS deps
+COPY packages/backend/package.json packages/backend/
+COPY packages/shared/package.json packages/shared/
+RUN pnpm install --frozen-lockfile
+COPY . .
+
+# ─── Development ─────────────────────────────────────────────
+FROM deps AS development
+EXPOSE 4000
+CMD ["pnpm", "--filter", "@gastrocore/backend", "dev"]
+
+# ─── Builder ─────────────────────────────────────────────────
+FROM deps AS builder
+RUN pnpm --filter @gastrocore/backend build && \
+    pnpm --filter @gastrocore/shared build && \
+    pnpm deploy --filter @gastrocore/backend /app/dist
+
+# ─── Production ──────────────────────────────────────────────
+FROM node:20-alpine AS production
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+WORKDIR /app
+COPY --from=builder /app/dist .
+EXPOSE 4000
+CMD ["node", "dist/main.js"]

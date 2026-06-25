@@ -1,0 +1,39 @@
+/* Custom styles for POS touch optimization */
+        .touch-target {
+            min-height: 48px;
+            min-width: 48px;
+        }
+        
+        /* Hide scrollbar for category list but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Grid layout specific to this POS */
+        .pos-layout {
+            display: grid;
+            grid-template-columns: 256px 1fr 380px;
+            grid-template-rows: 64px 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 1279px) {
+            .pos-layout {
+                grid-template-columns: 80px 1fr 320px;
+            }
+            .sidebar-text {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 767px) {
+            .pos-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr auto;
+            }
+        }

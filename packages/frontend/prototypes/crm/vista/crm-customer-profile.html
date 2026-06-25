@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Customer Profile - CRM &amp; Loyalty Manager</title>
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/crm-customer-profile.css">
+<script src="../js/crm-customer-profile.js"></script>
+</head>
+<body class="bg-background text-on-background font-body-md flex min-h-screen">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-inverse-surface w-64 h-screen sticky left-0 top-0 border-r border-outline-variant dark:border-outline flex flex-col h-full p-md z-40 hidden md:flex">
+<!-- Brand / Header -->
+<div class="mb-xl">
+<div class="flex items-center gap-sm mb-xs">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-sm">restaurant</span>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim leading-tight">Pro-Service Hospitality</h1>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">Enterprise CRM v2.4</p>
+</div>
+<!-- Primary CTA -->
+<button class="bg-primary text-on-primary font-label-md text-label-md rounded-lg py-sm px-md flex items-center justify-center gap-xs mb-lg hover:bg-on-primary-fixed-variant transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+            Quick Action
+        </button>
+<!-- Navigation Links -->
+<div class="flex-1 space-y-xs">
+<a class="flex items-center gap-sm py-sm px-md rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm py-sm px-md rounded-lg bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed font-semibold opacity-90 scale-[0.98] transition-all" href="#">
+<span class="material-symbols-outlined fill">group</span>
+<span class="font-body-md text-body-md">Customers</span>
+</a>
+<a class="flex items-center gap-sm py-sm px-md rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">military_tech</span>
+<span class="font-body-md text-body-md">Loyalty Program</span>
+</a>
+<a class="flex items-center gap-sm py-sm px-md rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="font-body-md text-body-md">Campaigns</span>
+</a>
+<a class="flex items-center gap-sm py-sm px-md rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</div>
+<!-- Footer Links -->
+<div class="mt-auto border-t border-outline-variant dark:border-outline pt-md space-y-xs">
+<a class="flex items-center gap-sm py-sm px-md rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-body-md text-body-md">Support</span>
+</a>
+<a class="flex items-center gap-sm py-sm px-md rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">notifications</span>
+<span class="font-body-md text-body-md">Notifications</span>
+</a>
+<!-- User Profile Avatar -->
+<div class="flex items-center gap-sm py-sm px-md mt-sm">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A small circular avatar of a professional restaurant manager in a crisp white shirt against a neutral grey background, corporate modern style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNZCc0DK8ZuMYXCSwegPBqnkDVyvUcbwxoTvFb4y6tD0jOHo22TwD3OEDaWXVP1mWpIvYGFxrh44gYXBJNF8IP8PltOnposW1QTF-yfZWgefOxDBZNOsMU-a9JBzaiejTr2Q9mLAcdqM_m6amfeFMoEWUMMz125SZBFaO0ZJtZHtrl0Fx2ESpZfIB7d-rAU_xc-seqnfrL7c3cGfLX9_jTP9cfUoF-oIrL4GgPWhPbeGUkp5m-eaRzANKztZxLQeQTIyQ25JWUqK7J"/>
+<span class="font-label-md text-label-md text-on-surface">Manager Profile</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-on-background w-full h-16 sticky top-0 z-30 border-b border-outline-variant dark:border-outline flex justify-between items-center px-xl">
+<!-- Mobile Menu & Breadcrumbs/Nav -->
+<div class="flex items-center gap-md">
+<button class="md:hidden text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex items-center gap-md">
+<!-- CRM Navigation Links (from JSON) -->
+<nav class="flex gap-lg">
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 font-bold font-label-md text-label-md" href="#">Directory</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-on-primary-fixed transition-colors duration-150 font-label-md text-label-md py-1" href="#">Segments</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-on-primary-fixed transition-colors duration-150 font-label-md text-label-md py-1" href="#">Rewards</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-on-surface dark:hover:text-on-primary-fixed transition-colors duration-150 font-label-md text-label-md py-1" href="#">History</a>
+</nav>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-md">
+<!-- Search (on_left in JSON, placed before actions) -->
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-sm top-1/2 transform -translate-y-1/2 text-outline text-sm">search</span>
+<input class="pl-xl pr-sm py-sm border border-outline-variant rounded-lg bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 font-body-sm text-body-sm w-64 transition-all" placeholder="Search..." type="text"/>
+</div>
+<div class="flex items-center gap-xs">
+<button class="p-sm text-on-surface-variant hover:text-primary transition-colors duration-150 rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined">tune</span>
+</button>
+<button class="p-sm text-on-surface-variant hover:text-primary transition-colors duration-150 rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined">sync</span>
+</button>
+</div>
+<div class="h-6 w-px bg-outline-variant mx-xs hidden sm:block"></div>
+<div class="flex items-center gap-sm hidden sm:flex">
+<button class="border border-outline-variant text-secondary font-label-md text-label-md rounded-lg py-xs px-sm hover:bg-surface-container transition-colors">Export Data</button>
+<button class="bg-primary text-on-primary font-label-md text-label-md rounded-lg py-xs px-sm hover:bg-on-primary-fixed-variant transition-colors">Add Customer</button>
+</div>
+<img class="w-8 h-8 rounded-full object-cover border border-outline-variant md:hidden ml-sm" data-alt="A small circular avatar of a professional restaurant manager in a crisp white shirt against a neutral grey background, corporate modern style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9wmXo2NYbGXAHrE7Z2TYm9Nk1U7SLTQFKPHZaCT55uYtjox_38956Z1WJvuK9SPa6zBN3k18jfCGNbV76jLPRRsQ5iVS6o4UiuU7p1pnVPjgeocfRf4-Hfjqlmu9nToSMasUnJEwV7m5Ev_RLoSaR9YZ-vA7T0pV6ut99lMjAHy7-HvS_dllIYWYTdYvz4GvgSm1lFMWqOgGaRS2Zsze4QMtvLJ2fk8z8s3qMsjrnlbWQhbRAzzEif-ILt2hfQaivSNRSJpdFqiSq"/>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-md md:p-xl max-w-[1440px] mx-auto w-full flex-1">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-xs text-on-surface-variant font-body-sm text-body-sm mb-lg">
+<a class="hover:text-primary transition-colors" href="#">Customers</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-on-surface font-medium" data-field="breadcrumb-name"></span>
+</nav>
+<!-- Profile Header -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-lg mb-lg flex flex-col md:flex-row gap-lg items-start md:items-center justify-between">
+<div class="flex items-center gap-lg">
+<!-- Avatar -->
+<div class="relative w-20 h-20 rounded-full overflow-hidden border-2 border-surface-container-lowest ambient-shadow">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of an executive woman in her 30s with dark hair, smiling warmly. The lighting is soft and high-key, set against a modern office background. High quality, corporate style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIcyXEDc8IpMWgpJE1rpWScgQz9X3GVK6ZMAU_0TffgWU7DILidpb44-LAjFzJ5oK0OVlQyRcjdsVgz6wbdprme_xb2Th2GzlA5RJI4whZCbdfnomcJT6fsRar3JoAbaGVtqovMdxjnfdVDgUSlSkbv8GaILK33pT9foxLBzpBM5iTmqqK6kkHrI84h9QoQGaUFqK3ZzwL2YUQXFpfnRaYq9G05y5PsS91F90ICAnsEKqC9gFjGfqHxg3H5eBgyuxBulrZGVfr32-z"/>
+</div>
+<div>
+<div class="flex items-center gap-sm mb-xs">
+<h2 class="font-headline-lg text-headline-lg md:font-headline-lg text-on-surface" data-field="customer-name"></h2>
+<!-- Status Badges -->
+<span data-container="tags"></span>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-center gap-sm sm:gap-lg text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">mail</span>
+<span data-field="email"></span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">phone</span>
+<span data-field="phone"></span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+<span data-field="location"></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Primary Actions -->
+<div class="flex flex-wrap gap-sm w-full md:w-auto">
+<button class="flex-1 md:flex-none border border-outline-variant text-secondary font-label-md text-label-md rounded-lg py-sm px-md hover:bg-surface-container transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+                        Edit Profile
+                    </button>
+<button class="flex-1 md:flex-none border border-outline-variant text-secondary font-label-md text-label-md rounded-lg py-sm px-md hover:bg-surface-container transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">chat</span>
+                        Send Message
+                    </button>
+<button class="flex-1 md:flex-none bg-primary text-on-primary font-label-md text-label-md rounded-lg py-sm px-md hover:bg-on-primary-fixed-variant transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">note_add</span>
+                        Add Note
+                    </button>
+</div>
+</div>
+<!-- Key Metrics (Bento Grid Style Top Row) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md mb-lg">
+<!-- Metric Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:translate-y-[-2px] transition-transform duration-200">
+<div class="flex items-center justify-between mb-sm">
+<span class="text-on-surface-variant font-body-sm text-body-sm">Lifetime Value</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+</div>
+</div>
+<div class="font-data-mono text-headline-md text-on-surface font-semibold" data-field="lifetimeValue"></div>
+<div class="text-[#065f46] font-label-md text-label-md mt-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> <span data-field="lifetimeValueChange"></span>
+                    </div>
+</div>
+<!-- Metric Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:translate-y-[-2px] transition-transform duration-200">
+<div class="flex items-center justify-between mb-sm">
+<span class="text-on-surface-variant font-body-sm text-body-sm">Total Visits</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">storefront</span>
+</div>
+</div>
+<div class="font-data-mono text-headline-md text-on-surface font-semibold" data-field="totalVisits"></div>
+<div class="text-on-surface-variant font-label-md text-label-md mt-xs" data-field="lastVisit"></div>
+</div>
+<!-- Metric Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:translate-y-[-2px] transition-transform duration-200">
+<div class="flex items-center justify-between mb-sm">
+<span class="text-on-surface-variant font-body-sm text-body-sm">Average Ticket</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+</div>
+</div>
+<div class="font-data-mono text-headline-md text-on-surface font-semibold" data-field="avgTicket"></div>
+<div class="text-on-surface-variant font-label-md text-label-md mt-xs" data-field="avgTicketNote"></div>
+</div>
+<!-- Metric Card 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:translate-y-[-2px] transition-transform duration-200 relative overflow-hidden">
+<!-- Subtle background decoration -->
+<div class="absolute right-0 top-0 w-24 h-24 bg-gradient-to-br from-transparent to-[#e2e8f0] rounded-bl-full opacity-50 pointer-events-none"></div>
+<div class="flex items-center justify-between mb-sm relative z-10">
+<span class="text-on-surface-variant font-body-sm text-body-sm">Loyalty Points</span>
+<div class="w-8 h-8 rounded-full bg-[#e2e8f0] flex items-center justify-center text-[#475569]">
+<span class="material-symbols-outlined text-[18px] fill">diamond</span>
+</div>
+</div>
+<div class="font-data-mono text-headline-md text-on-surface font-semibold relative z-10" data-field="loyaltyPoints"></div>
+<div class="text-[#475569] font-label-md text-label-md mt-xs font-bold relative z-10" data-field="loyaltyTier"></div>
+</div>
+</div>
+<!-- Main Content Area (Two Column Layout) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+<!-- Left Column (Main Content - 8 cols) -->
+<div class="lg:col-span-8 space-y-lg">
+<!-- Recent Orders Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
+<div class="bg-surface-container-low px-md py-sm border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-body-lg text-body-lg font-semibold text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-outline">history</span> Recent Orders
+                            </h3>
+<button class="text-primary font-label-md text-label-md hover:underline">View All</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container-lowest border-b border-outline-variant text-on-surface-variant font-label-md text-label-md">
+<tr>
+<th class="px-md py-sm font-semibold">Date</th>
+<th class="px-md py-sm font-semibold">Order ID</th>
+<th class="px-md py-sm font-semibold w-2/5">Items</th>
+<th class="px-md py-sm font-semibold text-right">Total</th>
+<th class="px-md py-sm font-semibold text-center">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant text-on-surface" data-container="orders"></tbody>
+</table>
+</div>
+</div>
+<!-- Favorite Items (Grid) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
+<div class="bg-surface-container-low px-md py-sm border-b border-outline-variant">
+<h3 class="font-body-lg text-body-lg font-semibold text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-outline">favorite</span> Most Ordered Items
+                            </h3>
+</div>
+<div class="p-md grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-md" data-container="favorites"></div>
+</div>
+</div>
+<!-- Right Column (Sidebar - 4 cols) -->
+<div class="lg:col-span-4 space-y-lg">
+<!-- Loyalty Status Card -->
+<div class="bg-gradient-to-br from-[#1e293b] to-[#0f172a] text-white border border-outline-variant rounded-lg overflow-hidden ambient-shadow">
+<div class="p-md border-b border-[#334155] flex justify-between items-center">
+<h3 class="font-body-lg text-body-lg font-semibold flex items-center gap-sm">
+<span class="material-symbols-outlined text-[#94a3b8]">card_membership</span> <span data-field="loyalty-tier"></span>
+                            </h3>
+<span class="material-symbols-outlined text-[#e2e8f0] fill">workspace_premium</span>
+</div>
+<div class="p-md">
+<div class="flex justify-between items-end mb-xs">
+<span class="font-label-md text-label-md text-[#94a3b8]" data-field="next-tier"></span>
+<span class="font-data-mono text-body-sm" data-field="points-progress"></span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-2 bg-[#334155] rounded-full overflow-hidden mb-md">
+<div class="h-full bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full" data-field="progress-bar"></div>
+</div>
+<h4 class="font-label-md text-label-md text-[#94a3b8] mb-xs uppercase tracking-wider">Current Benefits</h4>
+<ul class="space-y-xs font-body-sm text-body-sm text-[#cbd5e1]" data-container="benefits"></ul>
+</div>
+</div>
+<!-- Guest Preferences -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
+<div class="bg-surface-container-low px-md py-sm border-b border-outline-variant">
+<h3 class="font-body-lg text-body-lg font-semibold text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-outline">person_book</span> Guest Preferences
+                            </h3>
+</div>
+<div class="p-md space-y-md">
+<div class="flex items-start gap-sm">
+<div class="w-8 h-8 rounded bg-error-container text-on-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">medical_information</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Allergies</h4>
+<p class="font-body-md text-on-surface" data-field="allergies"></p>
+</div>
+</div>
+<div class="w-full h-px bg-outline-variant"></div>
+<div class="flex items-start gap-sm">
+<div class="w-8 h-8 rounded bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">restaurant</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Dietary</h4>
+<p class="font-body-md text-on-surface" data-field="dietary"></p>
+</div>
+</div>
+<div class="w-full h-px bg-outline-variant"></div>
+<div class="flex items-start gap-sm">
+<div class="w-8 h-8 rounded bg-surface-container-high text-on-surface flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">table_restaurant</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Preferred Seating</h4>
+<p class="font-body-md text-on-surface" data-field="seating"></p>
+</div>
+</div>
+</div>
+</div>
+<!-- Internal Notes -->
+<div class="bg-[#fffbeb] border border-[#fde68a] rounded-lg overflow-hidden">
+<div class="bg-[#fef3c7] px-md py-sm border-b border-[#fde68a] flex justify-between items-center">
+<h3 class="font-body-lg text-body-lg font-semibold text-[#92400e] flex items-center gap-sm">
+<span class="material-symbols-outlined text-[#b45309]">speaker_notes</span> Internal Notes
+                            </h3>
+<button class="text-[#b45309] hover:bg-[#fde68a] rounded p-xs transition-colors"><span class="material-symbols-outlined text-[18px]">add</span></button>
+</div>
+<div class="p-md space-y-md max-h-[300px] overflow-y-auto" data-container="notes"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+(function() {
+  var fields = {
+    'breadcrumb-name': profileData.name,
+    'customer-name': profileData.name,
+    'email': profileData.email,
+    'phone': profileData.phone,
+    'location': profileData.location,
+    'lifetimeValue': profileData.lifetimeValue,
+    'lifetimeValueChange': profileData.lifetimeValueChange,
+    'totalVisits': profileData.totalVisits,
+    'lastVisit': profileData.lastVisit,
+    'avgTicket': profileData.avgTicket,
+    'avgTicketNote': profileData.avgTicketNote,
+    'loyaltyPoints': profileData.loyaltyPoints,
+    'loyaltyTier': profileData.loyaltyTier,
+    'loyalty-tier': profileData.loyalty.tier,
+    'next-tier': profileData.loyalty.nextTier,
+    'points-progress': profileData.loyalty.pointsProgress,
+    'allergies': profileData.preferences.allergies,
+    'dietary': profileData.preferences.dietary,
+    'seating': profileData.preferences.seating
+  };
+  Object.keys(fields).forEach(function(key) {
+    var el = document.querySelector('[data-field="' + key + '"]');
+    if (el) el.textContent = fields[key];
+  });
+  var progressBar = document.querySelector('[data-field="progress-bar"]');
+  if (progressBar) progressBar.style.width = profileData.loyalty.progressWidth;
+  var tagsEl = document.querySelector('[data-container="tags"]');
+  if (tagsEl) {
+    tagsEl.innerHTML = profileData.tags.map(function(t) {
+      if (t.icon) {
+        return '<span class="bg-[' + t.bg + '] text-[' + t.text + '] font-label-md text-label-md px-sm py-[2px] rounded-full flex items-center gap-1 border border-[' + t.border + ']"><span class="material-symbols-outlined fill text-[14px]">' + t.icon + '</span> ' + t.label + '</span>';
+      }
+      return '<span class="bg-[' + t.bg + '] text-[' + t.text + '] font-label-md text-label-md px-sm py-[2px] rounded-full flex items-center gap-1 border border-[' + t.border + ']"><span class="w-2 h-2 rounded-full bg-[#10b981]"></span> ' + t.label + '</span>';
+    }).join('');
+  }
+  var ordersEl = document.querySelector('[data-container="orders"]');
+  if (ordersEl) {
+    ordersEl.innerHTML = profileData.recentOrders.map(function(o) {
+      var isCancelled = o.status === 'cancelled';
+      var statusBg = isCancelled ? 'bg-error-container text-on-error-container border-[#fecaca]' : 'bg-[#d1fae5] text-[#065f46] border-[#a7f3d0]';
+      var statusLabel = o.status.charAt(0).toUpperCase() + o.status.slice(1);
+      return '<tr class="hover:bg-surface-container-low transition-colors group">' +
+        '<td class="px-md py-md whitespace-nowrap">' + o.date + '</td>' +
+        '<td class="px-md py-md font-data-mono text-outline">' + o.id + '</td>' +
+        '<td class="px-md py-md truncate max-w-[200px]" title="' + o.items + '">' + o.items + '</td>' +
+        '<td class="px-md py-md text-right font-data-mono">' + o.total + '</td>' +
+        '<td class="px-md py-md text-center"><span class="inline-flex items-center px-2 py-1 rounded-full ' + statusBg + ' text-[11px] font-semibold leading-none border">' + statusLabel + '</span></td>' +
+      '</tr>';
+    }).join('');
+  }
+  var favEl = document.querySelector('[data-container="favorites"]');
+  if (favEl) {
+    favEl.innerHTML = profileData.favoriteItems.map(function(f) {
+      var countLabel = 'Ordered ' + f.count + ' time' + (f.count !== 1 ? 's' : '');
+      return '<div class="border border-outline-variant rounded-lg p-sm flex items-start gap-sm hover:border-primary transition-colors cursor-pointer bg-surface">' +
+        '<div class="w-12 h-12 rounded bg-surface-container-high flex-shrink-0 overflow-hidden">' +
+        '<img class="w-full h-full object-cover" src="' + f.img + '"/>' +
+        '</div>' +
+        '<div>' +
+        '<h4 class="font-label-md text-label-md text-on-surface">' + f.name + '</h4>' +
+        '<p class="font-body-sm text-body-sm text-on-surface-variant">' + countLabel + '</p>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+  }
+  var benefitsEl = document.querySelector('[data-container="benefits"]');
+  if (benefitsEl) {
+    benefitsEl.innerHTML = profileData.loyalty.benefits.map(function(b) {
+      return '<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px] text-[#4ade80]">check</span> ' + b + '</li>';
+    }).join('');
+  }
+  var notesEl = document.querySelector('[data-container="notes"]');
+  if (notesEl) {
+    notesEl.innerHTML = profileData.notes.map(function(n) {
+      return '<div class="relative pl-sm border-l-2 border-[#fbbf24]">' +
+        '<div class="flex justify-between items-center mb-xs">' +
+        '<span class="font-label-md text-label-md text-[#92400e]">' + n.author + '</span>' +
+        '<span class="font-data-mono text-[11px] text-[#b45309]">' + n.date + '</span>' +
+        '</div>' +
+        '<p class="font-body-sm text-body-sm text-[#78350f]">' + n.text + '</p>' +
+        '</div>';
+    }).join('');
+  }
+})();
+</script>
+</body></html>

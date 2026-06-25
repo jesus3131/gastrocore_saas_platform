@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Staff Management - Pro-Service Hospitality</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/hr-staff-dashboard.css">
+<script src="../js/hr-staff-dashboard.js"></script>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex">
+<!-- Shared Component: SideNavBar -->
+<nav aria-label="Main Navigation" class="h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant z-50 flex flex-col justify-between">
+<div class="flex flex-col h-full p-gutter gap-lg">
+<!-- Header Identity -->
+<div class="flex flex-col gap-sm">
+<div class="w-12 h-12 bg-primary-container rounded-lg flex items-center justify-center text-on-primary-container font-headline-md">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Pro-Service Hospitality</h1>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wide">Enterprise Admin</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<ul class="flex flex-col gap-xs flex-1">
+<li>
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-low rounded-lg px-4 py-2 transition-colors duration-150 scale-98 active:opacity-80" href="#">
+<span class="material-symbols-outlined">point_of_sale</span>
+<span class="font-label-md text-label-md">POS</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-low rounded-lg px-4 py-2 transition-colors duration-150 scale-98 active:opacity-80" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-low rounded-lg px-4 py-2 transition-colors duration-150 scale-98 active:opacity-80" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+</li>
+<li>
+<!-- ACTIVE STATE -->
+<a aria-current="page" class="flex items-center gap-3 bg-secondary-container text-on-secondary-container rounded-lg px-4 py-2 scale-98 active:opacity-80 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">badge</span>
+<span class="font-label-md text-label-md">Personnel</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-low rounded-lg px-4 py-2 transition-colors duration-150 scale-98 active:opacity-80" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</li>
+</ul>
+<!-- Footer Actions -->
+<div class="pt-md border-t border-outline-variant flex flex-col gap-xs">
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-low rounded-lg px-4 py-2 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Help</span>
+</a>
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-low rounded-lg px-4 py-2 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+<button class="mt-sm w-full bg-surface border border-outline-variant text-primary font-label-md text-label-md py-2 rounded hover:bg-surface-container-low transition-colors">
+                    Support Portal
+                </button>
+</div>
+</div>
+</nav>
+<!-- Main Content Wrapper (offset by sidebar width) -->
+<div class="flex-1 ml-64 flex flex-col min-h-screen relative">
+<!-- Shared Component: TopAppBar -->
+<header class="docked full-width top-0 sticky z-40 bg-surface border-b border-outline-variant flex justify-between items-center px-lg py-sm">
+<div class="flex items-center gap-md">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Sucursal Principal</h2>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="w-full pl-10 pr-3 py-1.5 bg-surface-container-low border border-outline-variant rounded focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 transition-all font-body-sm text-body-sm text-on-surface placeholder-on-surface-variant" placeholder="Search staff, schedules..." type="text"/>
+</div>
+<div class="flex items-center gap-sm">
+<button aria-label="notifications" class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-full transition-all duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button aria-label="account_circle" class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-full transition-all duration-200">
+<img alt="User Profile" class="w-8 h-8 rounded-full object-cover bg-surface-variant" data-alt="A professional headshot of a restaurant manager in a white collared shirt, well-lit against a neutral grey background, high resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCr0Us_qvawfimd70Mz_8Sn0NgvnU4TPvtC8-PUz8rMgh9y3kwhUDeiKOgCelGudTN9VrHMMsJznbmqovNFPlTyPaFVGiBwGodflFOEj_S8RRSbdhphyKzuFGHBufUkdwdA7spDDpCwalT2K5IiFilabS8YiaIAM__utCw95HCxjlOnZgMOQkU6k7U1K0tvnPLLzJsgd7fSH00v_iyXy1wAtVaWu1L-fUI0wgIOOEhcmIn_iJ9DgoF8ANTk7_1_sEjMVi31PYQVrhTw"/>
+</button>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-lg pb-xl overflow-x-hidden">
+<!-- Section 1: Summary Metrics -->
+<section aria-label="Key Performance Indicators" class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-lg">
+<!-- Metric Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:-translate-y-[2px] transition-transform duration-200 flex flex-col gap-sm">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">groups</span>
+<h3 class="font-label-md text-label-md uppercase tracking-wider">Total Employees</h3>
+</div>
+<div class="flex items-end justify-between">
+<span class="font-data-mono text-display-lg text-on-surface">142</span>
+<span class="font-body-sm text-body-sm text-tertiary flex items-center mb-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span> +3 this month
+                        </span>
+</div>
+</div>
+<!-- Metric Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:-translate-y-[2px] transition-transform duration-200 flex flex-col gap-sm">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+<h3 class="font-label-md text-label-md uppercase tracking-wider">Active Shifts</h3>
+</div>
+<div class="flex items-end justify-between">
+<span class="font-data-mono text-display-lg text-on-surface">38</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center mb-1">
+                            Currently clocked in
+                        </span>
+</div>
+</div>
+<!-- Metric Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:-translate-y-[2px] transition-transform duration-200 flex flex-col gap-sm">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">payments</span>
+<h3 class="font-label-md text-label-md uppercase tracking-wider">Total Commissions (MTD)</h3>
+</div>
+<div class="flex items-end justify-between">
+<span class="font-data-mono text-display-lg text-on-surface">$12,450</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center mb-1">
+                            Pending approval: 4
+                        </span>
+</div>
+</div>
+</section>
+<!-- Main Data Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-lg">
+<!-- Left Column (Tables & Schedules) -->
+<div class="xl:col-span-8 flex flex-col gap-lg">
+<!-- Section 2: Staff List Table -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<div class="bg-surface-container border-b border-outline-variant px-md py-sm flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-on-surface">Active Personnel Roster</h3>
+<button class="bg-primary-container text-on-primary-container font-label-md text-label-md px-3 py-1.5 rounded hover:bg-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+                                Add Staff
+                            </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface text-on-surface-variant font-label-md text-label-md uppercase tracking-wider border-b border-outline-variant">
+<th class="px-md py-sm font-medium">Employee Name</th>
+<th class="px-md py-sm font-medium">Role</th>
+<th class="px-md py-sm font-medium">Current Status</th>
+<th class="px-md py-sm font-medium text-right">Performance</th>
+<th class="px-md py-sm font-medium text-center w-12">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface"></tbody>
+</table>
+</div>
+</section>
+<!-- Section 3: Shift Schedule Overview -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<div class="bg-surface-container border-b border-outline-variant px-md py-sm flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-on-surface">Today's Shift Timeline</h3>
+<button class="text-primary hover:text-primary-container font-label-md text-label-md flex items-center gap-1">
+                                View Full Calendar <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<div class="p-md flex flex-col gap-sm"></div>
+</section>
+</div>
+<!-- Right Column (Commissions) -->
+<div class="xl:col-span-4 flex flex-col">
+<!-- Section 4: Manage Commissions -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-lg h-full flex flex-col">
+<div class="bg-surface-container border-b border-outline-variant px-md py-sm">
+<h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">local_atm</span>
+                                Commission Approvals
+                            </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Pending review for current period.</p>
+</div>
+<div class="flex-1 overflow-y-auto p-md flex flex-col gap-3"></div>
+<div class="p-md border-t border-outline-variant bg-surface mt-auto">
+<button class="w-full border border-outline text-on-surface font-label-md text-label-md py-2 rounded hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">fact_check</span>
+                                Bulk Approve All (4)
+                            </button>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+<script>
+(function() {
+  var sections = document.querySelectorAll('section');
+
+  // Summary metrics
+  var metricValues = sections[0].querySelectorAll('.font-data-mono.text-display-lg');
+  var metricSubtexts = sections[0].querySelectorAll('.font-body-sm');
+  metricValues[0].textContent = staffSummary.totalEmployees;
+  metricValues[1].textContent = staffSummary.activeShifts;
+  metricValues[2].textContent = '$' + staffSummary.totalCommissions.toLocaleString();
+  var icon0 = metricSubtexts[0].querySelector('.material-symbols-outlined');
+  if (icon0) { metricSubtexts[0].innerHTML = ''; metricSubtexts[0].appendChild(icon0); metricSubtexts[0].appendChild(document.createTextNode(' +' + staffSummary.newHires + ' this month')); }
+  metricSubtexts[1].textContent = 'Currently clocked in';
+  metricSubtexts[2].textContent = 'Pending approval: ' + staffSummary.pendingApprovals;
+
+  // Staff roster
+  var tbody = sections[1].querySelector('tbody');
+  var statusMap = { 'clocked-in': { bg: 'bg-tertiary/10', text: 'text-tertiary', dot: 'bg-tertiary', label: 'Clocked In' }, 'off': { bg: 'bg-surface-variant', text: 'text-on-surface-variant', dot: 'bg-outline', label: 'Off' }, 'late': { bg: 'bg-error-container', text: 'text-on-error-container', dot: 'bg-error', label: 'Late' } };
+  staffRoster.forEach(function(m) {
+    var s = statusMap[m.status] || statusMap['off'];
+    var av = m.status === 'off' ? 'bg-surface-variant text-on-surface-variant' : 'bg-secondary-container text-on-secondary-container';
+    var nc = m.status === 'off' ? 'text-on-surface-variant' : '';
+    var rc = m.status === 'off' ? 'text-on-surface-variant' : '';
+    var tr = document.createElement('tr');
+    tr.className = 'border-b border-outline-variant/50 hover:bg-surface-container-low transition-colors group';
+    tr.innerHTML = '<td class="px-md py-sm flex items-center gap-3"><div class="w-8 h-8 rounded-full ' + av + ' flex items-center justify-center font-bold text-xs">' + m.initials + '</div><span class="font-medium ' + nc + '">' + m.name + '</span></td><td class="px-md py-sm ' + rc + '">' + m.role + '</td><td class="px-md py-sm"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ' + s.bg + ' ' + s.text + ' font-label-md text-[10px] uppercase"><span class="w-1.5 h-1.5 rounded-full ' + s.dot + '"></span> ' + s.label + '</span></td><td class="px-md py-sm text-right font-data-mono">' + m.performance + ' / 5.0</td><td class="px-md py-sm text-center"><button class="text-secondary hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">more_vert</span></button></td>';
+    tbody.appendChild(tr);
+  });
+
+  // Shift timeline
+  var tc = sections[2].querySelector('.p-md');
+  shiftTimeline.forEach(function(e) {
+    var bc = e.active ? 'border-primary' : 'border-tertiary-container';
+    var tmc = e.active ? 'font-data-mono text-body-sm text-primary font-bold' : 'font-data-mono text-body-sm text-on-surface-variant';
+    var cc = e.active ? 'flex-1 bg-primary-container/5 py-2 px-3 rounded border border-primary/20 flex justify-between items-center shadow-sm' : 'flex-1 bg-surface py-2 px-3 rounded border border-outline-variant/50 flex justify-between items-center';
+    var pulse = e.active ? '<div class="absolute -left-[5px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary animate-pulse"></div>' : '';
+    var ah = '';
+    e.initials.forEach(function(i) { ah += '<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center text-[10px] border border-surface">' + i + '</div>'; });
+    ah += '<div class="w-6 h-6 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center text-[10px] border border-surface">' + e.extra + '</div>';
+    var div = document.createElement('div');
+    div.className = 'flex items-center gap-md border-l-2 ' + bc + ' pl-sm py-1 relative';
+    div.innerHTML = pulse + '<div class="w-24 flex-shrink-0 ' + tmc + '">' + e.time + '</div><div class="' + cc + '"><div><span class="font-label-md text-label-md text-on-surface block">' + e.label + '</span><span class="font-body-sm text-body-sm text-on-surface-variant">' + e.description + '</span></div><div class="flex -space-x-2">' + ah + '</div></div>';
+    tc.appendChild(div);
+  });
+
+  // Commission items
+  var cc2 = sections[3].querySelector('.flex-1.overflow-y-auto');
+  commissionItems.forEach(function(item) {
+    var d = document.createElement('div');
+    d.className = 'border border-outline-variant rounded p-3 hover:border-primary-container/50 transition-colors bg-surface relative overflow-hidden group';
+    d.innerHTML = '<div class="absolute top-0 left-0 w-1 h-full bg-tertiary-container"></div><div class="pl-2 flex justify-between items-start mb-2"><div><h4 class="font-label-md text-label-md text-on-surface">' + item.name + '</h4><p class="font-body-sm text-[11px] text-on-surface-variant">' + item.reason + '</p></div><span class="font-data-mono text-body-md font-bold text-on-surface">$' + item.amount.toFixed(2) + '</span></div><div class="pl-2 flex gap-2 mt-3"><button class="flex-1 bg-surface-variant hover:bg-surface-container-highest text-on-surface-variant font-label-md text-[11px] py-1.5 rounded transition-colors">Review</button><button class="flex-1 bg-primary text-on-primary font-label-md text-[11px] py-1.5 rounded hover:opacity-90 transition-opacity">Approve</button></div>';
+    cc2.appendChild(d);
+  });
+
+  // Bulk approve count
+  var ab = sections[3].querySelector('button.border-outline');
+  if (ab) ab.innerHTML = '<span class="material-symbols-outlined text-[18px]">fact_check</span> Bulk Approve All (' + staffSummary.pendingApprovals + ')';
+})();
+</script>
+</body></html>

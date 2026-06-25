@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Delivery Management Dashboard - RestoPro SaaS</title>
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/integrations-delivery-dashboard.css">
+<script src="../js/integrations-delivery-dashboard.js"></script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen">
+<!-- TopAppBar from JSON -->
+<header class="bg-surface dark:bg-surface-dim docked full-width top-0 sticky z-50 border-b border-outline-variant dark:border-outline flat no shadows flex justify-between items-center h-16 px-xl ml-64">
+<div class="flex items-center gap-4">
+<span class="text-headline-md font-headline-md font-black text-primary dark:text-primary-fixed-dim">Pro-Service Delivery</span>
+</div>
+<div class="flex-1 max-w-md mx-8">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container border border-outline-variant rounded-full text-body-md font-body-md focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-transparent transition-all" placeholder="Search orders..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="bg-primary-container text-on-primary text-label-md font-label-md py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">Sync Menus</button>
+<div class="flex items-center gap-2">
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-full p-2 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-full p-2 transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+<img alt="User Avatar" class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="A small circular avatar portrait of a professional woman wearing a white chef coat, set against a neutral gray background. The lighting is studio quality, soft and even, highlighting her features subtly. Her expression is focused and capable, conveying trust and enterprise-grade reliability in a restaurant management context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuASjrPFqeaww-ptPhnnujiSx9CgFbzKQIFQMDFEgJmuSwqBuKxZdu1zR4gOwz_KpGdcvrJ_d1JL1FGj1bucIFTQJoxTn7xZw90lBEquQsJteAG8j7TQnJLPBVstZUWcZSN6yP3Uxyd2svr4l8EQRmrNScMpnLasLibYc6ss8sgbNNgH3QSoAtXIMNtiuckLvxj4jWG7K85AYhZage2EiQZGyBVC-XjRtKzZ0YQVCXNKqg96bSwbuheTWfR_dAkrde-oET1mv8OFkEd6"/>
+</div>
+</header>
+<!-- SideNavBar from JSON -->
+<nav class="bg-surface-container-low dark:bg-inverse-surface h-screen w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline flat no shadows flex flex-col py-lg px-md z-40">
+<div class="mb-8 px-4 flex items-center gap-3">
+<img alt="Restaurant Manager Profile" class="w-10 h-10 rounded-lg object-cover" data-alt="A stylized logo icon representing global delivery operations. It features geometric shapes resembling interconnected nodes and delivery routes in shades of deep cobalt blue and slate gray. The design is modern, minimalist, and conveys speed, logistics, and enterprise software reliability on a light background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHMk4OXysuzTFZMZ4ZHV3pUCcDoV2phgqvKlbNlcaYxVCL51JR3UgJvLmxZ4IWWhRGLadAJ9eOi_JngOuy9AZ4KMAHgUD3GMMmrs9meLe8Hna9jNSFHazXudFAVE_B1mjgYMGqc5j-Qz6x5bTINRxkgWJeysNp6lCKJ2VvPD7_fgjtXCnaImnwu8PUFHa3mi9tZhEE26xlPdQuGqzcXNpPZlQx81ZMMVXnpVek7QJkC1QdFkUX2Fbl_Psda8c3eoh6mLZMsIXxdiNm"/>
+<div>
+<h1 class="text-headline-md font-headline-md font-bold text-primary dark:text-inverse-primary leading-tight">OmniChannel Hub</h1>
+<p class="text-label-md font-label-md text-on-surface-variant">Global Delivery Ops</p>
+</div>
+</div>
+<div class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg font-bold Active: scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined fill">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span class="text-label-md font-label-md">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span class="text-label-md font-label-md">Integrations</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-label-md font-label-md">Revenue</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">support_agent</span>
+<span class="text-label-md font-label-md">Support</span>
+</a>
+</div>
+<div class="mt-auto pt-6 border-t border-outline-variant/50 space-y-2">
+<button class="w-full mb-4 bg-primary text-on-primary text-label-md font-label-md py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors">
+                New Integration
+            </button>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-label-md font-label-md">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-64 p-xl max-w-container-max mx-auto grid grid-cols-12 gap-lg min-h-[calc(100vh-64px)]">
+<!-- Live Order Feed (Span 8 cols) -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-lg">
+<h2 class="text-headline-lg font-headline-lg text-on-surface">Live Orders</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md flex-1">
+<!-- Column: New -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col overflow-hidden">
+<div class="bg-surface-container px-4 py-3 border-b border-outline-variant flex justify-between items-center">
+<span class="text-label-md font-label-md text-on-surface uppercase tracking-wider">New</span>
+<span class="bg-primary-container text-on-primary-container text-xs px-2 py-0.5 rounded-full font-bold">2</span>
+</div>
+<div class="p-4 space-y-4 flex-1 overflow-y-auto bg-surface"></div>
+</div>
+<!-- Column: Preparing -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col overflow-hidden">
+<div class="bg-surface-container px-4 py-3 border-b border-outline-variant flex justify-between items-center">
+<span class="text-label-md font-label-md text-on-surface uppercase tracking-wider">Preparing</span>
+<span class="bg-primary-container text-on-primary-container text-xs px-2 py-0.5 rounded-full font-bold">1</span>
+</div>
+<div class="p-4 space-y-4 flex-1 overflow-y-auto bg-surface"></div>
+</div>
+<!-- Column: Out for Delivery -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col overflow-hidden">
+<div class="bg-surface-container px-4 py-3 border-b border-outline-variant flex justify-between items-center">
+<span class="text-label-md font-label-md text-on-surface uppercase tracking-wider">Out for Delivery</span>
+<span class="bg-primary-container text-on-primary-container text-xs px-2 py-0.5 rounded-full font-bold">1</span>
+</div>
+<div class="p-4 space-y-4 flex-1 overflow-y-auto bg-surface"></div>
+</div>
+</div>
+</div>
+<!-- Delivery Analytics Side Panel (Span 4 cols) -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-lg">
+<h2 class="text-headline-lg font-headline-lg text-on-surface">Analytics Snapshot</h2>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col gap-0 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+<!-- Top Channels Card -->
+<div class="p-6 border-b border-outline-variant">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-6">Top Channels by Volume</h3>
+<div class="space-y-5"></div>
+</div>
+<!-- Average Prep Time Card -->
+<div class="p-6">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-6">Avg. Prep Time</h3>
+<div class="grid grid-cols-2 gap-4"></div>
+</div>
+</div>
+</div>
+</main>
+<script>
+(function() {
+  // Order cards
+  var cols = document.querySelectorAll('.col-span-12.lg\\:col-span-8 .grid.grid-cols-1.md\\:grid-cols-3 > div .p-4.space-y-4');
+  var statuses = ['new', 'preparing', 'outForDelivery'];
+  statuses.forEach(function(key, i) {
+    var orders = deliveryOrders[key];
+    var container = cols[i];
+    orders.forEach(function(o) {
+      var card = document.createElement('div');
+      card.className = 'bg-surface-container-lowest border border-outline-variant rounded-lg p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 transition-transform';
+      var topHtml = '<div class="flex justify-between items-start mb-3"><div class="flex items-center gap-2"><img alt="' + (o.logoAlt || '') + '" class="w-6 h-6 object-contain" src="' + o.logoUrl + '"/><span class="text-data-mono font-data-mono text-on-surface font-bold">' + o.orderNumber + '</span></div>';
+      if (o.timer !== undefined) {
+        topHtml += '<span class="' + o.timerClass + ' text-label-md font-label-md px-2 py-1 rounded-md flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">timer</span> ' + o.timer + '</span>';
+      } else {
+        topHtml += '<span class="' + o.timerClass + ' text-label-md font-label-md px-2 py-1 rounded-md flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">moped</span> En Route</span>';
+      }
+      topHtml += '</div>';
+      var bodyHtml = '<div class="text-body-sm font-body-sm text-on-surface-variant mb-4">';
+      if (o.items) {
+        o.items.forEach(function(item) { bodyHtml += '<p>' + item + '</p>'; });
+      }
+      if (o.courier) {
+        bodyHtml += '<p>Courier: ' + o.courier + '</p><p>ETA: ' + o.eta + '</p>';
+      }
+      bodyHtml += '</div>';
+      var btnHtml = '';
+      if (o.buttonLabel) {
+        btnHtml += '<button class="w-full ' + o.buttonClass + ' text-label-md font-label-md py-2 rounded transition-colors">' + o.buttonLabel + '</button>';
+      }
+      card.innerHTML = topHtml + bodyHtml + btnHtml;
+      container.appendChild(card);
+    });
+  });
+
+  // Order column counts
+  var badges = document.querySelectorAll('.col-span-12.lg\\:col-span-8 .grid.grid-cols-1.md\\:grid-cols-3 > div .bg-primary-container.rounded-full');
+  if (badges[0]) badges[0].textContent = deliveryOrders.new.length;
+  if (badges[1]) badges[1].textContent = deliveryOrders.preparing.length;
+  if (badges[2]) badges[2].textContent = deliveryOrders.outForDelivery.length;
+
+  // Channel volume
+  var volContainer = document.querySelector('.space-y-5');
+  if (volContainer) {
+    channelVolume.forEach(function(ch) {
+      var div = document.createElement('div');
+      div.className = 'flex items-center justify-between';
+      div.innerHTML = '<div class="flex items-center gap-3"><div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center">' + ch.initials + '</div><span class="text-body-md font-body-md text-on-surface-variant">' + ch.name + '</span></div><div class="flex items-center gap-3 w-1/2"><div class="h-2 ' + ch.barClass + ' rounded-full flex-1" style="width: ' + ch.percentage + '%;"></div><span class="text-data-mono font-data-mono text-on-surface">' + ch.percentage + '%</span></div>';
+      volContainer.appendChild(div);
+    });
+  }
+
+  // Prep times
+  var prepGrid = document.querySelector('.grid.grid-cols-2.gap-4');
+  if (prepGrid) {
+    prepTimes.forEach(function(pt) {
+      var div = document.createElement('div');
+      div.className = 'bg-surface p-4 rounded-lg border border-outline-variant text-center' + (pt.span ? ' col-span-2' : '');
+      var valueClass = pt.span ? 'text-display-lg font-display-lg text-on-surface' : 'text-headline-md font-headline-md text-primary';
+      div.innerHTML = '<span class="block text-label-md font-label-md text-on-surface-variant mb-1">' + pt.platform + '</span><span class="' + valueClass + '">' + pt.time + '</span>';
+      prepGrid.appendChild(div);
+    });
+  }
+})();
+</script>
+</body></html>

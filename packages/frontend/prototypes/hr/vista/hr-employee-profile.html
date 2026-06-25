@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Staff Profile - Pro-Service Hospitality</title>
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/hr-employee-profile.css">
+<script src="../js/hr-employee-profile.js"></script>
+</head>
+<body class="text-on-background bg-background h-screen flex overflow-hidden">
+<!-- SideNavBar Component -->
+<nav class="bg-surface-container-lowest h-screen w-64 fixed left-0 top-0 border-r border-outline-variant flex flex-col h-full p-gutter z-50">
+<div class="mb-8">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-lg">P</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Pro-Service Hospitality</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Enterprise Admin</p>
+</div>
+</div>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-high transition-colors duration-150 rounded-lg px-4 py-2 scale-98 active:opacity-80 transition-transform" href="#">
+<span class="material-symbols-outlined">point_of_sale</span>
+<span class="font-label-md text-label-md">POS</span>
+</a>
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-high transition-colors duration-150 rounded-lg px-4 py-2 scale-98 active:opacity-80 transition-transform" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-high transition-colors duration-150 rounded-lg px-4 py-2 scale-98 active:opacity-80 transition-transform" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 bg-secondary-container text-on-secondary-container rounded-lg px-4 py-2 scale-98 active:opacity-80 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">badge</span>
+<span class="font-label-md text-label-md">Personnel</span>
+</a>
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-high transition-colors duration-150 rounded-lg px-4 py-2 scale-98 active:opacity-80 transition-transform" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+<div class="mt-auto pt-4 border-t border-outline-variant space-y-1">
+<button class="w-full bg-primary-container text-on-primary font-label-md text-label-md py-2 px-4 rounded-lg hover:opacity-90 mb-4 transition-colors">Support Portal</button>
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-high transition-colors duration-150 rounded-lg px-4 py-2 scale-98 active:opacity-80 transition-transform" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Help</span>
+</a>
+<a class="flex items-center gap-3 text-secondary hover:bg-surface-container-high transition-colors duration-150 rounded-lg px-4 py-2 scale-98 active:opacity-80 transition-transform" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col ml-64 overflow-hidden bg-surface">
+<!-- TopAppBar Component -->
+<header class="bg-surface border-b border-outline-variant full-width top-0 sticky z-40 flex justify-between items-center w-full px-lg py-sm">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Sucursal Principal</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-2 border border-outline-variant rounded-lg bg-surface-container-lowest text-on-surface focus:outline-none focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 font-body-sm text-body-sm w-64 transition-all" placeholder="Search..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-all duration-200 rounded-full active:opacity-70">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-all duration-200 rounded-full active:opacity-70">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 overflow-y-auto p-lg">
+<div class="max-w-[1440px] mx-auto space-y-lg">
+<!-- Back Navigation -->
+<div class="flex items-center gap-2 text-on-surface-variant hover:text-primary cursor-pointer w-fit transition-colors">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+<span class="font-label-md text-label-md">Back to Personnel</span>
+</div>
+<!-- Header Profile Section -->
+<div class="glass-card rounded-xl p-lg flex flex-col md:flex-row gap-lg items-start md:items-center justify-between">
+<div class="flex items-center gap-lg">
+<img class="w-24 h-24 rounded-full object-cover border-4 border-surface-container-lowest ambient-shadow" data-alt="A highly detailed, professional headshot of a modern restaurant employee wearing a clean, dark blue apron. The lighting is soft and flattering, typical of a high-end corporate portrait studio. The background is a slightly blurred, bright, and clean modern kitchen setting. The aesthetic is crisp, realistic, and polished, aligning with a premium corporate identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC627y6mlW-vksc1cl5i3p7E5wGJMfRNOYxA25iQn9tczl-TfWEG7I_PhydxMwMuDi-FNd3x2CglduJx4opjsWfUkI0FAr7qGIdRBw-yrywsW624HyvKM9sxCjp21iT6Rc11wXdLpLRkGQhmrP9UbXt7nvDDtBKbjxVBBLNFb_p-OOv4CPLQUDJYGPZwv5abGmOO_UbzwMPeNY0nwxXrXULDBind8-3DlA9lgZia4o5sPQVIG31NS9X8Ud7EhsrzZGWhTgn7GEnRevu"/>
+<div>
+<div class="flex items-center gap-3 mb-1">
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Elena Rodriguez</h1>
+<span class="bg-tertiary-container/10 text-tertiary-container font-label-md text-label-md px-2 py-1 rounded-full flex items-center gap-1 border border-tertiary-container/20">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+                                    Active
+                                </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-2">Senior Waitstaff • ID: EMP-4092</p>
+<p class="font-body-sm text-body-sm text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> Main Dining Hall
+                            </p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 border border-outline font-label-md text-label-md rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors">Edit Profile</button>
+<button class="px-4 py-2 bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:opacity-90 transition-opacity">Message</button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-lg">
+<!-- Performance Metrics (Span 8) -->
+<div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-md">
+<!-- Metric 1 -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-xl p-md hover:-translate-y-0.5 transition-transform duration-200">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-secondary-container/50 rounded-lg text-on-primary-fixed-variant">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<span class="text-tertiary-container flex items-center gap-1 font-label-md text-label-md bg-tertiary-container/10 px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +5.2%
+                                </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-1">Average Order Value</p>
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">$42.50</h3>
+</div>
+<!-- Metric 2 -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-xl p-md hover:-translate-y-0.5 transition-transform duration-200">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-secondary-container/50 rounded-lg text-on-primary-fixed-variant">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<span class="text-on-surface-variant flex items-center gap-1 font-label-md text-label-md bg-surface-container px-2 py-0.5 rounded">
+                                    Target 95%
+                                </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-1">On-time Arrival</p>
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">98.2%</h3>
+</div>
+<!-- Metric 3 -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-xl p-md hover:-translate-y-0.5 transition-transform duration-200">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-secondary-container/50 rounded-lg text-on-primary-fixed-variant">
+<span class="material-symbols-outlined">star</span>
+</div>
+<span class="text-tertiary-container flex items-center gap-1 font-label-md text-label-md bg-tertiary-container/10 px-2 py-0.5 rounded">
+                                    Top 10%
+                                </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-1">Customer Feedback</p>
+<div class="flex items-end gap-2">
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">4.8</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant pb-1">/ 5.0</span>
+</div>
+</div>
+<!-- Work Schedule Table spanning full width of this section -->
+<div class="col-span-1 sm:col-span-3 bg-surface-container-lowest border border-surface-container-high rounded-xl overflow-hidden mt-md">
+<div class="bg-surface-container p-md border-b border-surface-container-high flex justify-between items-center">
+<h3 class="font-label-md text-label-md text-on-surface font-bold uppercase tracking-wider">Upcoming Schedule</h3>
+<button class="text-primary font-label-md text-label-md hover:underline">View Full Roster</button>
+</div>
+<table class="w-full text-left">
+<thead>
+<tr class="border-b border-surface-container-high">
+<th class="py-3 px-4 font-label-md text-label-md text-on-surface-variant">Date</th>
+<th class="py-3 px-4 font-label-md text-label-md text-on-surface-variant">Shift</th>
+<th class="py-3 px-4 font-label-md text-label-md text-on-surface-variant">Role</th>
+<th class="py-3 px-4 font-label-md text-label-md text-on-surface-variant text-right">Status</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+<!-- Earnings & Permissions Side Column (Span 4) -->
+<div class="md:col-span-4 space-y-md">
+<!-- Earnings Summary -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-xl overflow-hidden">
+<div class="bg-surface-container p-md border-b border-surface-container-high flex justify-between items-center">
+<h3 class="font-label-md text-label-md text-on-surface font-bold uppercase tracking-wider">Period Earnings</h3>
+<span class="font-label-md text-label-md text-on-surface-variant">Oct 1 - Oct 15</span>
+</div>
+<div class="p-md">
+<div class="mb-6">
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-1">Total Estimated</p>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold font-data-mono">$1,845.20</h2>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center pb-3 border-b border-surface-container-low">
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary-container"></div> Base Salary
+                                        </span>
+<span class="font-data-mono text-data-mono text-on-surface">$1,200.00</span>
+</div>
+<div class="flex justify-between items-center pb-3 border-b border-surface-container-low">
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-tertiary-container"></div> Commissions
+                                        </span>
+<span class="font-data-mono text-data-mono text-on-surface">$585.20</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary"></div> Tips (Cash)
+                                        </span>
+<span class="font-data-mono text-data-mono text-on-surface">Not tracked</span>
+</div>
+</div>
+<button class="w-full mt-4 py-2 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors">View Paystubs</button>
+</div>
+</div>
+<!-- Roles & Permissions -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-xl overflow-hidden">
+<div class="bg-surface-container p-md border-b border-surface-container-high">
+<h3 class="font-label-md text-label-md text-on-surface font-bold uppercase tracking-wider">Access Permissions</h3>
+</div>
+<div class="p-md space-y-4">
+<!-- Permission Item -->
+<div class="flex items-center justify-between">
+<div>
+<h4 class="font-body-sm text-body-sm font-medium text-on-surface mb-0.5">Point of Sale (POS)</h4>
+<p class="font-label-md text-label-md text-on-surface-variant font-normal">Order entry and payments</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Permission Item -->
+<div class="flex items-center justify-between">
+<div>
+<h4 class="font-body-sm text-body-sm font-medium text-on-surface mb-0.5">Void &amp; Comps</h4>
+<p class="font-label-md text-label-md text-on-surface-variant font-normal">Require manager approval</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Permission Item -->
+<div class="flex items-center justify-between">
+<div>
+<h4 class="font-body-sm text-body-sm font-medium text-on-surface mb-0.5">Inventory View</h4>
+<p class="font-label-md text-label-md text-on-surface-variant font-normal">Read-only stock levels</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+<div class="px-md pb-md">
+<button class="w-full py-2 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">manage_accounts</span> Manage RBAC Group
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+(function() {
+  // Profile header
+  document.querySelector('.glass-card h1').textContent = employee.name;
+  var statusSpan = document.querySelector('.glass-card .rounded-full.flex.items-center.gap-1.border');
+  if (statusSpan) {
+    var dot = statusSpan.querySelector('.w-2.h-2');
+    statusSpan.innerHTML = '';
+    if (dot) statusSpan.appendChild(dot);
+    statusSpan.appendChild(document.createTextNode(' ' + employee.status));
+  }
+  var bodyMd = document.querySelectorAll('.glass-card .font-body-md');
+  if (bodyMd[0]) bodyMd[0].textContent = employee.position + ' \u2022 ID: ' + employee.id;
+  var locSpan = document.querySelector('.glass-card .font-body-sm.text-secondary');
+  if (locSpan) {
+    var icon = locSpan.querySelector('.material-symbols-outlined');
+    locSpan.innerHTML = '';
+    if (icon) locSpan.appendChild(icon);
+    locSpan.appendChild(document.createTextNode(' ' + employee.location));
+  }
+
+  // Metrics cards
+  var metricCards = document.querySelectorAll('.md\\:col-span-8.grid.grid-cols-1.sm\\:grid-cols-3.gap-md > div');
+  var aovValue = metricCards[0].querySelector('h3');
+  if (aovValue) aovValue.textContent = '$' + employee.metrics.avgOrderValue.toFixed(2);
+  var aovTrend = metricCards[0].querySelector('.font-label-md.text-label-md');
+  if (aovTrend) aovTrend.innerHTML = '<span class="material-symbols-outlined text-[14px]">trending_up</span> ' + employee.metrics.aovTrend;
+
+  var arrivalValue = metricCards[1].querySelector('h3');
+  if (arrivalValue) arrivalValue.textContent = employee.metrics.onTimeArrival + '%';
+
+  var feedbackVal = metricCards[2].querySelector('h3');
+  if (feedbackVal) feedbackVal.textContent = employee.metrics.feedback;
+  var feedbackSub = metricCards[2].querySelector('.font-label-md');
+  if (feedbackSub && feedbackSub.textContent.trim() === 'Top 10%') { /* keep hardcoded */ }
+
+  // Schedule
+  var stbody = document.querySelector('.col-span-1.sm\\:col-span-3 table tbody');
+  var sMap = { confirmed: { bg: 'bg-tertiary-container/10', text: 'text-tertiary-container', dot: 'bg-tertiary-container', label: 'Confirmed' }, pending: { bg: 'bg-surface-container-highest', text: 'text-on-surface-variant', dot: 'bg-outline', label: 'Pending' } };
+  employee.schedule.forEach(function(s) {
+    var cfg = sMap[s.status] || sMap['pending'];
+    var tr = document.createElement('tr');
+    tr.className = 'border-b border-surface-container-low hover:bg-surface-container-low transition-colors';
+    tr.innerHTML = '<td class="py-3 px-4 font-body-sm text-body-sm text-on-surface">' + s.date + '</td><td class="py-3 px-4 font-data-mono text-data-mono text-on-surface-variant">' + s.shift + '</td><td class="py-3 px-4 font-body-sm text-body-sm text-on-surface-variant">' + s.role + '</td><td class="py-3 px-4 text-right"><span class="inline-flex items-center gap-1 px-2 py-1 rounded-full ' + cfg.bg + ' ' + cfg.text + ' font-label-md text-label-md"><span class="w-1.5 h-1.5 rounded-full ' + cfg.dot + '"></span> ' + cfg.label + '</span></td>';
+    stbody.appendChild(tr);
+  });
+
+  // Earnings
+  var earnCard = document.querySelector('.md\\:col-span-4 .space-y-md > div:first-child');
+  if (earnCard) {
+    earnCard.querySelector('.font-label-md.text-label-md.text-on-surface-variant').textContent = employee.earnings.period;
+    earnCard.querySelector('h2').textContent = '$' + employee.earnings.total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    var earnItems = earnCard.querySelectorAll('.font-data-mono');
+    if (earnItems[0]) earnItems[0].textContent = '$' + employee.earnings.baseSalary.toFixed(2);
+    if (earnItems[1]) earnItems[1].textContent = '$' + employee.earnings.commissions.toFixed(2);
+    if (earnItems[2]) earnItems[2].textContent = employee.earnings.tips === null ? 'Not tracked' : '$' + employee.earnings.tips.toFixed(2);
+  }
+
+  // Permissions
+  var toggles = document.querySelectorAll('.md\\:col-span-4 .space-y-4 input[type="checkbox"]');
+  if (toggles[0]) toggles[0].checked = employee.permissions.pos;
+  if (toggles[1]) toggles[1].checked = employee.permissions.voidComps;
+  if (toggles[2]) toggles[2].checked = employee.permissions.inventoryView;
+})();
+</script>
+</body></html>

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Financial Performance &amp; Profitability</title>
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/analytics-financial-report.css">
+<script src="../js/analytics-financial-report.js"></script>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased overflow-hidden flex h-screen w-full">
+<!-- SideNavBar Component -->
+<nav class="hidden md:flex flex-col bg-surface-container dark:bg-inverse-surface h-screen w-64 border-r border-outline-variant dark:border-outline fixed left-0 top-0 py-lg transition-all duration-200 ease-in-out z-40">
+<!-- Header -->
+<div class="px-lg pb-lg border-b border-outline-variant/50 flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center font-headline-md">
+<span class="material-symbols-outlined">restaurant</span>
+</div>
+<div>
+<h1 class="font-headline-md text-body-lg text-primary dark:text-primary-fixed">Main Branch</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Restaurant Group HQ</p>
+</div>
+</div>
+<!-- Main Nav -->
+<div class="flex-1 overflow-y-auto py-md flex flex-col gap-xs px-sm">
+<!-- Inactive Tab -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">point_of_sale</span>
+<span>POS</span>
+</a>
+<!-- Inactive Tab -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Inventory</span>
+</a>
+<!-- Active Tab -->
+<a class="flex items-center gap-md px-md py-sm text-primary dark:text-tertiary-fixed-dim border-r-4 border-primary dark:border-tertiary-fixed-dim bg-primary-container/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined fill-icon">analytics</span>
+<span>Analytics</span>
+</a>
+<!-- Inactive Tab -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span>Personnel</span>
+</a>
+<!-- Inactive Tab -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<!-- Footer Nav -->
+<div class="px-sm pt-md border-t border-outline-variant/50 flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Sign Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col min-w-0 md:ml-64 relative">
+<!-- TopNavBar Component -->
+<header class="bg-surface-container-lowest dark:bg-surface-container-low w-full h-16 border-b border-outline-variant dark:border-outline flex justify-between items-center px-lg sticky top-0 z-30">
+<!-- Search Bar -->
+<div class="flex-1 max-w-md flex items-center relative">
+<span class="material-symbols-outlined absolute left-3 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-transparent focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 rounded-lg font-body-sm text-body-sm text-on-surface transition-all" placeholder="Search reports..." type="text"/>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-sm">
+<button class="p-2 rounded-full text-secondary dark:text-secondary-fixed hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full text-secondary dark:text-secondary-fixed hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="p-2 rounded-full text-secondary dark:text-secondary-fixed hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors cursor-pointer active:opacity-80 ml-sm border border-outline-variant">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 overflow-y-auto p-md md:p-xl scroll-smooth">
+<div class="max-w-container-max mx-auto flex flex-col gap-lg md:gap-xl">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-md">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-xs">Financial Performance &amp; Profitability</h2>
+<p class="font-body-md text-body-md text-secondary">Q3 2023 Menu Engineering &amp; Variance Analysis</p>
+</div>
+<div class="flex items-center gap-md w-full md:w-auto">
+<div class="relative flex-1 md:w-48">
+<select class="w-full appearance-none bg-surface-container-lowest border border-outline-variant rounded-lg px-md py-2 pr-10 font-body-sm text-body-sm text-on-surface focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 cursor-pointer">
+<option>All Units</option>
+<option>Downtown Flagship</option>
+<option>Westside Express</option>
+<option>Airport Terminal B</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
+</div>
+<button class="flex items-center gap-sm bg-primary-container text-on-primary-container px-md py-2 rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity whitespace-nowrap shadow-sm shadow-black/5">
+<span class="material-symbols-outlined text-[18px]">print</span>
+                            Print Report
+                        </button>
+</div>
+</div>
+<!-- KPI Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col gap-md shadow-sm shadow-black/5 hover:-translate-y-[2px] transition-transform duration-200">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-secondary uppercase tracking-wider">Total Gross Margin</span>
+<span class="material-symbols-outlined text-outline">payments</span>
+</div>
+<div class="flex items-end gap-sm">
+<span class="font-display-lg text-display-lg text-on-surface">$142,500</span>
+<div class="flex items-center bg-tertiary-container/10 text-on-tertiary-container px-2 py-1 rounded font-data-mono text-[12px] mb-2">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span class="ml-1">+5.2%</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col gap-md shadow-sm shadow-black/5 hover:-translate-y-[2px] transition-transform duration-200">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-secondary uppercase tracking-wider">COGS %</span>
+<span class="material-symbols-outlined text-outline">kitchen</span>
+</div>
+<div class="flex items-end gap-sm">
+<span class="font-display-lg text-display-lg text-on-surface">28.4%</span>
+<div class="flex items-center bg-tertiary-container/10 text-on-tertiary-container px-2 py-1 rounded font-data-mono text-[12px] mb-2">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+<span class="ml-1">-1.1%</span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col gap-md shadow-sm shadow-black/5 hover:-translate-y-[2px] transition-transform duration-200">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-secondary uppercase tracking-wider">Total Operating Expenses</span>
+<span class="material-symbols-outlined text-outline">receipt_long</span>
+</div>
+<div class="flex items-end gap-sm">
+<span class="font-display-lg text-display-lg text-on-surface">$45,200</span>
+<div class="flex items-center bg-error-container text-on-error-container px-2 py-1 rounded font-data-mono text-[12px] mb-2">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span class="ml-1">+2.0%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-lg">
+<!-- BCG Matrix Section -->
+<div class="xl:col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm shadow-black/5 flex flex-col">
+<div class="bg-surface-container-low px-lg py-md border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-md text-[18px] font-semibold text-on-surface">Menu Engineering (BCG Matrix)</h3>
+<div class="flex items-center gap-md font-body-sm text-[12px] text-secondary">
+<span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-primary-container"></div> Stars</span>
+<span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-on-tertiary-container"></div> Plowhorses</span>
+<span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-secondary-fixed-dim"></div> Puzzles</span>
+<span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full bg-error"></div> Dogs</span>
+</div>
+</div>
+<div class="p-lg relative h-[400px] flex items-center justify-center bg-background/50">
+<!-- Axis Labels -->
+<div class="absolute left-4 top-1/2 -translate-y-1/2 -rotate-90 font-label-md text-label-md text-secondary tracking-widest uppercase origin-center">Profitability (Margin)</div>
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 font-label-md text-label-md text-secondary tracking-widest uppercase">Popularity (Volume)</div>
+<!-- Matrix Grid -->
+<div class="relative w-[85%] h-[85%] border-l-2 border-b-2 border-outline grid grid-cols-2 grid-rows-2">
+<!-- Center Crosshair -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-full h-px bg-outline-variant border-t border-dashed"></div>
+<div class="h-full w-px bg-outline-variant border-l border-dashed absolute"></div>
+</div>
+<!-- Quadrant Backgrounds -->
+<div class="border-r border-b border-outline-variant/30 relative group">
+<span class="absolute top-2 left-2 font-label-md text-secondary opacity-50">Puzzles</span>
+</div>
+<div class="border-b border-outline-variant/30 relative group">
+<span class="absolute top-2 right-2 font-label-md text-secondary opacity-50">Stars</span>
+</div>
+<div class="border-r border-outline-variant/30 relative group">
+<span class="absolute bottom-2 left-2 font-label-md text-secondary opacity-50">Dogs</span>
+</div>
+<div class="relative group">
+<span class="absolute bottom-2 right-2 font-label-md text-secondary opacity-50">Plowhorses</span>
+</div>
+<!-- Data Points (Simulated Scatter) -->
+<!-- Star -->
+<div class="absolute top-[20%] right-[15%] flex flex-col items-center group cursor-pointer">
+<div class="w-4 h-4 rounded-full bg-primary-container shadow-md ring-4 ring-primary-container/20 group-hover:scale-125 transition-transform"></div>
+<span class="mt-1 font-body-sm text-[11px] text-on-surface bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant shadow-sm absolute top-5 whitespace-nowrap z-10 hidden group-hover:block">Dry Aged Ribeye</span>
+</div>
+<!-- Star -->
+<div class="absolute top-[35%] right-[25%] flex flex-col items-center group cursor-pointer">
+<div class="w-3 h-3 rounded-full bg-primary-container shadow-md group-hover:scale-125 transition-transform"></div>
+<span class="mt-1 font-body-sm text-[11px] text-on-surface bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant shadow-sm absolute top-4 whitespace-nowrap z-10 hidden group-hover:block">Signature Cocktail</span>
+</div>
+<!-- Plowhorse -->
+<div class="absolute bottom-[20%] right-[10%] flex flex-col items-center group cursor-pointer">
+<div class="w-5 h-5 rounded-full bg-on-tertiary-container shadow-md group-hover:scale-125 transition-transform"></div>
+<span class="mt-1 font-body-sm text-[11px] text-on-surface bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant shadow-sm absolute top-6 whitespace-nowrap z-10 hidden group-hover:block">House Burger</span>
+</div>
+<!-- Plowhorse -->
+<div class="absolute bottom-[40%] right-[30%] flex flex-col items-center group cursor-pointer">
+<div class="w-4 h-4 rounded-full bg-on-tertiary-container shadow-md group-hover:scale-125 transition-transform"></div>
+<span class="mt-1 font-body-sm text-[11px] text-on-surface bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant shadow-sm absolute top-5 whitespace-nowrap z-10 hidden group-hover:block">Truffle Fries</span>
+</div>
+<!-- Puzzle -->
+<div class="absolute top-[15%] left-[25%] flex flex-col items-center group cursor-pointer">
+<div class="w-3 h-3 rounded-full bg-secondary-fixed-dim shadow-md group-hover:scale-125 transition-transform"></div>
+<span class="mt-1 font-body-sm text-[11px] text-on-surface bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant shadow-sm absolute top-4 whitespace-nowrap z-10 hidden group-hover:block">Lobster Thermidor</span>
+</div>
+<!-- Dog -->
+<div class="absolute bottom-[30%] left-[15%] flex flex-col items-center group cursor-pointer">
+<div class="w-2 h-2 rounded-full bg-error shadow-md group-hover:scale-125 transition-transform"></div>
+<span class="mt-1 font-body-sm text-[11px] text-on-surface bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant shadow-sm absolute top-3 whitespace-nowrap z-10 hidden group-hover:block">Vegan Meatloaf</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Left Column: Profitability Breakdown -->
+<div class="xl:col-span-5 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm shadow-black/5 flex flex-col">
+<div class="bg-surface-container-low px-lg py-md border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-md text-[18px] font-semibold text-on-surface">Top 5 Profitable Categories</h3>
+<button class="text-secondary hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</div>
+<div class="p-lg flex-1 flex flex-col justify-center gap-md">
+<!-- Bar Item -->
+<div class="w-full">
+<div class="flex justify-between font-body-sm mb-xs">
+<span class="font-medium">Beverages (Alcoholic)</span>
+<span class="font-data-mono">82% Margin</span>
+</div>
+<div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full" style="width: 82%"></div>
+</div>
+</div>
+<!-- Bar Item -->
+<div class="w-full">
+<div class="flex justify-between font-body-sm mb-xs">
+<span class="font-medium">Appetizers</span>
+<span class="font-data-mono">74% Margin</span>
+</div>
+<div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary-container/80 rounded-full" style="width: 74%"></div>
+</div>
+</div>
+<!-- Bar Item -->
+<div class="w-full">
+<div class="flex justify-between font-body-sm mb-xs">
+<span class="font-medium">Desserts</span>
+<span class="font-data-mono">68% Margin</span>
+</div>
+<div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary-container/60 rounded-full" style="width: 68%"></div>
+</div>
+</div>
+<!-- Bar Item -->
+<div class="w-full">
+<div class="flex justify-between font-body-sm mb-xs">
+<span class="font-medium">Salads &amp; Soups</span>
+<span class="font-data-mono">65% Margin</span>
+</div>
+<div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary-container/50 rounded-full" style="width: 65%"></div>
+</div>
+</div>
+<!-- Bar Item -->
+<div class="w-full">
+<div class="flex justify-between font-body-sm mb-xs">
+<span class="font-medium">Mains (Pasta)</span>
+<span class="font-data-mono">61% Margin</span>
+</div>
+<div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary-container/40 rounded-full" style="width: 61%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Waste & Variance Report -->
+<div class="xl:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm shadow-black/5 flex flex-col">
+<div class="bg-surface-container-low px-lg py-md border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-md text-[18px] font-semibold text-on-surface">Waste &amp; Variance Report</h3>
+<span class="bg-error-container text-on-error-container px-2 py-1 rounded font-label-md text-[11px] uppercase tracking-wider">Top Impacts</span>
+</div>
+<div class="overflow-x-auto table-scroll">
+<table class="w-full text-left border-collapse min-w-[600px]">
+<thead>
+<tr class="bg-surface-bright border-b border-outline-variant text-secondary font-label-md text-[11px] uppercase tracking-wider">
+<th class="px-md py-sm font-semibold">Ingredient</th>
+<th class="px-md py-sm font-semibold text-right">Theo Cost</th>
+<th class="px-md py-sm font-semibold text-right">Actual Cost</th>
+<th class="px-md py-sm font-semibold text-center">Variance %</th>
+<th class="px-md py-sm font-semibold text-right">Financial Impact</th>
+</tr>
+</thead>
+<tbody class="font-body-sm">
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container-highest/50 transition-colors group">
+<td class="px-md py-sm font-medium text-on-surface">Beef Tenderloin</td>
+<td class="px-md py-sm font-data-mono text-right">$4,250.00</td>
+<td class="px-md py-sm font-data-mono text-right">$4,890.00</td>
+<td class="px-md py-sm text-center">
+<span class="inline-flex items-center gap-1 bg-error-container/50 text-error px-2 py-0.5 rounded font-data-mono text-[12px]">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> 15.0%
+                                            </span>
+</td>
+<td class="px-md py-sm font-data-mono text-right text-error">-$640.00</td>
+</tr>
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container-highest/50 transition-colors group">
+<td class="px-md py-sm font-medium text-on-surface">Avocado (Case)</td>
+<td class="px-md py-sm font-data-mono text-right">$850.00</td>
+<td class="px-md py-sm font-data-mono text-right">$1,020.00</td>
+<td class="px-md py-sm text-center">
+<span class="inline-flex items-center gap-1 bg-error-container/50 text-error px-2 py-0.5 rounded font-data-mono text-[12px]">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> 20.0%
+                                            </span>
+</td>
+<td class="px-md py-sm font-data-mono text-right text-error">-$170.00</td>
+</tr>
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container-highest/50 transition-colors group">
+<td class="px-md py-sm font-medium text-on-surface">Olive Oil (EVOO)</td>
+<td class="px-md py-sm font-data-mono text-right">$620.00</td>
+<td class="px-md py-sm font-data-mono text-right">$695.00</td>
+<td class="px-md py-sm text-center">
+<span class="inline-flex items-center gap-1 bg-error-container/50 text-error px-2 py-0.5 rounded font-data-mono text-[12px]">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> 12.1%
+                                            </span>
+</td>
+<td class="px-md py-sm font-data-mono text-right text-error">-$75.00</td>
+</tr>
+<tr class="hover:bg-surface-container-highest/50 transition-colors group">
+<td class="px-md py-sm font-medium text-on-surface">Chicken Breast</td>
+<td class="px-md py-sm font-data-mono text-right">$1,200.00</td>
+<td class="px-md py-sm font-data-mono text-right">$1,180.00</td>
+<td class="px-md py-sm text-center">
+<span class="inline-flex items-center gap-1 bg-tertiary-container/10 text-on-tertiary-container px-2 py-0.5 rounded font-data-mono text-[12px]">
+<span class="material-symbols-outlined text-[14px]">trending_down</span> 1.6%
+                                            </span>
+</td>
+<td class="px-md py-sm font-data-mono text-right text-on-tertiary-container">+$20.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-lg py-sm border-t border-outline-variant/50 bg-surface-container-lowest text-right">
+<a class="font-label-md text-primary hover:underline" href="#">View Full Inventory Variance</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+(function(){
+  var grid = document.querySelector('.grid-cols-1.md\\:grid-cols-3');
+  if (grid) {
+    var kids = grid.children;
+    for (var i = 0; i < kpis.length; i++) {
+      var val = kids[i].querySelector('.font-display-lg');
+      if (val) val.textContent = kpis[i].value;
+      var badge = kids[i].querySelector('.items-end .flex.items-center');
+      if (badge) {
+        var ib = badge.querySelector('.material-symbols-outlined');
+        if (ib) ib.textContent = kpis[i].trend;
+        var tb = badge.querySelector('.ml-1');
+        if (tb) tb.textContent = kpis[i].change;
+        badge.className = badge.className.replace(/bg-(tertiary-container|error-container)\\/10|bg-error-container/g,' ') + (kpis[i].pos ? ' bg-tertiary-container/10' : ' bg-error-container');
+      }
+    }
+  }
+  var catSec = document.querySelector('.xl\\:col-span-5');
+  if (catSec) {
+    var cBars = catSec.querySelectorAll('.p-lg > .w-full');
+    for (var i = 0; i < topCategories.length; i++) {
+      var nm = cBars[i].querySelector('.font-medium');
+      var mg = cBars[i].querySelector('.font-data-mono');
+      var br = cBars[i].querySelector('.rounded-full > div');
+      if (nm) nm.textContent = topCategories[i].name;
+      if (mg) mg.textContent = topCategories[i].margin + '% Margin';
+      if (br) br.style.width = topCategories[i].margin + '%';
+    }
+  }
+  var wTbody = document.querySelector('.xl\\:col-span-7 tbody');
+  if (wTbody) {
+    var wRows = wTbody.querySelectorAll('tr');
+    for (var i = 0; i < wasteData.length; i++) {
+      var c = wRows[i].querySelectorAll('td');
+      c[0].textContent = wasteData[i].ing;
+      c[1].textContent = wasteData[i].theo;
+      c[2].textContent = wasteData[i].actual;
+      var vs = c[3].querySelector('span');
+      if (vs) {
+        var vi = vs.querySelector('.material-symbols-outlined');
+        if (vi) vi.textContent = wasteData[i].pos ? 'trending_down' : 'trending_up';
+        for (var j = 0; j < vs.childNodes.length; j++) {
+          if (vs.childNodes[j].nodeType === 3) { vs.childNodes[j].textContent = ' ' + wasteData[i].var; break; }
+        }
+        vs.className = vs.className.replace(/bg-(error-container|tertiary-container)\\/50|text-error|text-on-tertiary-container/g,' ') + (wasteData[i].pos ? ' bg-tertiary-container/10 text-on-tertiary-container' : ' bg-error-container/50 text-error');
+      }
+      c[4].textContent = wasteData[i].impact;
+      c[4].className = c[4].className.replace(/text-error|text-on-tertiary-container/g,' ') + (wasteData[i].pos ? ' text-on-tertiary-container' : ' text-error');
+    }
+  }
+  var bEls = document.querySelectorAll('.xl\\:col-span-12 .group .hidden');
+  for (var i = 0; i < bcgItems.length; i++) {
+    if (bEls[i]) bEls[i].textContent = bcgItems[i].name;
+  }
+})();
+</script>
+</body></html>

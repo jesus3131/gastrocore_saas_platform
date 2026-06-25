@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Step 4: Review &amp; Launch - RestoFlow B2B</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="../../shared/design-tokens.js"></script>
+<link rel="stylesheet" href="../css/onboarding-final-review.css">
+<script src="../js/onboarding-final-review.js"></script>
+</head>
+<body class="bg-background text-on-surface antialiased min-h-screen">
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-surface-container-lowest border-b border-outline-variant">
+<div class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+            RestoFlow B2B
+        </div>
+<div class="flex items-center gap-md">
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors duration-150 active:scale-95">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors duration-150 active:scale-95">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</nav>
+<aside class="fixed left-0 top-16 bottom-0 w-64 flex flex-col py-md bg-surface-container-low border-r border-outline-variant">
+<div class="px-lg pb-lg mb-md border-b border-outline-variant">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Onboarding</h2>
+<p class="font-label-md text-label-md text-secondary mt-xs">Setup Progress</p>
+<div class="flex items-center gap-sm mt-md">
+<div class="h-2 flex-1 bg-primary rounded-full"></div>
+<div class="h-2 flex-1 bg-primary rounded-full"></div>
+<div class="h-2 flex-1 bg-primary rounded-full"></div>
+<div class="h-2 flex-1 bg-primary rounded-full"></div>
+</div>
+<p class="font-label-md text-label-md text-secondary mt-xs text-right">Step 4 of 4</p>
+</div>
+<ul class="flex flex-col flex-1 px-sm gap-xs">
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">storefront</span>
+                    Business Profile
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+                    Service Area
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-secondary hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">extension</span>
+                    Modules
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-primary font-bold border-r-4 border-primary bg-surface-container-lowest" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified</span>
+                    Final Review
+                </a>
+</li>
+</ul>
+</aside>
+<main class="ml-64 mt-16 p-xl flex justify-center">
+<div class="max-w-container-max w-full flex flex-col gap-xl">
+<header class="flex justify-between items-end border-b border-outline-variant pb-md">
+<div>
+<h1 class="font-display-lg text-display-lg text-primary">Review &amp; Launch</h1>
+<p class="font-body-lg text-body-lg text-secondary mt-sm">Verify your final configuration before activating the workspace.</p>
+</div>
+<button class="bg-primary-container text-on-primary px-lg py-md rounded-lg font-label-md text-label-md hover:bg-primary transition-colors flex items-center gap-sm whitespace-nowrap">
+                    Finalize Setup &amp; Launch Dashboard
+                    <span class="material-symbols-outlined">rocket_launch</span>
+</button>
+</header>
+<div class="grid grid-cols-12 gap-lg">
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-lg">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<div class="bg-surface-container-low px-md py-sm border-b border-outline-variant font-label-md text-label-md text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">domain</span>
+                            Business Profile Summary
+                        </div>
+<div class="p-lg flex-1 flex flex-col gap-md" id="profile-summary"></div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<div class="bg-surface-container-low px-md py-sm border-b border-outline-variant font-label-md text-label-md text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">admin_panel_settings</span>
+                            Primary Admin Account
+                        </div>
+<div class="p-lg flex-1 flex items-center gap-md" id="admin-account"></div>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-lg">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden relative min-h-[200px] flex items-center p-lg">
+<div class="absolute inset-0 z-0">
+<div class="bg-cover bg-right w-full h-full opacity-10" data-alt="A sophisticated, flat vector illustration suitable for a B2B SaaS dashboard, depicting a modern restaurant tech setup. The scene shows stylized POS terminals, floating analytical charts, and abstract data nodes connecting in a network. The color palette primarily uses cobalt blues, crisp whites, and subtle slate grays, conveying a sense of authoritative enterprise reliability, speed, and clean information density. High-key lighting, modern corporate aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC_SauZlDyIOOGzpZHnL3NKAIIsHm3bCVeQBq8uNz8rH2jKJrMZXTqXcBninufbqWob5hlIqx4rQ0LZ-J781-eE12rQMKLRJSSgHB0wWalmJ4bTZbllzt_zwK_wnCDwmQ6y_V6GZ8_8Dej2GZ3-mmOd6es4kmgkNFlfmBsnBQ7KoYM83BIq9N46-lFIctjcSJGAQpDiWjEXwFUTZl-S1N3LYptWlsScW30QMZkmnZDtjbjGAUG4ojo2G8ZBENqubjnjwIXqmDihgSMT')"></div>
+</div>
+<div class="relative z-10 max-w-lg">
+<h3 class="font-headline-lg text-headline-lg text-primary mb-sm">All Systems Ready</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Your workspace architecture has been successfully compiled. Upon launch, your initialized modules will synchronize with the central database and your first operational dashboard will be generated.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg flex-1">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<div class="bg-surface-container-low px-md py-sm border-b border-outline-variant font-label-md text-label-md text-on-surface flex justify-between items-center">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">dataset</span>
+                                    Activated Modules
+                                </div>
+<span class="font-data-mono text-data-mono text-secondary">4 Selected</span>
+</div>
+<div class="p-md flex-1">
+<ul class="flex flex-col gap-sm" id="modules-list"></ul>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<div class="bg-surface-container-low px-md py-sm border-b border-outline-variant font-label-md text-label-md text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">map</span>
+                                Service Area configuration
+                            </div>
+<div class="p-sm flex-1 flex flex-col">
+<div class="w-full flex-1 rounded border border-outline-variant overflow-hidden relative bg-surface-variant min-h-[150px]">
+<div class="w-full h-full bg-cover bg-center absolute inset-0" data-alt="A highly detailed, stylized map interface suitable for an enterprise B2B dashboard. The map displays a specific urban territory segmented into precise delivery zones using geometric overlays. The styling is authoritative and technical, using a sleek light-mode palette of pristine whites, slate grays, and precise cobalt blue boundaries. The visual aesthetic conveys geographic intelligence and operational control." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBC-O27fJW7Uap9rE40rpBzi_fUGmJ0mT3MzCEiwgIYRMnyUDZ7vK4q-Do26nfBGjJrT8znpD7tDKKoK5BxZ8mqOGjdWXfrW4RRhKpMqvhm9VO_oL-K63FnP1m6RLvJ8hWSRqKca_7RV5W42zeS6eNibLhjvoKSB3MVVDYMmX4exFyR_ZOibc4mbYPwduhH4bZTDJIt4Uqe9lQf_pnC0jfN6qsNRyuvG5XRxTKcTwQ2_IPItJ9YcJiv2D4ZKSbWI8d1_InrWktZ63kE')"></div>
+</div>
+<div class="mt-sm p-sm">
+<p class="font-label-md text-label-md text-secondary">Coverage Zones</p>
+<div class="flex flex-wrap gap-xs mt-xs" id="coverage-zones"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+  document.getElementById('profile-summary').innerHTML = '<div><p class="font-label-md text-label-md text-secondary">Legal Name</p><p class="font-body-md text-body-md text-on-surface">' + profileData.legalName + '</p></div><div><p class="font-label-md text-label-md text-secondary">Primary Address</p><p class="font-body-md text-body-md text-on-surface">' + profileData.address + '</p></div><div><p class="font-label-md text-label-md text-secondary">Tax ID / EIN</p><p class="font-data-mono text-data-mono text-on-surface">' + profileData.taxId + '</p></div>';
+  document.getElementById('admin-account').innerHTML = '<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-headline-md text-headline-md">' + adminData.initials + '</div><div><p class="font-body-md text-body-md text-on-surface font-semibold">' + adminData.name + '</p><p class="font-body-sm text-body-sm text-secondary">' + adminData.email + '</p>' + (adminData.verified ? '<div class="mt-xs inline-flex items-center gap-xs px-xs py-base bg-tertiary-container/10 text-tertiary-fixed-dim rounded font-label-md text-label-md" style="background-color: rgba(78, 222, 163, 0.1); color: #4edea3;"><span class="material-symbols-outlined text-[16px]">check_circle</span> Verified</div>' : '') + '</div>';
+  document.getElementById('modules-list').innerHTML = reviewModules.map(function(m) {
+    return '<li class="flex items-center justify-between p-sm border border-outline-variant rounded bg-surface"><span class="font-body-sm text-body-sm text-on-surface flex items-center gap-sm"><span class="material-symbols-outlined text-primary text-[18px]">' + m.icon + '</span> ' + m.name + '</span><span class="material-symbols-outlined text-tertiary-fixed-dim" style="color: #4edea3;">check</span></li>';
+  }).join('');
+  document.getElementById('coverage-zones').innerHTML = coverageZones.map(function(z) {
+    return '<span class="px-xs py-base bg-surface-container rounded border border-outline-variant font-data-mono text-data-mono text-[12px] text-on-surface">' + z + '</span>';
+  }).join('');
+</script>
+</body></html>
