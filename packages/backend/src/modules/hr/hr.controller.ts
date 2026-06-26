@@ -20,7 +20,7 @@ export class HrController {
 
   async updateEmployee(req: Request, res: Response, next: NextFunction) {
     try {
-      const employee = await this.service.updateEmployee(req.params.id as string, req.body)
+      const employee = await this.service.updateEmployee(req.tenantId!, req.params.id as string, req.body)
       res.json({ success: true, data: employee })
     } catch (err) { next(err) }
   }
@@ -43,6 +43,13 @@ export class HrController {
     try {
       const shift = await this.service.updateShiftStatus(req.params.id as string, req.body.status)
       res.json({ success: true, data: shift })
+    } catch (err) { next(err) }
+  }
+
+  async verifyPin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const employee = await this.service.verifyPin(req.tenantId!, req.body.pin, req.body.role)
+      res.json({ success: true, data: employee })
     } catch (err) { next(err) }
   }
 

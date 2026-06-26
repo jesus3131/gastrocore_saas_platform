@@ -10,9 +10,9 @@ export class CrmService {
     })
   }
 
-  async getCustomer(id: string) {
-    const customer = await prisma.customer.findUnique({
-      where: { id },
+  async getCustomer(tenantId: string, id: string) {
+    const customer = await prisma.customer.findFirst({
+      where: { tenantId, id },
       include: {
         orders: {
           include: { items: true },
@@ -29,7 +29,9 @@ export class CrmService {
     return prisma.customer.create({ data: { ...data, tenantId } })
   }
 
-  async updateCustomer(id: string, data: any) {
+  async updateCustomer(tenantId: string, id: string, data: any) {
+    const customer = await prisma.customer.findFirst({ where: { tenantId, id } })
+    if (!customer) throw new AppError(404, 'CUSTOMER_NOT_FOUND', 'Customer not found')
     return prisma.customer.update({ where: { id }, data })
   }
 
@@ -73,15 +75,15 @@ export class CrmService {
   }
 
   async redeemPoints(tenantId: string, data: { customerId: string; points: number; reward: string }) {
-    const customer = await prisma.customer.findUnique({ where: { id: data.customerId } })
+    const customer = await prisma.customer.findFirst({ where: { tenantId, id: data.customerId } })
     if (!customer) throw new AppError(404, 'CUSTOMER_NOT_FOUND', 'Customer not found')
     if (customer.loyaltyPoints < data.points) throw new AppError(400, 'INSUFFICIENT_POINTS', 'Insufficient loyalty points')
 
     const program = await prisma.loyaltyProgram.findFirst({ where: { tenantId, isActive: true } })
     if (!program) throw new AppError(404, 'PROGRAM_NOT_FOUND', 'Loyalty program not found')
 
-    await prisma.customer.update({
-      where: { id: data.customerId },
+    await prisma.customer.updateMany({
+      where: { tenantId, id: data.customerId },
       data: { loyaltyPoints: { decrement: data.points } },
     })
 

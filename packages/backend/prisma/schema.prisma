@@ -70,6 +70,24 @@ enum ShiftStatus {
   absent
 }
 
+enum AccountType {
+  asset
+  liability
+  equity
+  income
+  expense
+}
+
+enum JournalEntryType {
+  manual
+  automatic
+}
+
+enum JournalEntryStatus {
+  draft
+  posted
+}
+
 // ─── TENANT (Multi-tenant Core) ───────────────────────────────
 
 model Tenant {
@@ -87,19 +105,23 @@ model Tenant {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
-  // Relations
-  users          User[]
-  branches       Branch[]
-  menuCategories MenuCategory[]
-  orders         Order[]
-  customers      Customer[]
-  employees      Employee[]
-  ingredients    Ingredient[]
-  menuItems      MenuItem[]
-  featureFlags   TenantFeatureFlag[]
-  subscriptions  Subscription[]
+  users           User[]
+  branches        Branch[]
+  menuCategories  MenuCategory[]
+  orders          Order[]
+  customers       Customer[]
+  employees       Employee[]
+  ingredients     Ingredient[]
+  menuItems       MenuItem[]
+  featureFlags    TenantFeatureFlag[]
+  subscriptions   Subscription[]
   loyaltyPrograms LoyaltyProgram[]
+  integrations    Integration[]
+  accounts        Account[]
+  journalEntries  JournalEntry[]
+  accountingPeriods AccountingPeriod[]
 
+  @@index([slug])
   @@map("tenants")
 }
 
@@ -119,6 +141,7 @@ model User {
   updatedAt      DateTime     @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orders Order[] @relation("UserOrders")
 
   @@unique([tenantId, email])
   @@map("users")
@@ -142,6 +165,7 @@ model Branch {
   tables  Table[]
   areas   ServiceArea[]
 
+  @@index([tenantId])
   @@map("branches")
 }
 
@@ -158,6 +182,7 @@ model ServiceArea {
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
   tables Table[]
 
+  @@index([branchId])
   @@map("service_areas")
 }
 
@@ -177,6 +202,7 @@ model Table {
   area   ServiceArea  @relation(fields: [areaId], references: [id], onDelete: Cascade)
   orders Order[]
 
+  @@index([branchId, areaId])
   @@map("tables")
 }
 
@@ -195,6 +221,7 @@ model MenuCategory {
   menuItems  MenuItem[]
   modifiers  ModifierGroup[]
 
+  @@index([tenantId])
   @@map("menu_categories")
 }
 
@@ -216,6 +243,7 @@ model MenuItem {
   category MenuCategory  @relation(fields: [categoryId], references: [id])
   recipes  Recipe[]
 
+  @@index([tenantId, categoryId])
   @@map("menu_items")
 }
 
@@ -231,6 +259,7 @@ model ModifierGroup {
   category MenuCategory    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   options  ModifierOption[]
 
+  @@index([categoryId])
   @@map("modifier_groups")
 }
 
@@ -243,6 +272,7 @@ model ModifierOption {
 
   group ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
+  @@index([groupId])
   @@map("modifier_options")
 }
 
@@ -269,8 +299,15 @@ model Order {
   tenant   Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   table    Table?      @relation(fields: [tableId], references: [id])
   customer Customer?   @relation(fields: [customerId], references: [id])
+  user     User?       @relation("UserOrders", fields: [userId], references: [id])
   items    OrderItem[]
+  payments Payment[]
 
+  @@index([tenantId, createdAt])
+  @@index([branchId])
+  @@index([tableId])
+  @@index([customerId])
+  @@index([userId])
   @@map("orders")
 }
 
@@ -288,6 +325,8 @@ model OrderItem {
   order    Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
   modifiers OrderItemModifier[]
 
+  @@index([orderId])
+  @@index([menuItemId])
   @@map("order_items")
 }
 
@@ -301,6 +340,7 @@ model OrderItemModifier {
 
   orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
 
+  @@index([orderItemId])
   @@map("order_item_modifiers")
 }
 
@@ -316,6 +356,9 @@ model Payment {
   metadata    Json          @default("{}")
   createdAt   DateTime      @default(now())
 
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
   @@map("payments")
 }
 
@@ -357,6 +400,7 @@ model Recipe {
   menuItem    MenuItem           @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
   ingredients RecipeIngredient[]
 
+  @@index([menuItemId])
   @@map("recipes")
 }
 
@@ -369,6 +413,8 @@ model RecipeIngredient {
   recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id])
 
+  @@index([recipeId])
+  @@index([ingredientId])
   @@map("recipe_ingredients")
 }
 
@@ -383,6 +429,7 @@ model StockMovement {
 
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
 
+  @@index([ingredientId, createdAt])
   @@map("stock_movements")
 }
 
@@ -408,6 +455,7 @@ model Employee {
   commissions Commission[]
 
   @@unique([tenantId, email])
+  @@index([tenantId])
   @@map("employees")
 }
 
@@ -424,6 +472,7 @@ model Shift {
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
+  @@index([employeeId, date])
   @@map("shifts")
 }
 
@@ -438,6 +487,7 @@ model Commission {
 
   employee Employee @relation(fields: [employeeId], references: [id])
 
+  @@index([employeeId])
   @@map("commissions")
 }
 
@@ -465,6 +515,8 @@ model Customer {
   orders     Order[]
   redemptions LoyaltyRedemption[]
 
+  @@index([tenantId, email])
+  @@index([tenantId, phone])
   @@map("customers")
 }
 
@@ -482,6 +534,7 @@ model LoyaltyProgram {
   tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   redemptions LoyaltyRedemption[]
 
+  @@index([tenantId])
   @@map("loyalty_programs")
 }
 
@@ -497,6 +550,8 @@ model LoyaltyRedemption {
   program  LoyaltyProgram @relation(fields: [programId], references: [id])
   customer Customer       @relation(fields: [customerId], references: [id])
 
+  @@index([customerId])
+  @@index([programId])
   @@map("loyalty_redemptions")
 }
 
@@ -512,6 +567,7 @@ model TenantFeatureFlag {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, feature])
+  @@index([tenantId])
   @@map("tenant_feature_flags")
 }
 
@@ -532,6 +588,7 @@ model Subscription {
   tenant   Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   invoices SubscriptionInvoice[]
 
+  @@index([tenantId])
   @@map("subscriptions")
 }
 
@@ -549,6 +606,7 @@ model SubscriptionInvoice {
 
   subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
+  @@index([subscriptionId])
   @@map("subscription_invoices")
 }
 
@@ -564,8 +622,93 @@ model Integration {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@unique([tenantId, provider])
+  @@index([tenantId])
   @@map("integrations")
+}
+
+// ─── ACCOUNTING (Double-Entry Ledger) ─────────────────────────
+
+model Account {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  code      String   @db.VarChar(20)
+  name      String   @db.VarChar(255)
+  type      AccountType
+  subtype   String?  @db.VarChar(100) // e.g. current_asset, fixed_asset, operating_revenue
+  parentId  String?  @db.Uuid
+  isActive  Boolean  @default(true)
+  isSystem  Boolean  @default(false) // system-protected accounts
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parent     Account?       @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children   Account[]      @relation("AccountHierarchy")
+  journalLines JournalLine[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, type])
+  @@map("accounts")
+}
+
+model JournalEntry {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  entryDate   DateTime @db.Date
+  description String   @db.Text
+  reference   String?  @db.VarChar(100) // e.g. POS-ORDER-123, INV-PURCHASE-456
+  entryType   JournalEntryType @default(manual)
+  status      JournalEntryStatus @default(draft)
+  createdBy   String?  @db.Uuid
+  approvedBy  String?  @db.Uuid
+  periodId    String?  @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lines   JournalLine[]
+  period  AccountingPeriod? @relation(fields: [periodId], references: [id])
+
+  @@index([tenantId, entryDate])
+  @@index([tenantId, status])
+  @@map("journal_entries")
+}
+
+model JournalLine {
+  id             String  @id @default(uuid()) @db.Uuid
+  journalEntryId String  @db.Uuid
+  accountId      String  @db.Uuid
+  debit          Decimal @default(0) @db.Decimal(14, 2)
+  credit         Decimal @default(0) @db.Decimal(14, 2)
+  description    String? @db.Text
+
+  entry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account Account      @relation(fields: [accountId], references: [id])
+
+  @@index([journalEntryId])
+  @@index([accountId])
+  @@map("journal_lines")
+}
+
+model AccountingPeriod {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  name      String   @db.VarChar(100) // e.g. "Enero 2026"
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  isClosed  Boolean  @default(false)
+  closedAt  DateTime?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  entries JournalEntry[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId, startDate])
+  @@map("accounting_periods")
 }
 
 // ─── AUDIT LOG ────────────────────────────────────────────────

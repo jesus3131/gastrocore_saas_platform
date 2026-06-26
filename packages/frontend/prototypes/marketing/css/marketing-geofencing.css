@@ -1,0 +1,6 @@
+/* Geofencing */
+.geofence-card { transition: all 0.2s ease; }
+.geofence-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+.map-placeholder { background: linear-gradient(135deg, #e8f0fe 0%, #f0f4ff 30%, #e8f0fe 60%, #dce8fa 100%); position: relative; }
+.radius-circle { border: 2px dashed #1e3a8a; border-radius: 50%; position: absolute; opacity: 0.3; }
+.geo-marker { width: 16px; height: 16px; background: #1e3a8a; border: 3px solid white; border-radius: 50%; position: absolute; transform: translate(-50%, -50%); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }

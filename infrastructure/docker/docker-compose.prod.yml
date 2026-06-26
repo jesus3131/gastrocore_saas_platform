@@ -1,0 +1,86 @@
+name: gastrocore-prod
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gastrocore-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gastrocore
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gastrocore}
+      POSTGRES_DB: gastrocore
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gastrocore"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: gastrocore-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.backend
+      target: production
+    image: jesus273/gastrocore-backend:latest
+    container_name: gastrocore-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://gastrocore:${POSTGRES_PASSWORD:-gastrocore}@postgres:5432/gastrocore?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-gastrocore-dev-secret-change-in-production}
+      JWT_EXPIRATION: 15m
+      JWT_REFRESH_EXPIRATION: 7d
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:80}
+      LOG_LEVEL: info
+      PRISMA_AUTO_MIGRATE: ${PRISMA_AUTO_MIGRATE:-true}
+      SEED_DATABASE: ${SEED_DATABASE:-true}
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.frontend
+      target: production
+    image: jesus273/gastrocore-frontend:latest
+    container_name: gastrocore-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+  analytics:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.analytics
+    image: jesus273/gastrocore-analytics:latest
+    container_name: gastrocore-analytics
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:

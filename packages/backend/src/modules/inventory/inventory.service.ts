@@ -15,8 +15,8 @@ export class InventoryService {
     })
   }
 
-  async updateIngredient(id: string, data: any) {
-    const ingredient = await prisma.ingredient.findUnique({ where: { id } })
+  async updateIngredient(tenantId: string, id: string, data: any) {
+    const ingredient = await prisma.ingredient.findFirst({ where: { tenantId, id } })
     if (!ingredient) throw new AppError(404, 'INGREDIENT_NOT_FOUND', 'Ingredient not found')
     return prisma.ingredient.update({ where: { id }, data })
   }
@@ -39,8 +39,8 @@ export class InventoryService {
     const ingredientsData = []
 
     for (const ing of data.ingredients) {
-      const ingredient = await prisma.ingredient.findUnique({
-        where: { id: ing.ingredientId },
+      const ingredient = await prisma.ingredient.findFirst({
+        where: { tenantId, id: ing.ingredientId },
       })
       if (!ingredient) continue
 

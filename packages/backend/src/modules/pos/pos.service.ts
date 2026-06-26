@@ -40,7 +40,7 @@ export class PosService {
       for (const area of branch.areas) {
         for (const table of area.tables) {
           const activeOrder = await prisma.order.findFirst({
-            where: { tableId: table.id, status: { notIn: ['paid', 'canceled'] } },
+            where: { tenantId, tableId: table.id, status: { notIn: ['paid', 'canceled'] } },
             select: { id: true, total: true, status: true },
           })
           ;(table as any).activeOrder = activeOrder
@@ -115,16 +115,18 @@ export class PosService {
     return order
   }
 
-  async getOrder(id: string) {
-    const order = await prisma.order.findUnique({
-      where: { id },
+  async getOrder(tenantId: string, id: string) {
+    const order = await prisma.order.findFirst({
+      where: { tenantId, id },
       include: { items: { include: { modifiers: true } }, table: true, customer: true },
     })
     if (!order) throw new AppError(404, 'ORDER_NOT_FOUND', 'Order not found')
     return order
   }
 
-  async updateOrderStatus(id: string, status: OrderStatus) {
+  async updateOrderStatus(tenantId: string, id: string, status: OrderStatus) {
+    const order = await prisma.order.findFirst({ where: { tenantId, id } })
+    if (!order) throw new AppError(404, 'ORDER_NOT_FOUND', 'Order not found')
     return prisma.order.update({
       where: { id },
       data: { status },
@@ -133,7 +135,7 @@ export class PosService {
 
   // ─── Payments ────────────────────────────────────────────
   async processPayment(tenantId: string, data: { orderId: string; method: PaymentMethod; amount: number; reference?: string }) {
-    const order = await prisma.order.findUnique({ where: { id: data.orderId } })
+    const order = await prisma.order.findFirst({ where: { tenantId, id: data.orderId } })
     if (!order) throw new AppError(404, 'ORDER_NOT_FOUND', 'Order not found')
 
     const payment = await prisma.payment.create({
@@ -164,8 +166,8 @@ export class PosService {
   }
 
   async splitBill(tenantId: string, data: { orderId: string; splits: { items: string[]; amount: number }[] }) {
-    const order = await prisma.order.findUnique({
-      where: { id: data.orderId },
+    const order = await prisma.order.findFirst({
+      where: { tenantId, id: data.orderId },
       include: { items: true },
     })
     if (!order) throw new AppError(404, 'ORDER_NOT_FOUND', 'Order not found')
@@ -201,8 +203,8 @@ export class PosService {
       for (const ingredient of recipe.ingredients) {
         const qtyToDeduct = Number(ingredient.quantity) * item.quantity
 
-        await prisma.ingredient.update({
-          where: { id: ingredient.ingredientId },
+        await prisma.ingredient.updateMany({
+          where: { tenantId, id: ingredient.ingredientId },
           data: { currentStock: { decrement: qtyToDeduct } },
         })
 
@@ -216,8 +218,8 @@ export class PosService {
         })
 
         // Check stock alert
-        const updatedIngredient = await prisma.ingredient.findUnique({
-          where: { id: ingredient.ingredientId },
+        const updatedIngredient = await prisma.ingredient.findFirst({
+          where: { tenantId, id: ingredient.ingredientId },
         })
         if (updatedIngredient && updatedIngredient.currentStock <= updatedIngredient.minimumStock) {
           // TODO: Trigger notification via notification service

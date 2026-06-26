@@ -1,25 +1,139 @@
-
-  var modulesData = [
-    { id: "pos", name: "POS &amp; Tables", icon: "point_of_sale", iconBgClass: "bg-secondary-container text-primary", hasGradient: false, description: "Core point-of-sale functionality including table management, splitting bills, and direct kitchen routing. Essential for dine-in operations.", planLabel: "Included in Core", planClass: "font-label-md text-label-md text-secondary", statusLabel: "Active", statusClass: "font-label-md text-label-md text-tertiary-container bg-tertiary-fixed px-sm py-xs rounded", checked: true },
-    { id: "inv", name: "Advanced Inventory", icon: "inventory_2", iconBgClass: "bg-primary-fixed text-primary-fixed-variant", hasGradient: true, gradientFrom: "from-primary-fixed-dim/20", description: "Recipe costing (Escandallos), automated supplier ordering based on par levels, and real-time theoretical vs. actual variance reporting.", planLabel: "Pro Feature", planClass: "font-label-md text-label-md text-primary bg-primary-fixed-dim/30 px-sm py-xs rounded", statusLabel: "Optional", statusClass: "font-label-md text-label-md text-secondary", checked: false },
-    { id: "del", name: "Omni-channel Delivery", icon: "local_shipping", iconBgClass: "bg-secondary-container text-primary", hasGradient: false, description: "Centralize orders from UberEats, Glovo, and your own white-label app directly into a single kitchen display system (KDS).", planLabel: "Pro Feature", planClass: "font-label-md text-label-md text-primary bg-primary-fixed-dim/30 px-sm py-xs rounded", statusLabel: "Active", statusClass: "font-label-md text-label-md text-tertiary-container bg-tertiary-fixed px-sm py-xs rounded", checked: true },
-    { id: "crm", name: "CRM &amp; Loyalty", icon: "loyalty", iconBgClass: "bg-tertiary-fixed text-tertiary-fixed-variant", hasGradient: true, gradientFrom: "from-tertiary-fixed-dim/20", description: "Customer database management, automated marketing campaigns, and points-based loyalty programs to drive repeat business.", planLabel: "Enterprise", planClass: "font-label-md text-label-md text-on-surface bg-surface-dim px-sm py-xs rounded border border-outline-variant", statusLabel: "Optional", statusClass: "font-label-md text-label-md text-secondary", checked: false }
-  ];
-  var steps = [
-    { label: "Business Profile", icon: "storefront" },
-    { label: "Service Area", icon: "grid_view" },
-    { label: "Modules", icon: "extension", active: true },
-    { label: "Final Review", icon: "verified" }
+(function() {
+  var STORAGE_KEY = 'onboarding_modules';
+  var STEP = 3;
+  var STEPS = [
+    { label: 'Business Profile', icon: 'storefront' },
+    { label: 'Service Area', icon: 'grid_view' },
+    { label: 'Modules', icon: 'extension' },
+    { label: 'Final Review', icon: 'verified' }
   ];
 
+  var MODULES = [
+    {
+      id: 'pos', name: 'POS &amp; Tables', icon: 'point_of_sale',
+      iconBg: 'bg-secondary-container text-primary',
+      description: 'Core point-of-sale with table management, bill splitting, and direct kitchen routing. Essential for dine-in operations.',
+      features: ['Table Management', 'Bill Splitting', 'Kitchen Routing', 'Payment Processing'],
+      active: true
+    },
+    {
+      id: 'inventory', name: 'Advanced Inventory', icon: 'inventory_2',
+      iconBg: 'bg-primary-fixed text-primary-fixed-variant',
+      description: 'Recipe costing, automated supplier ordering, real-time theoretical vs actual variance reporting.',
+      features: ['Recipe Costing', 'Supplier Orders', 'Variance Reports', 'Stock Alerts'],
+      active: true
+    },
+    {
+      id: 'hr', name: 'HR &amp; Staffing', icon: 'group',
+      iconBg: 'bg-tertiary-fixed text-tertiary-fixed-variant',
+      description: 'Employee scheduling, time tracking, payroll integration, and role-based access control.',
+      features: ['Scheduling', 'Time Tracking', 'Payroll Integration', 'Role-Based Access'],
+      active: false
+    },
+    {
+      id: 'crm', name: 'CRM &amp; Loyalty', icon: 'loyalty',
+      iconBg: 'bg-secondary-container text-primary',
+      description: 'Customer database, automated marketing campaigns, and points-based loyalty programs.',
+      features: ['Customer Database', 'Marketing Campaigns', 'Loyalty Programs', 'Analytics'],
+      active: false
+    },
+    {
+      id: 'analytics', name: 'Analytics &amp; Reports', icon: 'bar_chart',
+      iconBg: 'bg-primary-fixed text-primary-fixed-variant',
+      description: 'Real-time business intelligence dashboards, sales reports, and performance metrics.',
+      features: ['Real-time Dashboards', 'Sales Reports', 'Performance Metrics', 'Custom Reports'],
+      active: false
+    },
+    {
+      id: 'integrations', name: 'Integrations', icon: 'integration_instructions',
+      iconBg: 'bg-surface-variant text-on-surface-variant',
+      description: 'Connect with third-party services: delivery platforms, accounting, and payment gateways.',
+      features: ['Delivery Platforms', 'Accounting Sync', 'Payment Gateways', 'API Access'],
+      active: false
+    }
+  ];
 
-
-  function renderModules() {
-    var container = document.getElementById('module-grid');
-    container.innerHTML = modulesData.map(function(m) {
-      var gradientHtml = m.hasGradient ? '<div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl ' + m.gradientFrom + ' to-transparent rounded-bl-full z-0"></div>' : '';
-      var checkedAttr = m.checked ? 'checked=""' : '';
-      return '<div class="module-card bg-surface-container-lowest border border-surface-container-highest rounded-lg p-lg flex flex-col relative overflow-hidden">' + gradientHtml + '<div class="flex justify-between items-start mb-md relative z-10"><div class="flex items-center gap-sm"><div class="w-10 h-10 rounded-lg ' + m.iconBgClass + ' flex items-center justify-center"><span class="material-symbols-outlined">' + m.icon + '</span></div><h3 class="font-headline-md text-headline-md text-on-surface">' + m.name + '</h3></div><div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in"><input ' + checkedAttr + ' class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer opacity-0 z-20" id="toggle_' + m.id + '" name="toggle_' + m.id + '" type="checkbox"/><label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" for="toggle_' + m.id + '"></label></div></div><p class="font-body-sm text-body-sm text-on-surface-variant flex-grow relative z-10">' + m.description + '</p><div class="mt-md pt-sm border-t border-surface-container-high flex justify-between items-center relative z-10"><span class="' + m.planClass + '">' + m.planLabel + '</span><span class="' + m.statusClass + '">' + m.statusLabel + '</span></div></div>';
-    }).join('');
+  function load() {
+    var saved = Utils.storage.get(STORAGE_KEY, {});
+    if (saved.modules) {
+      MODULES.forEach(function(m) {
+        if (saved.modules.indexOf(m.id) !== -1) m.active = true;
+        else m.active = false;
+      });
+    }
+    return MODULES;
   }
-  renderModules();
+
+  function save() {
+    var activeIds = [];
+    MODULES.forEach(function(m) { if (m.active) activeIds.push(m.id); });
+    Utils.storage.set(STORAGE_KEY, { modules: activeIds });
+  }
+
+  function updateProgress() {
+    var pb = document.getElementById('progress-bar');
+    if (pb) pb.style.width = (STEP / STEPS.length * 100) + '%';
+  }
+
+  function render() {
+    var container = document.getElementById('module-grid');
+    if (!container) return;
+    container.innerHTML = MODULES.map(function(m) {
+      var checked = m.active ? 'checked=""' : '';
+      var features = m.features.map(function(f) {
+        return '<li class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs"><span class="material-symbols-outlined text-[14px] text-tertiary-container">check</span>' + f + '</li>';
+      }).join('');
+      return '<div class="module-card bg-surface-container-lowest border border-surface-container-highest rounded-lg p-lg flex flex-col relative overflow-hidden">' +
+        '<div class="flex justify-between items-start mb-md relative z-10">' +
+          '<div class="flex items-center gap-sm">' +
+            '<div class="w-10 h-10 rounded-lg ' + m.iconBg + ' flex items-center justify-center"><span class="material-symbols-outlined">' + m.icon + '</span></div>' +
+            '<h3 class="font-headline-md text-headline-md text-on-surface">' + m.name + '</h3>' +
+          '</div>' +
+          '<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">' +
+            '<input ' + checked + ' class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer opacity-0 z-20" id="toggle_' + m.id + '" type="checkbox" data-module="' + m.id + '"/>' +
+            '<label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" for="toggle_' + m.id + '"></label>' +
+          '</div>' +
+        '</div>' +
+        '<p class="font-body-sm text-body-sm text-on-surface-variant mb-sm">' + m.description + '</p>' +
+        '<ul class="space-y-xs">' + features + '</ul>' +
+      '</div>';
+    }).join('');
+    attachToggleEvents();
+  }
+
+  function attachToggleEvents() {
+    MODULES.forEach(function(m) {
+      var cb = document.getElementById('toggle_' + m.id);
+      if (cb) {
+        cb.addEventListener('change', function() {
+          m.active = cb.checked;
+          save();
+        });
+      }
+    });
+  }
+
+  function findBtn(text) {
+    return Array.from(document.querySelectorAll('button')).filter(function(b) {
+      return b.textContent.replace(/[\n\r]/g, '').trim().indexOf(text) === 0;
+    })[0];
+  }
+
+  function init() {
+    load();
+    render();
+    updateProgress();
+    save();
+
+    var backBtn = findBtn('Back');
+    if (backBtn) backBtn.addEventListener('click', function() { window.location.href = 'onboarding-areas-tables.html'; });
+
+    var contBtn = findBtn('Continue');
+    if (contBtn) contBtn.addEventListener('click', function() {
+      save();
+      window.location.href = 'onboarding-final-review.html';
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();

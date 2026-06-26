@@ -31,3 +31,8 @@ export const createShiftSchema = z.object({
 export const updateShiftStatusSchema = z.object({
   status: z.enum(['scheduled', 'in_progress', 'completed', 'absent', 'cancelled']),
 })
+
+export const verifyPinSchema = z.object({
+  pin: z.string().length(4).regex(/^\d{4}$/),
+  role: z.enum(['waiter', 'chef', 'cashier', 'host', 'delivery']).optional(),
+})

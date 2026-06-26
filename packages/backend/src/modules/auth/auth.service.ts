@@ -110,10 +110,40 @@ export class AuthService {
   async getProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, role: true, tenantId: true, lastLoginAt: true },
+      select: { id: true, email: true, name: true, role: true, tenantId: true, lastLoginAt: true, createdAt: true },
     })
     if (!user) throw new AppError(404, 'USER_NOT_FOUND', 'User not found')
     return user
+  }
+
+  async updateProfile(userId: string, data: { name?: string; email?: string }) {
+    if (data.email) {
+      const existing = await prisma.user.findFirst({
+        where: { email: data.email, id: { not: userId } },
+      })
+      if (existing) throw new AppError(409, 'EMAIL_EXISTS', 'Email already in use')
+    }
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data,
+      select: { id: true, email: true, name: true, role: true },
+    })
+    return user
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user) throw new AppError(404, 'USER_NOT_FOUND', 'User not found')
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash)
+    if (!valid) throw new AppError(400, 'INVALID_PASSWORD', 'Current password is incorrect')
+
+    const passwordHash = await bcrypt.hash(newPassword, this.saltRounds)
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    })
+    return { message: 'Password changed successfully' }
   }
 
   private generateTokens(payload: JwtPayload): AuthTokens {

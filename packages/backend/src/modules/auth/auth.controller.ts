@@ -41,4 +41,18 @@ export class AuthController {
       res.json({ success: true, data: user })
     } catch (err) { next(err) }
   }
+
+  async updateProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = await this.service.updateProfile(req.user!.sub, req.body)
+      res.json({ success: true, data: user })
+    } catch (err) { next(err) }
+  }
+
+  async changePassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await this.service.changePassword(req.user!.sub, req.body.currentPassword, req.body.newPassword)
+      res.json({ success: true, data: result })
+    } catch (err) { next(err) }
+  }
 }
