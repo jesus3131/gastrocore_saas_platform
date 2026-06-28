@@ -226,6 +226,39 @@ packages/frontend/prototypes/pos/vista/pos-order-taking.html
 
 ---
 
+## 👥 Usuarios de Prueba (Seed Data)
+
+### Admin
+| Email | Contraseña | Rol |
+|-------|-----------|:---:|
+| `admin@lacocina.com` | `admin123` | admin |
+
+### Empleados PIN (Waiter Service)
+| Nombre | Email | PIN | Rol |
+|--------|-------|:---:|:---:|
+| Carlos Hernández | `carlos@lacocina.com` | `1234` | chef |
+| María García | `maria@lacocina.com` | `2345` | waiter |
+| José López | `jose@lacocina.com` | `3456` | waiter |
+| Ana Martínez | `ana@lacocina.com` | `4567` | cashier |
+| Sofía Torres | `sofia@lacocina.com` | — | manager |
+| Luis Mendoza | `luis@lacocina.com` | — | waiter |
+| Diego Ramírez | `diego@lacocina.com` | — | host |
+| Valentina Ruiz | `valentina@lacocina.com` | — | delivery |
+
+### Clientes (CRM)
+| Nombre | Email | Segmento | Puntos |
+|--------|-------|:--------:|:------:|
+| Roberto Sánchez | `roberto@email.com` | VIP | 2500 |
+| Laura Fernández | `laura@email.com` | VIP | 1680 |
+| Pedro Ramírez | `pedro@email.com` | regular | 420 |
+| Carmen Díaz | `carmen@email.com` | VIP | 4400 |
+| Miguel Ángel Torres | `miguel@email.com` | nuevo | 109 |
+| Gabriela Ortiz | `gabriela@email.com` | regular | 760 |
+| Jorge Hernández | `jorge@email.com` | nuevo | 0 |
+| Patricia Vega | `patricia@email.com` | regular | 320 |
+
+---
+
 ## 🧪 Scripts Disponibles
 
 ```bash
@@ -315,6 +348,10 @@ uvicorn main:app --reload --port 8000
 
 ## 🛠️ Mejoras Recientes
 
+- **Fix seed `createAccountTree`**: La función recursiva no propagaba los resultados de cuentas hijas al arreglo principal, causando error `"Cannot read properties of undefined (reading 'id')"` al referenciar cuentas leaf por código contable (ej. `accMap['1101']`). Solución: propagar `results.push(...await createAccountTree(...))` para incluir todas las cuentas (padres + hijos).
+- **Fix TypeScript `tsc -b`**: `tsconfig.node.json` tenía `noEmit: false` con `allowImportingTsExtensions`, incompatible en TS 5.x. Cambiado a `emitDeclarationOnly: true`.
+- **Fix `baseUrl` en tsconfig**: Eliminado `baseUrl: "."` de `tsconfig.json` por ser deprecated con `moduleResolution: "bundler"`.
+- **Dockerfiles corregidos**: Reemplazado `COPY . .` por copias selectivas por directorio para evitar sobrescribir symlinks de pnpm. Agregado `entrypoint.sh` con auto-migración y seed condicionales.
 - **Prototipos HTML refactorizados**: 19 prototipos migrados a estructura modular (`vista/`, `css/`, `js/` por módulo). Sin datos estáticos ni CSS/JS inline. Config Tailwind compartida via `design-tokens.js`.
 - **Prisma Postgres**: Base de datos cloud linkeda via `prisma bootstrap`. Schema con 24 modelos pushado y generado.
 - **Zod validation**: Schemas de validación en 7 módulos + middleware `validate()` en todas las rutas.

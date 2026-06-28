@@ -349,7 +349,7 @@ async function main() {
       results.push(acc)
       const children = def.children
       if (children) {
-        await createAccountTree(acc.id, children)
+        results.push(...await createAccountTree(acc.id, children))
       }
     }
     return results
