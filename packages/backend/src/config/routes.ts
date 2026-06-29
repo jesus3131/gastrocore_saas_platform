@@ -11,6 +11,7 @@ import { onboardingRouter } from '../modules/onboarding/onboarding.routes.js'
 import { subscriptionRouter } from '../modules/subscriptions/subscription.routes.js'
 import { integrationRouter } from '../modules/integrations/integration.routes.js'
 import { accountingRouter } from '../modules/accounting/accounting.routes.js'
+import { superAdminRouter } from '../modules/super-admin/super-admin.routes.js'
 
 export function registerRoutes(app: Express) {
   app.use(`${API_PREFIX}/auth`, authRouter)
@@ -24,6 +25,7 @@ export function registerRoutes(app: Express) {
   app.use(`${API_PREFIX}/subscriptions`, subscriptionRouter)
   app.use(`${API_PREFIX}/integrations`, integrationRouter)
   app.use(`${API_PREFIX}/accounting`, accountingRouter)
+  app.use(`${API_PREFIX}/super`, superAdminRouter)
 
   // Health check
   app.get('/health', (_req, res) => {

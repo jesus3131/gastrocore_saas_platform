@@ -53,6 +53,7 @@ enum PaymentMethod {
 }
 
 enum EmployeeRole {
+  super_admin
   admin
   manager
   chef

@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './app/store/auth.store'
 import { DashboardLayout } from './layouts/dashboard.layout'
 import { AuthLayout } from './layouts/auth.layout'
+import { api } from './lib/api'
 import { LoginPage } from './features/auth/pages/login.page'
 import { RegisterPage } from './features/auth/pages/register.page'
 import { DashboardPage } from './features/dashboard/pages/dashboard.page'
@@ -26,6 +28,31 @@ import { ChartOfAccountsPage } from './features/accounting/pages/chart-of-accoun
 import { JournalEntriesPage } from './features/accounting/pages/journal-entries.page'
 import { FinancialStatementsPage } from './features/accounting/pages/financial-statements.page'
 import { AccountingSettingsPage } from './features/accounting/pages/accounting-settings.page'
+import { SuperAdminPage } from './features/super-admin/pages/super-admin.page'
+
+function SessionGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, tokens, logout, setAuth, user } = useAuthStore()
+  const [checking, setChecking] = useState(isAuthenticated)
+
+  useEffect(() => {
+    if (!isAuthenticated || !tokens?.accessToken) {
+      setChecking(false)
+      return
+    }
+    api.get('/auth/me')
+      .then((res) => {
+        setAuth(res.data.data, tokens)
+        setChecking(false)
+      })
+      .catch(() => {
+        logout()
+        setChecking(false)
+      })
+  }, [])
+
+  if (checking) return null
+  return <>{children}</>
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -58,20 +85,24 @@ export function App() {
 
       {/* Onboarding */}
       <Route path="/onboarding" element={
-        <ProtectedRoute>
-          <OnboardingPage />
-        </ProtectedRoute>
+        <SessionGuard>
+          <ProtectedRoute>
+            <OnboardingPage />
+          </ProtectedRoute>
+        </SessionGuard>
       } />
 
       {/* App routes */}
       <Route path="/" element={
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <WaiterBlock>
-              <DashboardLayout />
-            </WaiterBlock>
-          </OnboardingGuard>
-        </ProtectedRoute>
+        <SessionGuard>
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <WaiterBlock>
+                <DashboardLayout />
+              </WaiterBlock>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        </SessionGuard>
       }>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
@@ -95,6 +126,7 @@ export function App() {
         <Route path="accounting/settings" element={<AccountingSettingsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/profile" element={<ProfilePage />} />
+        <Route path="super-admin" element={<SuperAdminPage />} />
       </Route>
     </Routes>
   )

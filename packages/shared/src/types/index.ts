@@ -10,7 +10,7 @@ export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'served' | 'paid' 
 
 export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'mercadopago' | 'stripe'
 
-export type EmployeeRole = 'admin' | 'manager' | 'chef' | 'waiter' | 'cashier' | 'host' | 'delivery'
+export type EmployeeRole = 'super_admin' | 'admin' | 'manager' | 'chef' | 'waiter' | 'cashier' | 'host' | 'delivery'
 
 export type ShiftStatus = 'scheduled' | 'checked_in' | 'on_break' | 'checked_out' | 'absent'
 

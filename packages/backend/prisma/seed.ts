@@ -56,6 +56,32 @@ async function main() {
     },
   })
 
+  // ─── Super Admin (platform owner) ──────────────────────────
+  const superTenant = await prisma.tenant.create({
+    data: {
+      name: 'RestoPro Platform',
+      slug: 'restopro-platform',
+      businessType: 'fine_dining',
+      subscriptionPlan: 'enterprise',
+      subscriptionStatus: 'active',
+      locale: 'es-CO',
+      timezone: 'America/Bogota',
+      currency: 'COP',
+      settings: { onboardingCompleted: true, isPlatform: true },
+    },
+  })
+
+  const superPasswordHash = await bcrypt.hash('RestoPro2024!', 12)
+  await prisma.user.create({
+    data: {
+      tenantId: superTenant.id,
+      email: 'superadmin@restopro.com',
+      passwordHash: superPasswordHash,
+      name: 'Super Admin',
+      role: 'super_admin',
+    },
+  })
+
   // ─── User ─────────────────────────────────────────────────
   const passwordHash = await bcrypt.hash('admin123', 12)
   await prisma.user.create({
@@ -476,6 +502,7 @@ async function main() {
   console.log('✅ Seed completed successfully!')
   console.log(`   Tenant: ${tenant.name}`)
   console.log('   Admin: admin@lacocina.com / admin123')
+  console.log('   Super Admin: superadmin@restopro.com / RestoPro2024!')
   console.log(`   Accounts: ${coa.length} created`)
   console.log(`   Menu items: ${menuItems.length}`)
   console.log(`   Employees: ${employees.length}`)

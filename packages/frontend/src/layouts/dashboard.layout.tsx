@@ -3,47 +3,64 @@ import {
   LayoutDashboard, ShoppingCart, ClipboardList, Users, BarChart3,
   Settings, LogOut, User, ChevronDown, Bell, Table2, Gift,
   Truck, CreditCard, ChefHat, UtensilsCrossed, BookOpen,
-  FileSpreadsheet, ScrollText, Menu, X, Sun, Moon,
+  FileSpreadsheet, ScrollText, Menu, X, Sun, Moon, Building2,
 } from 'lucide-react'
 import { useAuthStore } from '../app/store/auth.store'
 import { useThemeStore } from '../app/store/theme.store'
 import { useLogout } from '../app/hooks/use-auth'
 import { useState, useEffect } from 'react'
 
-const navItems = [
+interface NavItem { to: string; icon: any; label: string; feature?: string }
+
+const navItemsAll: NavItem[] = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/pos/service', icon: UtensilsCrossed, label: 'Servicio Mesas' },
-  { to: '/pos/tables', icon: Table2, label: 'Mapa de Mesas' },
-  { to: '/pos', icon: ShoppingCart, label: 'POS' },
-  { to: '/pos/checkout', icon: CreditCard, label: 'Cobro' },
-  { to: '/pos/kds', icon: ChefHat, label: 'Comandas' },
-  { to: '/inventory', icon: ClipboardList, label: 'Inventario' },
-  { to: '/inventory/recipes', icon: ClipboardList, label: 'Escandallos' },
-  { to: '/hr', icon: Users, label: 'Personal' },
-  { to: '/analytics', icon: BarChart3, label: 'Analítica' },
-  { to: '/accounting', icon: BookOpen, label: 'Contabilidad' },
-  { to: '/accounting/accounts', icon: BookOpen, label: 'Cuentas Contables' },
-  { to: '/accounting/journal-entries', icon: ScrollText, label: 'Asientos' },
-  { to: '/accounting/statements', icon: FileSpreadsheet, label: 'Estados Financieros' },
-  { to: '/accounting/settings', icon: Settings, label: 'Config. Contable' },
-  { to: '/crm', icon: User, label: 'CRM Clientes' },
-  { to: '/crm/loyalty', icon: Gift, label: 'Lealtad' },
-  { to: '/integrations', icon: Truck, label: 'Delivery' },
-  { to: '/integrations/channels', icon: Truck, label: 'Canales' },
+  { to: '/pos/service', icon: UtensilsCrossed, label: 'Servicio Mesas', feature: 'pos' },
+  { to: '/pos/tables', icon: Table2, label: 'Mapa de Mesas', feature: 'pos' },
+  { to: '/pos', icon: ShoppingCart, label: 'POS', feature: 'pos' },
+  { to: '/pos/checkout', icon: CreditCard, label: 'Cobro', feature: 'pos' },
+  { to: '/pos/kds', icon: ChefHat, label: 'Comandas', feature: 'pos' },
+  { to: '/inventory', icon: ClipboardList, label: 'Inventario', feature: 'inventory' },
+  { to: '/inventory/recipes', icon: ClipboardList, label: 'Escandallos', feature: 'inventory' },
+  { to: '/hr', icon: Users, label: 'Personal', feature: 'hr' },
+  { to: '/analytics', icon: BarChart3, label: 'Analítica', feature: 'analytics' },
+  { to: '/accounting', icon: BookOpen, label: 'Contabilidad', feature: 'accounting' },
+  { to: '/accounting/accounts', icon: BookOpen, label: 'Cuentas Contables', feature: 'accounting' },
+  { to: '/accounting/journal-entries', icon: ScrollText, label: 'Asientos', feature: 'accounting' },
+  { to: '/accounting/statements', icon: FileSpreadsheet, label: 'Estados Financieros', feature: 'accounting' },
+  { to: '/accounting/settings', icon: Settings, label: 'Config. Contable', feature: 'accounting' },
+  { to: '/crm', icon: User, label: 'CRM Clientes', feature: 'crm' },
+  { to: '/crm/loyalty', icon: Gift, label: 'Lealtad', feature: 'crm' },
+  { to: '/integrations', icon: Truck, label: 'Delivery', feature: 'integrations' },
+  { to: '/integrations/channels', icon: Truck, label: 'Canales', feature: 'integrations' },
   { to: '/settings', icon: Settings, label: 'Configuración' },
   { to: '/settings/profile', icon: User, label: 'Mi Perfil' },
 ]
 
-const bottomNavItems = [
+const superAdminNavItems = [
+  { to: '/super-admin', icon: Building2, label: 'Empresas' },
+  { to: '/settings/profile', icon: User, label: 'Mi Perfil' },
+]
+
+const bottomNavItems: NavItem[] = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/pos', icon: ShoppingCart, label: 'POS' },
-  { to: '/inventory', icon: ClipboardList, label: 'Inventario' },
-  { to: '/accounting', icon: BookOpen, label: 'Contabilidad' },
+  { to: '/pos', icon: ShoppingCart, label: 'POS', feature: 'pos' },
+  { to: '/inventory', icon: ClipboardList, label: 'Inventario', feature: 'inventory' },
+  { to: '/accounting', icon: BookOpen, label: 'Contabilidad', feature: 'accounting' },
+  { to: '/settings', icon: Settings, label: 'Ajustes' },
+]
+
+const superAdminBottomNav = [
+  { to: '/super-admin', icon: Building2, label: 'Empresas' },
   { to: '/settings', icon: Settings, label: 'Ajustes' },
 ]
 
 export function DashboardLayout() {
   const { user, waiter } = useAuthStore()
+  const isSuperAdmin = user?.role === 'super_admin'
+  const flags: string[] = user?.featureFlags || []
+  const navItems: NavItem[] = isSuperAdmin
+    ? superAdminNavItems
+    : navItemsAll.filter(item => !item.feature || flags.includes(item.feature))
   const { theme, toggle: toggleTheme } = useThemeStore()
   const logout = useLogout()
   const location = useLocation()
@@ -137,7 +154,7 @@ export function DashboardLayout() {
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-surface border-t border-on-surface-muted/10">
         <div className="flex items-center justify-around h-16 px-1">
-          {bottomNavItems.map((item) => {
+          {(isSuperAdmin ? superAdminBottomNav : bottomNavItems.filter(item => !item.feature || flags.includes(item.feature))).map((item) => {
             const isActive = location.pathname === item.to || location.pathname.startsWith(item.to + '/')
             return (
               <NavLink key={item.to} to={item.to}

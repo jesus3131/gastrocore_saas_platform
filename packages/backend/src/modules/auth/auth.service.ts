@@ -29,6 +29,16 @@ export class AuthService {
       email: user.email,
     })
 
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: user.tenantId },
+      select: { name: true, subscriptionPlan: true, subscriptionStatus: true, settings: true, currency: true },
+    })
+
+    const flags = await prisma.tenantFeatureFlag.findMany({
+      where: { tenantId: user.tenantId, enabled: true },
+      select: { feature: true },
+    })
+
     await prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date(), refreshToken: tokens.refreshToken },
@@ -37,7 +47,7 @@ export class AuthService {
     const { passwordHash, refreshToken, ...safeUser } = user
     void passwordHash
     void refreshToken
-    return { user: safeUser, tokens }
+    return { user: { ...safeUser, tenantName: tenant?.name, tenantPlan: tenant?.subscriptionPlan, tenantCurrency: tenant?.currency, onboardingCompleted: (tenant?.settings as any)?.onboardingCompleted || false, featureFlags: flags.map(f => f.feature) }, tokens }
   }
 
   async register(data: {
@@ -170,7 +180,25 @@ export class AuthService {
       select: { id: true, email: true, name: true, role: true, tenantId: true, lastLoginAt: true, createdAt: true },
     })
     if (!user) throw new AppError(404, 'USER_NOT_FOUND', 'User not found')
-    return user
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: user.tenantId },
+      select: { name: true, subscriptionPlan: true, subscriptionStatus: true, settings: true, currency: true },
+    })
+
+    const flags = await prisma.tenantFeatureFlag.findMany({
+      where: { tenantId: user.tenantId, enabled: true },
+      select: { feature: true },
+    })
+
+    return {
+      ...user,
+      tenantName: tenant?.name,
+      tenantPlan: tenant?.subscriptionPlan,
+      tenantCurrency: tenant?.currency,
+      onboardingCompleted: (tenant?.settings as any)?.onboardingCompleted || false,
+      featureFlags: flags.map(f => f.feature),
+    }
   }
 
   async updateProfile(userId: string, data: { name?: string; email?: string }) {

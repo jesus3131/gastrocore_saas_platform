@@ -87,6 +87,7 @@ export const BUSINESS_TYPE_FEATURES: Record<BusinessType, FeatureFlag[]> = {
 // ─── Employee Permission Matrix ──────────────────────────────
 
 export const ROLE_PERMISSIONS: Record<string, string[]> = {
+  super_admin: ['*', 'super:manage'],
   admin: ['*'],
   manager: ['pos:read', 'pos:write', 'inventory:read', 'inventory:write', 'hr:read', 'hr:write', 'analytics:read', 'crm:read', 'crm:write'],
   chef: ['pos:read', 'inventory:read', 'inventory:write', 'kds:read'],

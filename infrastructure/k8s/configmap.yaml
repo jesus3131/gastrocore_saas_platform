@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: restopro-config
+  namespace: restopro
+  labels:
+    app.kubernetes.io/name: restopro
+    app.kubernetes.io/part-of: restopro-enterprise
+data:
+  NODE_ENV: production
+  PORT: "4000"
+  FRONTEND_URL: "https://restopro.example.com"
+  JWT_EXPIRES_IN: "15m"
+  JWT_REFRESH_EXPIRES_IN: "7d"
+  PRISMA_AUTO_MIGRATE: "true"
+  SEED_DATABASE: "false"
+  TZ: America/Bogota
