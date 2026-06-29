@@ -1,8 +1,11 @@
+import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../../config/database/prisma.js'
 import { env } from '../../config/env.js'
 import { AppError } from '../../common/filters/error-handler.js'
+import { sendWelcomeEmail } from '../notifications/email.service.js'
+import { SUBSCRIPTION_PLANS } from '@gastrocore/shared'
 import type { JwtPayload, AuthTokens } from '@gastrocore/shared'
 
 export class AuthService {
@@ -39,24 +42,30 @@ export class AuthService {
 
   async register(data: {
     email: string
-    password: string
+    password?: string
     name: string
     tenantName: string
     businessType: string
+    planId?: string
   }) {
     const existing = await prisma.user.findFirst({ where: { email: data.email } })
     if (existing) {
       throw new AppError(409, 'EMAIL_EXISTS', 'Email already registered')
     }
 
-    const passwordHash = await bcrypt.hash(data.password, this.saltRounds)
+    // Auto-generate password if not provided
+    const rawPassword = data.password || this.generatePassword()
+    const passwordHash = await bcrypt.hash(rawPassword, this.saltRounds)
+
+    const planId = (data.planId || 'basic') as keyof typeof SUBSCRIPTION_PLANS
+    const plan = SUBSCRIPTION_PLANS[planId]
 
     const tenant = await prisma.tenant.create({
       data: {
         name: data.tenantName,
         slug: data.tenantName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
         businessType: data.businessType as never,
-        subscriptionPlan: 'basic',
+        subscriptionPlan: planId,
         subscriptionStatus: 'trial',
       },
     })
@@ -71,6 +80,36 @@ export class AuthService {
       },
     })
 
+    // Create subscription record if plan has features
+    if (plan) {
+      const subscription = await prisma.subscription.create({
+        data: {
+          tenantId: tenant.id,
+          plan: planId as any,
+          status: 'trial',
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      })
+
+      await prisma.subscriptionInvoice.create({
+        data: {
+          subscriptionId: subscription.id,
+          amount: plan.priceMonthly,
+          status: 'pending',
+          periodStart: subscription.currentPeriodStart,
+          periodEnd: subscription.currentPeriodEnd,
+        },
+      })
+
+      // Create feature flags from plan
+      for (const feature of plan.features) {
+        await prisma.tenantFeatureFlag.create({
+          data: { tenantId: tenant.id, feature, enabled: true },
+        })
+      }
+    }
+
     const tokens = this.generateTokens({
       sub: user.id,
       tenantId: tenant.id,
@@ -78,7 +117,25 @@ export class AuthService {
       email: user.email,
     })
 
-    return { user: { id: user.id, email: user.email, name: user.name, role: user.role }, tenant, tokens }
+    // Send welcome email with credentials (non-blocking)
+    sendWelcomeEmail(data.email, data.name, data.email, rawPassword)
+      .then((sent) => {
+        if (sent) console.log(`[Auth] Welcome email sent to ${data.email}`)
+        else console.warn(`[Auth] Could not send welcome email to ${data.email}`)
+      })
+      .catch((err) => console.warn(`[Auth] Email error for ${data.email}:`, err.message))
+
+    return {
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      tenant,
+      tokens,
+      credentials: { email: data.email, password: rawPassword },
+    }
+  }
+
+  private generatePassword(length = 12): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*'
+    return Array.from(crypto.randomBytes(length), (byte) => chars[byte % chars.length]).join('')
   }
 
   async refresh(refreshToken: string): Promise<AuthTokens> {

@@ -29,14 +29,14 @@ export function useRegister() {
   return useMutation({
     mutationFn: (data: {
       email: string
-      password: string
       name: string
       tenantName: string
       businessType: string
+      planId?: string
     }) => api.post('/auth/register', data).then((r) => r.data.data),
     onSuccess: (data) => {
       setAuth(data.user, data.tokens)
-      toast.success('Cuenta creada exitosamente')
+      toast.success('Cuenta creada — revisa tu correo para las credenciales')
       navigate('/onboarding')
     },
     onError: (err: any) => {

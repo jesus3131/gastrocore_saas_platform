@@ -129,9 +129,12 @@ export function OnboardingPage() {
                 <div>
                   <label className="label">Moneda</label>
                   <select value={profile.currency} onChange={(e) => setProfile({ ...profile, currency: e.target.value })} className="select">
-                    <option value="MXN">MXN</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
+                    <option value="MXN">MXN - Peso Mexicano</option>
+                    <option value="USD">USD - Dólar</option>
+                    <option value="COP">COP - Peso Colombiano</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="BRL">BRL - Real Brasileño</option>
+                    <option value="ARS">ARS - Peso Argentino</option>
                   </select>
                 </div>
                 <div>

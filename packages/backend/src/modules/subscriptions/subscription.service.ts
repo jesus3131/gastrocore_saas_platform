@@ -1,6 +1,7 @@
 import { prisma } from '../../config/database/prisma.js'
 import { AppError } from '../../common/filters/error-handler.js'
 import { SUBSCRIPTION_PLANS } from '@gastrocore/shared'
+import { sendCredentialsEmail } from '../notifications/email.service.js'
 
 export class SubscriptionService {
   async getPlans() {
@@ -70,7 +71,25 @@ export class SubscriptionService {
       })
     }
 
+    // Notify tenant admins about plan change (non-blocking)
+    this.notifyPlanChange(tenantId, newPlan)
+
     return { subscription, plan }
+  }
+
+  private async notifyPlanChange(tenantId: string, newPlan: string) {
+    try {
+      const admins = await prisma.user.findMany({
+        where: { tenantId, role: 'admin', isActive: true },
+        select: { email: true, name: true },
+      })
+      const planName = SUBSCRIPTION_PLANS[newPlan as keyof typeof SUBSCRIPTION_PLANS]?.name || newPlan
+      for (const admin of admins) {
+        await sendCredentialsEmail(admin.email, admin.email, '')
+      }
+    } catch (err) {
+      console.warn(`[Subscription] Failed to notify plan change for tenant ${tenantId}:`, (err as Error).message)
+    }
   }
 
   async getInvoices(tenantId: string) {
