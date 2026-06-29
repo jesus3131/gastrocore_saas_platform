@@ -66,6 +66,42 @@ export class InventoryService {
     })
   }
 
+  async updateRecipe(tenantId: string, id: string, data: any) {
+    const existing = await prisma.recipe.findFirst({
+      where: { id, menuItem: { tenantId } },
+      include: { ingredients: true },
+    })
+    if (!existing) throw new AppError(404, 'RECIPE_NOT_FOUND', 'Recipe not found')
+
+    // Recalculate total cost if ingredients provided
+    let totalCost = 0
+    if (data.ingredients) {
+      for (const ing of data.ingredients) {
+        const ingredient = await prisma.ingredient.findFirst({
+          where: { tenantId, id: ing.ingredientId },
+        })
+        if (!ingredient) continue
+        totalCost += Number(ingredient.unitCost) * Number(ing.quantity)
+      }
+
+      // Delete old ingredients and create new ones
+      await prisma.recipeIngredient.deleteMany({ where: { recipeId: id } })
+    }
+
+    const { ingredients, ...recipeData } = data
+
+    return prisma.recipe.update({
+      where: { id },
+      data: {
+        ...recipeData,
+        ...(ingredients
+          ? { ingredients: { create: ingredients.map((i: any) => ({ ingredientId: i.ingredientId, quantity: i.quantity })) } }
+          : {}),
+      },
+      include: { ingredients: { include: { ingredient: true } }, menuItem: true },
+    })
+  }
+
   async getRecipeByItem(menuItemId: string) {
     const recipe = await prisma.recipe.findFirst({
       where: { menuItemId },

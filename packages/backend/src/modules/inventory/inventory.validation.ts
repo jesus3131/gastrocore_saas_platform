@@ -33,3 +33,12 @@ export const createRecipeSchema = z.object({
   instructions: z.string().optional(),
   ingredients: z.array(recipeIngredientSchema).min(1),
 })
+
+export const updateRecipeSchema = z.object({
+  menuItemId: z.string().uuid().optional(),
+  name: z.string().min(1).max(255).optional(),
+  servings: z.number().int().positive().optional(),
+  wastePercentage: z.number().min(0).max(100).optional(),
+  instructions: z.string().optional(),
+  ingredients: z.array(recipeIngredientSchema).optional(),
+})

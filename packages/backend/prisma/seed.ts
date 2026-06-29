@@ -243,12 +243,12 @@ async function main() {
 
   // ─── Loyalty ──────────────────────────────────────────────
   const loyalty = await prisma.loyaltyProgram.create({
-    data: { tenantId: tenant.id, name: 'RestoPro Rewards', pointsPerUnit: 10, unitPerPoint: 1, tiers: JSON.stringify([
+    data: { tenantId: tenant.id, name: 'RestoPro Rewards', pointsPerUnit: 10, unitPerPoint: 1, tiers: [
       { name: 'Bronce', minPoints: 0, color: '#CD7F32', benefits: ['Acceso básico'] },
       { name: 'Plata', minPoints: 500, color: '#C0C0C0', benefits: ['Descuento 5%', 'Postre gratis en tu cumpleaños'] },
       { name: 'Oro', minPoints: 1500, color: '#FFD700', benefits: ['Descuento 10%', 'Postre gratis', 'Prioridad en reservas'] },
       { name: 'Platino', minPoints: 3500, color: '#E5E4E2', benefits: ['Descuento 15%', 'Menú degustación gratis', 'Eventos exclusivos', 'Acceso VIP'] },
-    ]) },
+    ] },
   })
 
   // ─── Orders ───────────────────────────────────────────────

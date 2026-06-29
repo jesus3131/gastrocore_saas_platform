@@ -24,6 +24,7 @@ interface Recipe {
   servings: number
   wastePercentage: number
   instructions?: string
+  menuItemId?: string
   menuItem?: { id: string; name: string; price: number }
   ingredients: RecipeIngredient[]
 }
@@ -32,8 +33,9 @@ export function RecipePage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null)
   const [ingredientLines, setIngredientLines] = useState<{ ingredientId: string; quantity: number }[]>([])
+  const [editing, setEditing] = useState(false)
   const queryClient = useQueryClient()
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<any>()
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<any>()
 
   const { data: recipes, isLoading, error, refetch } = useQuery({
     queryKey: ['inventory', 'recipes'],
@@ -63,22 +65,56 @@ export function RecipePage() {
     onError: (err: any) => toast.error(err.response?.data?.message || 'Error al crear'),
   })
 
+  const updateRecipe = useMutation({
+    mutationFn: (data: any) => api.put(`/inventory/recipes/${selectedRecipe!.id}`, {
+      ...data,
+      ingredients: ingredientLines.filter((l) => l.ingredientId && l.quantity > 0),
+    }),
+    onSuccess: () => {
+      toast.success('Receta actualizada exitosamente')
+      queryClient.invalidateQueries({ queryKey: ['inventory'] })
+      closeModal()
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Error al actualizar'),
+  })
+
   const closeModal = () => {
     setModalOpen(false)
     setSelectedRecipe(null)
     setIngredientLines([])
+    setEditing(false)
     reset()
   }
 
   const openCreate = () => {
     setSelectedRecipe(null)
+    setEditing(true)
     setIngredientLines([{ ingredientId: '', quantity: 0 }])
     reset({ name: '', menuItemId: '', servings: 1, wastePercentage: 0, instructions: '' })
     setModalOpen(true)
   }
 
+  const openEdit = (recipe: Recipe) => {
+    setSelectedRecipe(recipe)
+    setEditing(true)
+    const lines = recipe.ingredients?.map((ri) => ({
+      ingredientId: ri.ingredient.id,
+      quantity: Number(ri.quantity),
+    })) || [{ ingredientId: '', quantity: 0 }]
+    setIngredientLines(lines)
+    reset({
+      name: recipe.name,
+      menuItemId: recipe.menuItem?.id || recipe.menuItemId || '',
+      servings: recipe.servings,
+      wastePercentage: recipe.wastePercentage,
+      instructions: recipe.instructions || '',
+    })
+    setModalOpen(true)
+  }
+
   const openDetail = (recipe: Recipe) => {
     setSelectedRecipe(recipe)
+    setEditing(false)
     reset()
     setModalOpen(true)
   }
@@ -98,7 +134,11 @@ export function RecipePage() {
   }
 
   const onSubmit = (data: any) => {
-    createRecipe.mutate(data)
+    if (selectedRecipe) {
+      updateRecipe.mutate(data)
+    } else {
+      createRecipe.mutate(data)
+    }
   }
 
   if (isLoading) return <LoadingSkeleton rows={6} />
@@ -142,7 +182,7 @@ export function RecipePage() {
             return (
               <div key={recipe.id} className="card hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-3">
-                  <div>
+                  <div className="flex-1 cursor-pointer" onClick={() => openDetail(recipe)}>
                     <h3 className="font-semibold text-on-surface">{recipe.name}</h3>
                     <p className="text-2xs text-on-surface-muted">
                       {recipe.servings} porcione{recipe.servings !== 1 ? 's' : ''}
@@ -150,7 +190,7 @@ export function RecipePage() {
                       {recipe.wastePercentage > 0 && ` · ${recipe.wastePercentage}% merma`}
                     </p>
                   </div>
-                  <button onClick={() => openDetail(recipe)} className="btn-ghost btn-sm p-1">
+                  <button onClick={() => openEdit(recipe)} className="btn-ghost btn-sm p-1" title="Editar receta">
                     <Edit className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -215,13 +255,11 @@ export function RecipePage() {
         />
       )}
 
-      <Modal open={modalOpen} onClose={closeModal} title={selectedRecipe ? selectedRecipe.name : 'Nueva Receta'} size={selectedRecipe ? 'xl' : 'lg'}>
-        {selectedRecipe ? (
-          <RecipeDetail recipe={selectedRecipe} ingredients={ingredients || []} />
-        ) : (
+      <Modal open={modalOpen} onClose={closeModal} title={selectedRecipe ? (editing ? `Editar: ${selectedRecipe.name}` : selectedRecipe.name) : 'Nueva Receta'} size={editing ? 'lg' : 'xl'}>
+        {editing ? (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <FormField label="Nombre de la Receta" registration={register('name', { required: true })} error={errors.name ? 'Requerido' : undefined} placeholder="Ej: Hamburguesa Clásica" />
-            
+
             <FormField label="Vincular a producto del Menú" type="select" registration={register('menuItemId')} options={[
               { value: '', label: 'Sin vínculo (solo receta)' },
               ...allMenuItems.map((mi: any) => ({ value: mi.id, label: `${mi.name} - $${Number(mi.price).toFixed(2)}` })),
@@ -293,18 +331,20 @@ export function RecipePage() {
 
             <div className="flex gap-2 pt-2">
               <button type="button" onClick={closeModal} className="btn-secondary flex-1">Cancelar</button>
-              <button type="submit" className="btn-primary flex-1" disabled={createRecipe.isPending}>
-                {createRecipe.isPending ? 'Creando...' : 'Crear Receta'}
+              <button type="submit" className="btn-primary flex-1" disabled={createRecipe.isPending || updateRecipe.isPending}>
+                {(createRecipe.isPending || updateRecipe.isPending) ? 'Guardando...' : selectedRecipe ? 'Actualizar Receta' : 'Crear Receta'}
               </button>
             </div>
           </form>
-        )}
+        ) : selectedRecipe ? (
+          <RecipeDetail recipe={selectedRecipe} ingredients={ingredients || []} onEdit={() => openEdit(selectedRecipe)} />
+        ) : null}
       </Modal>
     </div>
   )
 }
 
-function RecipeDetail({ recipe, ingredients }: { recipe: Recipe; ingredients: any[] }) {
+function RecipeDetail({ recipe, ingredients, onEdit }: { recipe: Recipe; ingredients: any[]; onEdit: () => void }) {
   const totalCost = recipe.ingredients?.reduce(
     (sum: number, ri: RecipeIngredient) => sum + Number(ri.ingredient.unitCost) * Number(ri.quantity), 0
   ) || 0
@@ -316,6 +356,12 @@ function RecipeDetail({ recipe, ingredients }: { recipe: Recipe; ingredients: an
 
   return (
     <div className="space-y-5">
+      <div className="flex justify-end">
+        <button onClick={onEdit} className="btn-primary btn-sm">
+          <Edit className="w-3.5 h-3.5" /> Editar Receta
+        </button>
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-3 rounded-lg bg-surface-container text-center">
           <p className="text-2xs text-on-surface-muted">Costo Total</p>

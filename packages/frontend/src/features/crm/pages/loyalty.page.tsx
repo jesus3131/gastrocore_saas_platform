@@ -1,10 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
-import { Gift, Star, Medal, Award, Trophy } from 'lucide-react'
+import { Gift, Star, Medal, Award, Trophy, RefreshCw } from 'lucide-react'
 import { api } from '../../../lib/api'
 import { MetricCard, EmptyState, ErrorState } from '../../../shared/components/ui'
 import { LoadingSkeleton } from '../../../shared/components/ui/loading'
 
-const tierIcons: Record<string, any> = { bronze: Medal, silver: Award, gold: Star, platinum: Trophy }
+const tierIcons: Record<string, any> = {
+  bronce: Medal, plata: Award, oro: Star, platino: Trophy,
+  bronze: Medal, silver: Award, gold: Star, platinum: Trophy,
+}
+
+function parseTiers(tiers: unknown): any[] {
+  if (Array.isArray(tiers)) return tiers
+  if (typeof tiers === 'string') {
+    try { return JSON.parse(tiers) } catch { return [] }
+  }
+  return []
+}
 
 export function LoyaltyPage() {
   const { data: program, isLoading: loadingProgram, error: errorProgram, refetch: refetchProgram } = useQuery({
@@ -12,15 +23,16 @@ export function LoyaltyPage() {
     queryFn: () => api.get('/crm/loyalty').then((r) => r.data.data),
   })
 
-  const { data: rewards, isLoading: loadingRewards } = useQuery({
+  const { data: rewards, isLoading: loadingRewards, error: errorRewards, refetch: refetchRewards } = useQuery({
     queryKey: ['crm', 'rewards'],
     queryFn: () => api.get('/crm/rewards').then((r) => r.data.data),
   })
 
   if (loadingProgram || loadingRewards) return <LoadingSkeleton rows={6} />
   if (errorProgram) return <ErrorState message="Error al cargar programa de lealtad" onRetry={refetchProgram} />
+  if (errorRewards) return <ErrorState message="Error al cargar canjes" onRetry={() => { refetchProgram(); refetchRewards() }} />
 
-  const tiers = program?.tiers || []
+  const tiers = parseTiers(program?.tiers)
   const totalPoints = rewards?.reduce((s: number, r: any) => s + r.points, 0) || 0
 
   return (
@@ -53,9 +65,22 @@ export function LoyaltyPage() {
                   </div>
                   <p className="text-sm font-bold text-on-surface mt-2">{tier.name}</p>
                   <p className="text-2xs text-on-surface-muted">{tier.minPoints} pts mínimo</p>
-                  <div className="mt-2 inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
-                    style={{ backgroundColor: (tier.color || '#F59E0B') + '20', color: tier.color || '#F59E0B' }}>
-                    {(tier.discount * 100).toFixed(0)}% descuento
+                  <div className="mt-2 flex flex-wrap gap-1 justify-center">
+                    {tier.benefits?.slice(0, 2).map((b: string, i: number) => (
+                      <span key={i} className="inline-block rounded-full px-2 py-0.5 text-2xs font-medium"
+                        style={{ backgroundColor: (tier.color || '#F59E0B') + '20', color: tier.color || '#F59E0B' }}>
+                        {b}
+                      </span>
+                    ))}
+                    {(tier.benefits?.length || 0) > 2 && (
+                      <span className="text-2xs text-on-surface-muted">+{tier.benefits.length - 2} más</span>
+                    )}
+                    {!tier.benefits && tier.discount != null && (
+                      <span className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
+                        style={{ backgroundColor: (tier.color || '#F59E0B') + '20', color: tier.color || '#F59E0B' }}>
+                        {(tier.discount * 100).toFixed(0)}% descuento
+                      </span>
+                    )}
                   </div>
                 </div>
               )

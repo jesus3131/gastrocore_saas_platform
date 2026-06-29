@@ -71,6 +71,10 @@ export class CrmService {
       })
     }
 
+    // Ensure tiers is a parsed array (not a JSON string)
+    if (program && typeof program.tiers === 'string') {
+      program.tiers = JSON.parse(program.tiers as string)
+    }
     return program
   }
 
