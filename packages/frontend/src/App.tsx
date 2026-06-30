@@ -29,6 +29,7 @@ import { JournalEntriesPage } from './features/accounting/pages/journal-entries.
 import { FinancialStatementsPage } from './features/accounting/pages/financial-statements.page'
 import { AccountingSettingsPage } from './features/accounting/pages/accounting-settings.page'
 import { SuperAdminPage } from './features/super-admin/pages/super-admin.page'
+import { CompanyDetailPage } from './features/super-admin/pages/company-detail.page'
 
 function SessionGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, tokens, logout, setAuth, user } = useAuthStore()
@@ -127,6 +128,7 @@ export function App() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="settings/profile" element={<ProfilePage />} />
         <Route path="super-admin" element={<SuperAdminPage />} />
+        <Route path="super-admin/companies/:id" element={<CompanyDetailPage />} />
       </Route>
     </Routes>
   )

@@ -20,10 +20,18 @@ export class SubscriptionService {
 
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
-      select: { subscriptionPlan: true, subscriptionStatus: true },
+      select: { subscriptionPlan: true, subscriptionStatus: true, customFields: true },
     })
 
-    return { subscription, currentPlan: tenant }
+    const plan = tenant ? SUBSCRIPTION_PLANS[tenant.subscriptionPlan] : null
+    const extraUsers = (tenant?.customFields as any)?.extraUsers || 0
+
+    return {
+      subscription,
+      currentPlan: tenant,
+      plan: plan ? { ...plan, id: tenant?.subscriptionPlan } : null,
+      extraUsers,
+    }
   }
 
   async changePlan(tenantId: string, newPlan: string) {

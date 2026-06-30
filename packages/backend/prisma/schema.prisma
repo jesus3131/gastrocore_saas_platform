@@ -61,6 +61,7 @@ enum EmployeeRole {
   cashier
   host
   delivery
+  accountant
 }
 
 enum ShiftStatus {

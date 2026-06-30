@@ -26,6 +26,12 @@ export async function authGuard(req: Request, _res: Response, next: NextFunction
     const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload
     req.user = payload
     req.tenantId = payload.tenantId
+
+    const headerTenantId = req.headers['x-tenant-id'] as string | undefined
+    if (headerTenantId && payload.role !== 'super_admin' && headerTenantId !== payload.tenantId) {
+      return next(new AppError(403, 'TENANT_MISMATCH', 'x-tenant-id does not match your tenant'))
+    }
+
     next()
   } catch {
     return next(new AppError(401, 'UNAUTHORIZED', 'Invalid or expired token'))

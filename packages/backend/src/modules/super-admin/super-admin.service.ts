@@ -17,6 +17,7 @@ export class SuperAdminService {
           select: { id: true, email: true, name: true, createdAt: true },
           take: 1,
         },
+        featureFlags: { select: { feature: true, enabled: true } },
         _count: { select: { users: true, branches: true } },
       },
     })
@@ -29,6 +30,11 @@ export class SuperAdminService {
       locale: t.locale,
       timezone: t.timezone,
       currency: t.currency,
+      taxId: (t.customFields as any)?.taxId || null,
+      address: (t.customFields as any)?.address || null,
+      phone: (t.customFields as any)?.phone || null,
+      extraUsers: (t.customFields as any)?.extraUsers || 0,
+      features: t.featureFlags,
       admin: t.users[0] || null,
       userCount: t._count.users,
       branchCount: t._count.branches,
@@ -45,11 +51,18 @@ export class SuperAdminService {
           select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true, lastLoginAt: true },
         },
         subscriptions: { orderBy: { createdAt: 'desc' }, take: 3, include: { invoices: true } },
+        featureFlags: { select: { feature: true, enabled: true } },
         _count: { select: { users: true, branches: true, orders: true, customers: true } },
       },
     })
     if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
-    return tenant
+    return {
+      ...tenant,
+      taxId: (tenant.customFields as any)?.taxId || null,
+      address: (tenant.customFields as any)?.address || null,
+      phone: (tenant.customFields as any)?.phone || null,
+      extraUsers: (tenant.customFields as any)?.extraUsers || 0,
+    }
   }
 
   async createCompany(data: {
@@ -58,6 +71,9 @@ export class SuperAdminService {
     adminEmail: string
     businessType: string
     planId: string
+    taxId?: string
+    address?: string
+    phone?: string
   }) {
     const existing = await prisma.user.findFirst({ where: { email: data.adminEmail } })
     if (existing) throw new AppError(409, 'EMAIL_EXISTS', 'Email already registered')
@@ -68,6 +84,11 @@ export class SuperAdminService {
     const planId = (data.planId || 'basic') as keyof typeof SUBSCRIPTION_PLANS
     const plan = SUBSCRIPTION_PLANS[planId]
 
+    const customFields: Record<string, unknown> = {}
+    if (data.taxId) customFields.taxId = data.taxId
+    if (data.address) customFields.address = data.address
+    if (data.phone) customFields.phone = data.phone
+
     const tenant = await prisma.tenant.create({
       data: {
         name: data.companyName,
@@ -75,6 +96,7 @@ export class SuperAdminService {
         businessType: data.businessType as never,
         subscriptionPlan: planId,
         subscriptionStatus: 'trial',
+        customFields: customFields as any,
       },
     })
 
@@ -129,6 +151,86 @@ export class SuperAdminService {
       admin: { id: user.id, email: user.email, name: user.name },
       credentials: { email: data.adminEmail, password: rawPassword },
     }
+  }
+
+  async updateCompany(id: string, data: {
+    companyName?: string
+    businessType?: string
+    planId?: string
+    taxId?: string
+    address?: string
+    phone?: string
+    extraUsers?: number
+  }) {
+    const tenant = await prisma.tenant.findUnique({ where: { id } })
+    if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
+
+    const customFields = { ...(tenant.customFields as Record<string, unknown>) }
+
+    const updateData: Record<string, unknown> = {}
+
+    if (data.companyName) updateData.name = data.companyName
+    if (data.businessType) updateData.businessType = data.businessType
+    if (data.planId) updateData.subscriptionPlan = data.planId
+
+    if (data.taxId !== undefined) customFields.taxId = data.taxId
+    if (data.address !== undefined) customFields.address = data.address
+    if (data.phone !== undefined) customFields.phone = data.phone
+    if (data.extraUsers !== undefined) customFields.extraUsers = data.extraUsers
+
+    updateData.customFields = customFields
+
+    const updated = await prisma.tenant.update({
+      where: { id },
+      data: updateData as any,
+    })
+
+    // If plan changed, update subscription and feature flags
+    if (data.planId) {
+      const plan = SUBSCRIPTION_PLANS[data.planId as keyof typeof SUBSCRIPTION_PLANS]
+      if (plan) {
+        await prisma.subscription.create({
+          data: {
+            tenantId: id,
+            plan: data.planId as any,
+            status: 'active',
+            currentPeriodStart: new Date(),
+            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          },
+        })
+
+        // Replace feature flags with new plan's features
+        await prisma.tenantFeatureFlag.deleteMany({ where: { tenantId: id } })
+        for (const feature of plan.features) {
+          await prisma.tenantFeatureFlag.create({
+            data: { tenantId: id, feature, enabled: true },
+          })
+        }
+      }
+    }
+
+    return {
+      id: updated.id,
+      name: updated.name,
+      businessType: updated.businessType,
+      subscriptionPlan: updated.subscriptionPlan,
+      customFields: updated.customFields,
+    }
+  }
+
+  async updateModules(companyId: string, features: { feature: string; enabled: boolean }[]) {
+    const tenant = await prisma.tenant.findUnique({ where: { id: companyId } })
+    if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
+
+    for (const f of features) {
+      await prisma.tenantFeatureFlag.upsert({
+        where: { tenantId_feature: { tenantId: companyId, feature: f.feature } },
+        create: { tenantId: companyId, feature: f.feature, enabled: f.enabled },
+        update: { enabled: f.enabled },
+      })
+    }
+
+    return { message: 'Modules updated successfully' }
   }
 
   async resendCredentials(companyId: string) {

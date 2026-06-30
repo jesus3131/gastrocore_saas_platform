@@ -95,7 +95,7 @@ async function main() {
   })
 
   // ─── Feature Flags ────────────────────────────────────────
-  const features = ['kds', 'table_management', 'split_bills', 'inventory_auto', 'hr_scheduling', 'bcg_matrix', 'crm_full', 'loyalty_program']
+  const features = ['kds', 'table_management', 'split_bills', 'inventory_auto', 'hr_scheduling', 'bcg_matrix', 'crm_full', 'loyalty_program', 'pos', 'analytics', 'accounting']
   for (const feature of features) {
     await prisma.tenantFeatureFlag.create({
       data: { tenantId: tenant.id, feature, enabled: true },

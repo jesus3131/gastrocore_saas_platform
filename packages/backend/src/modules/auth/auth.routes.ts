@@ -8,6 +8,9 @@ const router = Router()
 const controller = new AuthController()
 
 router.post('/login', validate(loginSchema), controller.login.bind(controller))
+router.get('/ping', (_req, res) => {
+  res.json({ success: true, data: { message: 'pong' } })
+})
 router.post('/register', validate(registerSchema), controller.register.bind(controller))
 router.post('/refresh', controller.refresh.bind(controller))
 router.post('/logout', authGuard, controller.logout.bind(controller))

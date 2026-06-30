@@ -145,12 +145,12 @@ El sistema se auto-configura según el tipo de negocio:
 
 | Tipo | Features Activadas |
 |------|-------------------|
-| **Alta Cocina** | Mesas, splits, KDS, CRM, loyalty, BCG, inventario, RRHH |
-| **Fast Food** | KDS, online ordering, delivery, inventario |
-| **Cafetería** | KDS, online, loyalty, inventario |
-| **Food Truck** | KDS, online, delivery |
-| **Bar** | Mesas, splits, KDS, loyalty, RRHH |
-| **Franquicia** | Multi-sucursal, todo incluido |
+| **Alta Cocina** | POS, Mesas, splits, KDS, CRM, loyalty, BCG, inventario, RRHH, analítica, contabilidad |
+| **Fast Food** | POS, KDS, online ordering, delivery, inventario, analítica |
+| **Cafetería** | POS, KDS, online, loyalty, inventario, analítica |
+| **Food Truck** | POS, KDS, online, delivery |
+| **Bar** | POS, Mesas, splits, KDS, loyalty, RRHH, analítica, contabilidad |
+| **Franquicia** | POS, Multi-sucursal, todo incluido |
 
 Flujo de onboarding:
 1. Registro → selección de tipo de negocio
@@ -168,12 +168,15 @@ Flujo de onboarding:
 | Sucursales | 1 | 3 | ∞ |
 | Transacciones/mes | 1,000 | 10,000 | ∞ |
 | Almacenamiento | 5 GB | 50 GB | 500 GB |
-| **POS + Mesas** | ✅ | ✅ | ✅ |
+| **POS (Punto de Venta)** | ✅ | ✅ | ✅ |
 | **KDS (Cocina)** | ✅ | ✅ | ✅ |
+| **Mapa de Mesas** | ✅ | ✅ | ✅ |
 | **Split de cuentas** | ✅ | ✅ | ✅ |
 | **Inventario** | — | ✅ | ✅ |
 | **RRHH** | — | ✅ | ✅ |
 | **CRM** | — | ✅ | ✅ |
+| **Analítica** | — | ✅ | ✅ |
+| **Contabilidad** | — | ✅ | ✅ |
 | **Facturación electrónica** | — | ✅ | ✅ |
 | **Integración delivery** | — | ✅ | ✅ |
 | **BCG Matrix** | — | — | ✅ |
@@ -231,6 +234,7 @@ packages/frontend/prototypes/pos/vista/pos-order-taking.html
 ### Admin
 | Email | Contraseña | Rol |
 |-------|-----------|:---:|
+| `superadmin@restopro.com` | `RestoPro2024!` | super_admin |
 | `admin@lacocina.com` | `admin123` | admin |
 
 ### Empleados PIN (Waiter Service)
@@ -347,6 +351,13 @@ uvicorn main:app --reload --port 8000
 ---
 
 ## 🛠️ Mejoras Recientes
+
+- **Fix feature flags en navegación**: Los nav items del dashboard usaban nombres incorrectos (`'inventory'` vs `'inventory_auto'`, `'hr'` vs `'hr_scheduling'`, etc.) que nunca coincidían con los feature flags reales, ocultando todos los módulos. Se agregaron flags `'pos'`, `'analytics'`, `'accounting'` al tipo `FeatureFlag` y se corrigieron los nombres en `dashboard.layout.tsx`.
+- **Super Admin Module**: Panel completo para crear empresas con NIT/RUT, dirección, teléfono; editar plan y módulos; vender cupos extra de usuarios. Rutas: `PUT /super/companies/:id`, `PUT /super/companies/:id/modules`.
+- **Cross-tenant validation**: Guard `authGuard` valida que `x-tenant-id` coincida con el JWT (excepto super_admin), retornando `403 TENANT_MISMATCH`.
+- **Rol contador (`accountant`)**: Nuevo rol en Prisma schema, `EmployeeRole`, `ROLE_PERMISSIONS` con permisos de contabilidad y reportes. Filtro "Contabilidad" en frontend HR.
+- **User limit enforcement**: `HrService.createEmployee` valúa `plan.maxUsers + extraUsers` contra empleados activos, retornando `403 USER_LIMIT_REACHED`.
+- **Plan comparison table**: Tabla interactiva en Settings con features, límites y precios de Básico/Pro/Enterprise.
 
 - **Fix seed `createAccountTree`**: La función recursiva no propagaba los resultados de cuentas hijas al arreglo principal, causando error `"Cannot read properties of undefined (reading 'id')"` al referenciar cuentas leaf por código contable (ej. `accMap['1101']`). Solución: propagar `results.push(...await createAccountTree(...))` para incluir todas las cuentas (padres + hijos).
 - **Fix TypeScript `tsc -b`**: `tsconfig.node.json` tenía `noEmit: false` con `allowImportingTsExtensions`, incompatible en TS 5.x. Cambiado a `emitDeclarationOnly: true`.

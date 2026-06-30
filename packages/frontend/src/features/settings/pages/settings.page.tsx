@@ -4,7 +4,48 @@ import toast from 'react-hot-toast'
 import { api } from '../../../lib/api'
 import { Modal, ConfirmDialog, EmptyState, ErrorState } from '../../../shared/components/ui'
 import { LoadingSkeleton } from '../../../shared/components/ui/loading'
-import { Save, CreditCard, RefreshCw, Eye, EyeOff } from 'lucide-react'
+import { Save, CreditCard, RefreshCw, Check, Minus, Info } from 'lucide-react'
+
+const FEATURE_LABELS: Record<string, string> = {
+  pos: 'POS (Punto de Venta)',
+  kds: 'KDS (Cocina)',
+  table_management: 'Mapa de Mesas',
+  split_bills: 'Split de cuentas',
+  online_ordering: 'Pedidos en línea',
+  inventory_auto: 'Inventario',
+  hr_scheduling: 'RRHH',
+  crm_full: 'CRM',
+  analytics: 'Analítica',
+  accounting: 'Contabilidad',
+  electronic_invoice: 'Facturación electrónica',
+  delivery_integration: 'Integración delivery',
+  bcg_matrix: 'BCG Matrix',
+  loyalty_program: 'Loyalty Program',
+  multi_branch: 'Multi-sucursal',
+}
+
+const PLAN_FEATURES_MATRIX: Record<string, { basic: boolean; pro: boolean; enterprise: boolean }> = {
+  pos: { basic: true, pro: true, enterprise: true },
+  table_management: { basic: true, pro: true, enterprise: true },
+  split_bills: { basic: true, pro: true, enterprise: true },
+  kds: { basic: true, pro: true, enterprise: true },
+  inventory_auto: { basic: false, pro: true, enterprise: true },
+  hr_scheduling: { basic: false, pro: true, enterprise: true },
+  electronic_invoice: { basic: false, pro: true, enterprise: true },
+  delivery_integration: { basic: false, pro: true, enterprise: true },
+  crm_full: { basic: false, pro: true, enterprise: true },
+  online_ordering: { basic: false, pro: true, enterprise: true },
+  analytics: { basic: false, pro: true, enterprise: true },
+  accounting: { basic: false, pro: true, enterprise: true },
+  bcg_matrix: { basic: false, pro: false, enterprise: true },
+  loyalty_program: { basic: false, pro: false, enterprise: true },
+  multi_branch: { basic: false, pro: false, enterprise: true },
+}
+
+const PLAN_IDS = ['basic', 'pro', 'enterprise'] as const
+
+const PLAN_LABELS: Record<string, string> = { basic: 'Básico', pro: 'Pro', enterprise: 'Enterprise' }
+const PLAN_PRICES: Record<string, string> = { basic: '$49/mes', pro: '$129/mes', enterprise: '$349/mes' }
 
 export function SettingsPage() {
   const [configForm, setConfigForm] = useState<any>(null)
@@ -52,11 +93,13 @@ export function SettingsPage() {
   if (isLoading) return <LoadingSkeleton rows={6} />
   if (error) return <ErrorState message="Error al cargar configuración" onRetry={refetch} />
 
-  const currentPlan = plans?.find((p: any) => p.id === subscription?.planId)
+  const currentPlanId = subscription?.plan?.id || subscription?.currentPlan?.subscriptionPlan || 'basic'
+  const hasExtraUsers = (subscription?.extraUsers || 0) > 0
+  const totalUsers = (subscription?.plan?.maxUsers || 0) + (subscription?.extraUsers || 0)
   const featureList = features?.features || []
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-3xl">
+    <div className="space-y-6 animate-fade-in max-w-4xl">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-on-surface">Configuración</h1>
         <button onClick={() => { setConfigForm({ ...config }); refetch() }} className="btn-secondary btn-sm">
@@ -137,7 +180,7 @@ export function SettingsPage() {
           {featureList.length > 0 ? (
             featureList.map((f: any) => (
               <span key={f.feature} className={`badge ${f.enabled ? 'badge-success' : 'badge-neutral'}`}>
-                {f.feature.replace(/_/g, ' ')}
+                {FEATURE_LABELS[f.feature] || f.feature.replace(/_/g, ' ')}
               </span>
             ))
           ) : (
@@ -148,85 +191,170 @@ export function SettingsPage() {
 
       <div className="card space-y-3">
         <div className="card-header">
-          <h3 className="card-title">Suscripción</h3>
+          <h3 className="card-title">Plan Actual</h3>
           <CreditCard className="w-4 h-4 text-on-surface-muted" />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-on-surface-muted/10">
+                <th className="text-left py-2 pr-4 text-xs text-on-surface-muted font-medium">Característica</th>
+                {PLAN_IDS.map((pid) => (
+                  <th key={pid} className={`py-2 px-3 text-center text-xs font-bold ${pid === currentPlanId ? 'text-primary' : 'text-on-surface-muted'}`}>
+                    {PLAN_LABELS[pid]}
+                    <span className="block text-2xs font-normal">{PLAN_PRICES[pid]}</span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-on-surface-muted/5">
+                <td className="py-2 pr-4 text-xs text-on-surface font-medium">Usuarios</td>
+                {PLAN_IDS.map((pid) => (
+                  <td key={pid} className={`py-2 px-3 text-center text-xs ${pid === currentPlanId ? 'font-bold text-primary' : 'text-on-surface-muted'}`}>
+                    {pid === 'basic' ? '3' : pid === 'pro' ? '15' : '∞'}
+                  </td>
+                ))}
+              </tr>
+              <tr className="border-b border-on-surface-muted/5">
+                <td className="py-2 pr-4 text-xs text-on-surface font-medium">Sucursales</td>
+                {PLAN_IDS.map((pid) => (
+                  <td key={pid} className={`py-2 px-3 text-center text-xs ${pid === currentPlanId ? 'font-bold text-primary' : 'text-on-surface-muted'}`}>
+                    {pid === 'basic' ? '1' : pid === 'pro' ? '3' : '∞'}
+                  </td>
+                ))}
+              </tr>
+              <tr className="border-b border-on-surface-muted/5">
+                <td className="py-2 pr-4 text-xs text-on-surface font-medium">Transacciones/mes</td>
+                {PLAN_IDS.map((pid) => (
+                  <td key={pid} className={`py-2 px-3 text-center text-xs ${pid === currentPlanId ? 'font-bold text-primary' : 'text-on-surface-muted'}`}>
+                    {pid === 'basic' ? '1,000' : pid === 'pro' ? '10,000' : '∞'}
+                  </td>
+                ))}
+              </tr>
+              <tr className="border-b border-on-surface-muted/5">
+                <td className="py-2 pr-4 text-xs text-on-surface font-medium">Almacenamiento</td>
+                {PLAN_IDS.map((pid) => (
+                  <td key={pid} className={`py-2 px-3 text-center text-xs ${pid === currentPlanId ? 'font-bold text-primary' : 'text-on-surface-muted'}`}>
+                    {pid === 'basic' ? '5 GB' : pid === 'pro' ? '50 GB' : '500 GB'}
+                  </td>
+                ))}
+              </tr>
+              {Object.entries(PLAN_FEATURES_MATRIX).map(([feature, matrix]) => (
+                <tr key={feature} className="border-b border-on-surface-muted/5 last:border-0">
+                  <td className="py-2 pr-4 text-xs text-on-surface">{FEATURE_LABELS[feature] || feature}</td>
+                  {PLAN_IDS.map((pid) => (
+                    <td key={pid} className="py-2 px-3 text-center">
+                      {matrix[pid as keyof typeof matrix] ? (
+                        <Check className="w-4 h-4 text-success mx-auto" />
+                      ) : (
+                        <Minus className="w-4 h-4 text-on-surface-muted/40 mx-auto" />
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
           <div>
-            <p className="text-2xs text-on-surface-muted">Plan Actual</p>
-            <p className="text-sm font-bold text-on-surface capitalize">{currentPlan?.name || subscription?.planId || 'Básico'}</p>
-          </div>
-          <div>
-            <p className="text-2xs text-on-surface-muted">Estado</p>
-            <p className="text-sm font-semibold">
-              <span className={`badge-${subscription?.status === 'active' ? 'success' : subscription?.status === 'trial' ? 'warning' : 'error'}`}>
-                {subscription?.status || 'active'}
-              </span>
+            <p className="text-sm font-bold text-on-surface">
+              {PLAN_LABELS[currentPlanId]} — {PLAN_PRICES[currentPlanId]}
+            </p>
+            <p className="text-xs text-on-surface-muted">
+              {totalUsers} usuarios disponibles
+              {hasExtraUsers && <span className="text-success ml-1">(+{subscription?.extraUsers} extra)</span>}
+              {' · '}Plan {subscription?.subscription?.status || 'activo'}
             </p>
           </div>
-          <div>
-            <p className="text-2xs text-on-surface-muted">Usuarios</p>
-            <p className="text-sm font-semibold">{subscription?.maxUsers || currentPlan?.maxUsers || 3}</p>
-          </div>
-          <div>
-            <p className="text-2xs text-on-surface-muted">Precio</p>
-            <p className="text-sm font-semibold text-primary">${currentPlan?.priceMonthly || 49}/mes</p>
-          </div>
-        </div>
-        <div className="flex gap-2 pt-2">
-          <button onClick={() => setShowSubModal(true)} className="btn-secondary btn-sm">Cambiar Plan</button>
-          <button onClick={() => setShowInvoiceModal(true)} className="btn-ghost btn-sm">Ver Facturas</button>
+          <button onClick={() => setShowSubModal(true)} className="btn-primary btn-sm">
+            Cambiar Plan
+          </button>
         </div>
 
-        {currentPlan?.features && (
-          <div className="mt-3 pt-3 border-t border-on-surface-muted/10">
-            <p className="text-xs font-semibold text-on-surface mb-2">Características del Plan:</p>
-            <div className="flex flex-wrap gap-1.5">
-              {currentPlan.features.map((f: string) => (
-                <span key={f} className="badge-info text-2xs">{f.replace(/_/g, ' ')}</span>
-              ))}
-            </div>
-          </div>
-        )}
+        <button onClick={() => setShowInvoiceModal(true)} className="btn-ghost btn-sm self-start">
+          Ver Facturas
+        </button>
       </div>
 
-      <Modal open={showSubModal} onClose={() => setShowSubModal(false)} title="Cambiar Plan" size="lg">
-        <div className="space-y-4">
-          {plans?.map((plan: any) => (
-            <div
-              key={plan.id}
-              className={`p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
-                plan.id === subscription?.planId ? 'border-primary bg-primary/5' : 'border-on-surface-muted/10'
-              }`}
-              onClick={() => {
-                if (plan.id !== subscription?.planId) {
-                  changePlan.mutate({ planId: plan.id })
-                }
-              }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-bold text-on-surface">{plan.name}</h4>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-primary">${plan.priceMonthly}/mes</p>
-                  <p className="text-2xs text-on-surface-muted">${plan.priceYearly}/año</p>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {plan.features?.map((f: string) => (
-                  <span key={f} className="badge-neutral text-2xs">{f.replace(/_/g, ' ')}</span>
+      <Modal open={showSubModal} onClose={() => setShowSubModal(false)} title="Comparar Planes" size="xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-on-surface-muted/10">
+                <th className="text-left py-3 pr-4 text-xs text-on-surface-muted font-medium">Característica</th>
+                {PLAN_IDS.map((pid) => (
+                  <th key={pid} className={`py-3 px-4 text-center ${pid === currentPlanId ? 'bg-primary/5' : ''}`}>
+                    <div className={`text-sm font-bold ${pid === currentPlanId ? 'text-primary' : 'text-on-surface'}`}>{PLAN_LABELS[pid]}</div>
+                    <div className="text-lg font-bold text-primary">{PLAN_PRICES[pid]}</div>
+                    {pid === currentPlanId && <span className="badge-success text-2xs mt-1">Actual</span>}
+                  </th>
                 ))}
-              </div>
-              <div className="flex gap-4 mt-3 text-xs text-on-surface-muted">
-                <span>↑ {plan.maxUsers} usuarios</span>
-                <span>↑ {plan.maxBranches} sucursales</span>
-                <span>{plan.storageGb} GB</span>
-              </div>
-              {plan.id === subscription?.planId && (
-                <div className="mt-2">
-                  <span className="badge-success">Plan Actual</span>
-                </div>
-              )}
-            </div>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-on-surface-muted/5">
+                <td className="py-2.5 pr-4 text-xs font-medium text-on-surface">Usuarios</td>
+                {PLAN_IDS.map((pid) => (
+                  <td key={pid} className={`py-2.5 px-4 text-center text-xs ${pid === currentPlanId ? 'bg-primary/5 font-bold' : ''}`}>
+                    {pid === 'basic' ? '3' : pid === 'pro' ? '15' : '∞'}
+                  </td>
+                ))}
+              </tr>
+              <tr className="border-b border-on-surface-muted/5">
+                <td className="py-2.5 pr-4 text-xs font-medium text-on-surface">Sucursales</td>
+                {PLAN_IDS.map((pid) => (
+                  <td key={pid} className={`py-2.5 px-4 text-center text-xs ${pid === currentPlanId ? 'bg-primary/5 font-bold' : ''}`}>
+                    {pid === 'basic' ? '1' : pid === 'pro' ? '3' : '∞'}
+                  </td>
+                ))}
+              </tr>
+              <tr className="border-b border-on-surface-muted/5">
+                <td className="py-2.5 pr-4 text-xs font-medium text-on-surface">Transacciones/mes</td>
+                {PLAN_IDS.map((pid) => (
+                  <td key={pid} className={`py-2.5 px-4 text-center text-xs ${pid === currentPlanId ? 'bg-primary/5 font-bold' : ''}`}>
+                    {pid === 'basic' ? '1,000' : pid === 'pro' ? '10,000' : '∞'}
+                  </td>
+                ))}
+              </tr>
+              <tr className="border-b border-on-surface-muted/5">
+                <td className="py-2.5 pr-4 text-xs font-medium text-on-surface">Almacenamiento</td>
+                {PLAN_IDS.map((pid) => (
+                  <td key={pid} className={`py-2.5 px-4 text-center text-xs ${pid === currentPlanId ? 'bg-primary/5 font-bold' : ''}`}>
+                    {pid === 'basic' ? '5 GB' : pid === 'pro' ? '50 GB' : '500 GB'}
+                  </td>
+                ))}
+              </tr>
+              {Object.entries(PLAN_FEATURES_MATRIX).map(([feature, matrix]) => (
+                <tr key={feature} className="border-b border-on-surface-muted/5 last:border-0">
+                  <td className="py-2.5 pr-4 text-xs text-on-surface">{FEATURE_LABELS[feature] || feature}</td>
+                  {PLAN_IDS.map((pid) => (
+                    <td key={pid} className={`py-2.5 px-4 text-center ${pid === currentPlanId ? 'bg-primary/5' : ''}`}>
+                      {matrix[pid as keyof typeof matrix] ? (
+                        <Check className="w-4 h-4 text-success mx-auto" />
+                      ) : (
+                        <Minus className="w-4 h-4 text-on-surface-muted/40 mx-auto" />
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex gap-3 mt-4">
+          {PLAN_IDS.filter((pid) => pid !== currentPlanId).map((pid) => (
+            <button
+              key={pid}
+              onClick={() => changePlan.mutate({ planId: pid })}
+              disabled={changePlan.isPending}
+              className="btn-primary flex-1 text-sm"
+            >
+              {changePlan.isPending ? 'Cambiando...' : `Cambiar a ${PLAN_LABELS[pid]}`}
+            </button>
           ))}
         </div>
       </Modal>

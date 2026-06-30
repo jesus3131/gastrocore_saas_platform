@@ -5,7 +5,7 @@ import { api } from '../../../lib/api'
 import { useAuthStore } from '../../../app/store/auth.store'
 import { DataTable, Modal, FormField, ConfirmDialog, MetricCard, EmptyState, ErrorState } from '../../../shared/components/ui'
 import { LoadingSkeleton } from '../../../shared/components/ui/loading'
-import { Plus, Edit, Trash2, Users, Clock, DollarSign, UserPlus, Shield } from 'lucide-react'
+import { Plus, Edit, Trash2, Users, Clock, DollarSign, UserPlus, Shield, BookOpen } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 
 interface Employee {
@@ -17,6 +17,23 @@ interface Employee {
   commissionPct?: number
   isActive: boolean
   hourlyRate?: number
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Administrador',
+  manager: 'Gerente',
+  chef: 'Cocinero',
+  waiter: 'Mesero',
+  cashier: 'Cajero',
+  host: 'Anfitrión',
+  delivery: 'Repartidor',
+  accountant: 'Contador',
+}
+
+const ROLE_GROUPS: Record<string, { label: string; roles: string[] }> = {
+  management: { label: 'Dirección', roles: ['admin', 'manager'] },
+  operations: { label: 'Operaciones', roles: ['chef', 'waiter', 'cashier', 'host', 'delivery'] },
+  accounting: { label: 'Contabilidad', roles: ['accountant'] },
 }
 
 export function HrDashboardPage() {
@@ -31,6 +48,11 @@ export function HrDashboardPage() {
   const { data: employees, isLoading: loadingEmp, error: errorEmp, refetch: refetchEmp } = useQuery({
     queryKey: ['hr', 'employees'],
     queryFn: () => api.get('/hr/employees').then((r) => r.data.data),
+  })
+
+  const { data: subscription } = useQuery({
+    queryKey: ['subscriptions', 'current'],
+    queryFn: () => api.get('/subscriptions/current').then((r) => r.data.data),
   })
 
   const { data: shifts } = useQuery({
@@ -90,6 +112,10 @@ export function HrDashboardPage() {
   const adminUser = user ? { id: user.id || 'admin', name: user.name || 'Admin', email: user.email || '', role: 'admin', isActive: true, phone: '' } : null
   const employeeList = adminUser ? [adminUser, ...(employees || [])] : (employees || [])
   const activeEmployees = employees?.filter((e: Employee) => e.isActive) || []
+  const planMax = subscription?.plan?.maxUsers || 0
+  const extraUsers = subscription?.extraUsers || 0
+  const totalLimit = planMax + extraUsers
+
   const pendingCommissions = Array.isArray(commissions) ? commissions.filter((c: any) => c.status === 'pending') : []
   const totalCommissions = Array.isArray(commissions) ? commissions.reduce((s: number, c: any) => s + Number(c.amount), 0) : 0
   const todayShifts = Array.isArray(shifts) ? shifts.filter((s: any) => {
@@ -110,16 +136,23 @@ export function HrDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard label="Empleados Activos" value={activeEmployees.length} icon={Users} color="text-primary bg-primary/10" />
+        <MetricCard label="Empleados Activos" value={`${activeEmployees.length} / ${totalLimit}`} icon={Users} color="text-primary bg-primary/10" />
         <MetricCard label="Turnos Hoy" value={todayShifts} icon={Clock} color="text-info bg-info/10" />
         <MetricCard label="Comisiones Pendientes" value={pendingCommissions.length} icon={DollarSign} color="text-warning bg-warning/10" />
         <MetricCard label="Total Comisiones" value={`$${totalCommissions.toFixed(2)}`} icon={DollarSign} color="text-success bg-success/10" />
       </div>
 
+      {totalLimit > 0 && activeEmployees.length >= totalLimit && (
+        <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 flex items-center gap-2">
+          <Users className="w-4 h-4 text-warning" />
+          <p className="text-xs text-on-surface">Límite de usuarios alcanzado ({totalLimit}). Contacta al super admin para aumentar el cupo.</p>
+        </div>
+      )}
+
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Empleados</h3>
-          <span className="badge-info">{activeEmployees.length} activos + admin</span>
+          <span className="badge-info">{activeEmployees.length} de {totalLimit} cupos usados</span>
         </div>
         {employeeList.length > 0 ? (
           <DataTable
@@ -127,8 +160,8 @@ export function HrDashboardPage() {
               { key: 'name', label: 'Nombre' },
               { key: 'role', label: 'Rol', render: (r: Employee) => (
                 r.role === 'admin'
-                  ? <span className="badge bg-primary/10 text-primary font-semibold">Administrador</span>
-                  : <span className="badge-neutral">{r.role}</span>
+                  ? <span className="badge bg-primary/10 text-primary font-semibold">{ROLE_LABELS[r.role] || r.role}</span>
+                  : <span className="badge-neutral">{ROLE_LABELS[r.role] || r.role}</span>
               )},
               { key: 'email', label: 'Email' },
               { key: 'phone', label: 'Teléfono', render: (r: Employee) => r.phone || '-' },
@@ -194,7 +227,18 @@ export function HrDashboardPage() {
           <FormField label="Nombre" registration={register('name', { required: true })} error={errors.name ? 'Requerido' : undefined} />
           <FormField label="Email" type="email" registration={register('email', { required: true })} error={errors.email ? 'Requerido' : undefined} />
           <FormField label="Teléfono" registration={register('phone')} />
-          <FormField label="Rol" type="select" registration={register('role')} options={(roles || []).map((r: any) => ({ value: r.role, label: r.role.charAt(0).toUpperCase() + r.role.slice(1) }))} />
+          <div>
+            <label className="label">Rol</label>
+            <select {...register('role')} className="select">
+              {Object.entries(ROLE_GROUPS).map(([groupKey, group]) => (
+                <optgroup key={groupKey} label={group.label}>
+                  {group.roles.map((r) => (
+                    <option key={r} value={r}>{ROLE_LABELS[r] || r}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
           <FormField label="Comisión (%)" type="number" registration={register('commissionPct')} />
           <FormField label="Tarifa por Hora" type="number" registration={register('hourlyRate')} />
           <div className="flex gap-2 pt-2">
