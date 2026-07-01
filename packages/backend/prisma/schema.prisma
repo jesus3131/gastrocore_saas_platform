@@ -131,22 +131,62 @@ model Tenant {
 
 model User {
   id             String       @id @default(uuid()) @db.Uuid
-  tenantId       String       @db.Uuid
+  tenantId       String?      @db.Uuid
   email          String       @db.VarChar(255)
   passwordHash   String       @db.VarChar(255)
   name           String       @db.VarChar(255)
   role           EmployeeRole @default(waiter)
+  pinCode        String?      @db.VarChar(6)
   isActive       Boolean      @default(true)
   lastLoginAt    DateTime?
   refreshToken   String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   orders Order[] @relation("UserOrders")
+  permissions UserPermission[]
 
-  @@unique([tenantId, email])
+  @@unique([email])
+  @@index([tenantId])
   @@map("users")
+}
+
+model Role {
+  name        EmployeeRole @id
+  description String?      @db.Text
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String           @unique @db.VarChar(100)
+  description String?          @db.Text
+  createdAt   DateTime         @default(now())
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  role         EmployeeRole
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String     @db.Uuid
+
+  @@id([role, permissionId])
+  @@map("role_permissions")
+}
+
+model UserPermission {
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String     @db.Uuid
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String     @db.Uuid
+
+  @@id([userId, permissionId])
+  @@map("user_permissions")
 }
 
 // ─── BRANCHES (Multi-sucursal) ────────────────────────────────
@@ -205,6 +245,7 @@ model Table {
   orders Order[]
 
   @@index([branchId, areaId])
+  @@index([status])
   @@map("tables")
 }
 
@@ -306,6 +347,8 @@ model Order {
   payments Payment[]
 
   @@index([tenantId, createdAt])
+  @@index([tenantId, status])
+  @@index([tenantId, type])
   @@index([branchId])
   @@index([tableId])
   @@index([customerId])
@@ -432,6 +475,7 @@ model StockMovement {
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
 
   @@index([ingredientId, createdAt])
+  @@index([type, createdAt])
   @@map("stock_movements")
 }
 
@@ -458,6 +502,7 @@ model Employee {
 
   @@unique([tenantId, email])
   @@index([tenantId])
+  @@index([role])
   @@map("employees")
 }
 
@@ -475,6 +520,7 @@ model Shift {
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId, date])
+  @@index([date, status])
   @@map("shifts")
 }
 
@@ -519,6 +565,8 @@ model Customer {
 
   @@index([tenantId, email])
   @@index([tenantId, phone])
+  @@index([tenantId, lastVisitAt])
+  @@index([tenantId, loyaltyTier])
   @@map("customers")
 }
 
@@ -653,6 +701,7 @@ model Account {
 
   @@unique([tenantId, code])
   @@index([tenantId, type])
+  @@index([parentId])
   @@map("accounts")
 }
 
@@ -676,6 +725,8 @@ model JournalEntry {
 
   @@index([tenantId, entryDate])
   @@index([tenantId, status])
+  @@index([periodId])
+  @@index([reference])
   @@map("journal_entries")
 }
 
@@ -692,6 +743,7 @@ model JournalLine {
 
   @@index([journalEntryId])
   @@index([accountId])
+  @@index([accountId, journalEntryId])
   @@map("journal_lines")
 }
 
@@ -728,6 +780,7 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   @@index([tenantId, createdAt])
+  @@index([entity, entityId])
   @@map("audit_logs")
 }
 
@@ -745,5 +798,46 @@ model Event {
 
   @@index([tenantId, occurredOn])
   @@index([eventName, occurredOn])
+  @@index([aggregateType, aggregateId])
   @@map("events")
+}
+
+// ─── OUTBOX (Transactional Outbox for Reliable Events) ───────
+
+model OutboxMessage {
+  id            String   @id @default(uuid()) @db.Uuid
+  eventName     String   @db.VarChar(100)
+  aggregateId   String   @db.VarChar(100)
+  aggregateType String   @db.VarChar(50)
+  payload       Json     @default("{}")
+  tenantId      String?  @db.Uuid
+  status        String   @default("pending") @db.VarChar(20) // pending, processing, sent, failed
+  retryCount    Int      @default(0)
+  maxRetries    Int      @default(3)
+  lastError     String?  @db.Text
+  scheduledAt   DateTime @default(now())
+  processedAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([status, scheduledAt])
+  @@index([tenantId])
+  @@index([aggregateType])
+  @@map("outbox_messages")
+}
+
+// ─── REFRESH TOKENS (Hashed, Rotated) ────────────────────────
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @db.VarChar(255)
+  family    String   @db.VarChar(100) // token rotation family
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([tokenHash])
+  @@index([userId])
+  @@index([family])
+  @@map("refresh_tokens")
 }

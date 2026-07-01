@@ -10,6 +10,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
       status: res.statusCode,
       duration: `${Date.now() - start}ms`,
       tenantId: req.headers['x-tenant-id'],
+      correlationId: req.correlationId,
     }, 'HTTP Request')
   })
   next()

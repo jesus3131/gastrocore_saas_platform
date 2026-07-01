@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express'
+import { container } from 'tsyringe'
 import { CrmService } from './crm.service.js'
 
 export class CrmController {
-  private service = new CrmService()
+  private service = container.resolve(CrmService)
 
   async getCustomers(req: Request, res: Response, next: NextFunction) {
     try {

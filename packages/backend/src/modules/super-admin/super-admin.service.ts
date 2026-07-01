@@ -1,18 +1,28 @@
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
-import { prisma } from '../../config/database/prisma.js'
+import { inject, injectable } from 'tsyringe'
 import { AppError } from '../../common/filters/error-handler.js'
+import { logger } from '../../config/logger.js'
 import { sendWelcomeEmail } from '../notifications/email.service.js'
 import { SUBSCRIPTION_PLANS } from '@gastrocore/shared'
 import { CreateCompanyUseCase } from '../../core/use-cases/super-admin/create-company.use-case.js'
+import type { TenantRepository } from '../../core/ports/repositories/tenant.repository.js'
+import type { UserRepository } from '../../core/ports/repositories/user.repository.js'
+import type { SubscriptionRepository } from '../../core/ports/repositories/subscription.repository.js'
 
+@injectable()
 export class SuperAdminService {
   private readonly saltRounds = 12
 
-  constructor(private readonly createCompanyUseCase?: CreateCompanyUseCase) {}
+  constructor(
+    @inject('TenantRepository') private readonly tenantRepo: TenantRepository,
+    @inject('UserRepository') private readonly userRepo: UserRepository,
+    @inject('SubscriptionRepository') private readonly subscriptionRepo: SubscriptionRepository,
+    private readonly createCompanyUseCase?: CreateCompanyUseCase,
+  ) {}
 
   async getCompanies() {
-    const tenants = await prisma.tenant.findMany({
+    const tenants = await this.tenantRepo.findManyTenants({
       orderBy: { createdAt: 'desc' },
       include: {
         users: {
@@ -24,7 +34,7 @@ export class SuperAdminService {
         _count: { select: { users: true, branches: true } },
       },
     })
-    return tenants.map((t) => ({
+    return tenants.map((t: any) => ({
       id: t.id,
       name: t.name,
       businessType: t.businessType,
@@ -46,7 +56,11 @@ export class SuperAdminService {
   }
 
   async getCompany(id: string) {
-    const tenant = await prisma.tenant.findUnique({
+    const tenant = await this.tenantRepo.findById(id)
+    if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
+
+    // Need to fetch with includes separately since findById doesn't support it
+    const tenantFull = await this.tenantRepo.findManyTenants({
       where: { id },
       include: {
         users: {
@@ -58,13 +72,14 @@ export class SuperAdminService {
         _count: { select: { users: true, branches: true, orders: true, customers: true } },
       },
     })
-    if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
+
+    const full = tenantFull[0]
     return {
-      ...tenant,
-      taxId: (tenant.customFields as any)?.taxId || null,
-      address: (tenant.customFields as any)?.address || null,
-      phone: (tenant.customFields as any)?.phone || null,
-      extraUsers: (tenant.customFields as any)?.extraUsers || 0,
+      ...full,
+      taxId: (full.customFields as any)?.taxId || null,
+      address: (full.customFields as any)?.address || null,
+      phone: (full.customFields as any)?.phone || null,
+      extraUsers: (full.customFields as any)?.extraUsers || 0,
     }
   }
 
@@ -83,15 +98,15 @@ export class SuperAdminService {
 
       sendWelcomeEmail(data.adminEmail, data.adminName, data.adminEmail, result.credentials.password)
         .then((sent) => {
-          if (sent) console.log(`[SuperAdmin] Welcome email sent to ${data.adminEmail}`)
-          else console.warn(`[SuperAdmin] Could not send welcome email to ${data.adminEmail}`)
+          if (sent) logger.info({ email: data.adminEmail }, 'SuperAdmin: welcome email sent')
+          else logger.warn({ email: data.adminEmail }, 'SuperAdmin: could not send welcome email')
         })
-        .catch((err) => console.warn(`[SuperAdmin] Email error:`, err.message))
+        .catch((err) => logger.warn({ err, email: data.adminEmail }, 'SuperAdmin: email error'))
 
       return result
     }
 
-    const existing = await prisma.user.findFirst({ where: { email: data.adminEmail } })
+    const existing = await this.userRepo.findFirst({ where: { email: data.adminEmail } })
     if (existing) throw new AppError(409, 'EMAIL_EXISTS', 'Email already registered')
 
     const rawPassword = this.generatePassword()
@@ -105,61 +120,51 @@ export class SuperAdminService {
     if (data.address) customFields.address = data.address
     if (data.phone) customFields.phone = data.phone
 
-    const tenant = await prisma.tenant.create({
-      data: {
-        name: data.companyName,
-        slug: data.companyName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-        businessType: data.businessType as never,
-        subscriptionPlan: planId,
-        subscriptionStatus: 'trial',
-        customFields: customFields as any,
-      },
+    const tenant = await this.tenantRepo.create({
+      name: data.companyName,
+      slug: data.companyName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+      businessType: data.businessType as never,
+      subscriptionPlan: planId,
+      subscriptionStatus: 'trial',
+      customFields: customFields as any,
     })
 
-    const user = await prisma.user.create({
-      data: {
-        tenantId: tenant.id,
-        email: data.adminEmail,
-        passwordHash,
-        name: data.adminName,
-        role: 'admin',
-      },
+    const user = await this.userRepo.create({
+      tenantId: tenant.id,
+      email: data.adminEmail,
+      passwordHash,
+      name: data.adminName,
+      role: 'admin',
     })
 
     if (plan) {
-      const subscription = await prisma.subscription.create({
-        data: {
-          tenantId: tenant.id,
-          plan: planId as any,
-          status: 'trial',
-          currentPeriodStart: new Date(),
-          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        },
+      const subscription = await this.subscriptionRepo.create({
+        tenantId: tenant.id,
+        plan: planId as any,
+        status: 'trial',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       })
 
-      await prisma.subscriptionInvoice.create({
-        data: {
-          subscriptionId: subscription.id,
-          amount: plan.priceMonthly,
-          status: 'pending',
-          periodStart: subscription.currentPeriodStart,
-          periodEnd: subscription.currentPeriodEnd,
-        },
+      await this.subscriptionRepo.createInvoice({
+        subscriptionId: subscription.id,
+        amount: plan.priceMonthly,
+        status: 'pending',
+        periodStart: subscription.currentPeriodStart,
+        periodEnd: subscription.currentPeriodEnd,
       })
 
       for (const feature of plan.features) {
-        await prisma.tenantFeatureFlag.create({
-          data: { tenantId: tenant.id, feature, enabled: true },
-        })
+        await this.tenantRepo.upsertFeatureFlag(tenant.id, feature, true)
       }
     }
 
     sendWelcomeEmail(data.adminEmail, data.adminName, data.adminEmail, rawPassword)
       .then((sent) => {
-        if (sent) console.log(`[SuperAdmin] Welcome email sent to ${data.adminEmail}`)
-        else console.warn(`[SuperAdmin] Could not send welcome email to ${data.adminEmail}`)
+        if (sent) logger.info({ email: data.adminEmail }, 'SuperAdmin: welcome email sent')
+        else logger.warn({ email: data.adminEmail }, 'SuperAdmin: could not send welcome email')
       })
-      .catch((err) => console.warn(`[SuperAdmin] Email error:`, err.message))
+      .catch((err) => logger.warn({ err, email: data.adminEmail }, 'SuperAdmin: email error'))
 
     return {
       company: { id: tenant.id, name: tenant.name },
@@ -177,7 +182,7 @@ export class SuperAdminService {
     phone?: string
     extraUsers?: number
   }) {
-    const tenant = await prisma.tenant.findUnique({ where: { id } })
+    const tenant = await this.tenantRepo.findById(id)
     if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
 
     const customFields = { ...(tenant.customFields as Record<string, unknown>) }
@@ -194,24 +199,22 @@ export class SuperAdminService {
 
     updateData.customFields = customFields
 
-    const updated = await prisma.tenant.update({ where: { id }, data: updateData as any })
+    const updated = await this.tenantRepo.update(id, updateData as any)
 
     if (data.planId) {
       const plan = SUBSCRIPTION_PLANS[data.planId as keyof typeof SUBSCRIPTION_PLANS]
       if (plan) {
-        await prisma.subscription.create({
-          data: {
-            tenantId: id,
-            plan: data.planId as any,
-            status: 'active',
-            currentPeriodStart: new Date(),
-            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          },
+        await this.subscriptionRepo.create({
+          tenantId: id,
+          plan: data.planId as any,
+          status: 'active',
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         })
 
-        await prisma.tenantFeatureFlag.deleteMany({ where: { tenantId: id } })
+        await this.tenantRepo.deleteFeatureFlags({ tenantId: id })
         for (const feature of plan.features) {
-          await prisma.tenantFeatureFlag.create({ data: { tenantId: id, feature, enabled: true } })
+          await this.tenantRepo.upsertFeatureFlag(id, feature, true)
         }
       }
     }
@@ -220,37 +223,33 @@ export class SuperAdminService {
   }
 
   async updateModules(companyId: string, features: { feature: string; enabled: boolean }[]) {
-    const tenant = await prisma.tenant.findUnique({ where: { id: companyId } })
+    const tenant = await this.tenantRepo.findById(companyId)
     if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
 
     for (const f of features) {
-      await prisma.tenantFeatureFlag.upsert({
-        where: { tenantId_feature: { tenantId: companyId, feature: f.feature } },
-        create: { tenantId: companyId, feature: f.feature, enabled: f.enabled },
-        update: { enabled: f.enabled },
-      })
+      await this.tenantRepo.upsertFeatureFlag(companyId, f.feature, f.enabled)
     }
 
     return { message: 'Modules updated successfully' }
   }
 
   async resendCredentials(companyId: string) {
-    const admin = await prisma.user.findFirst({ where: { tenantId: companyId, role: 'admin', isActive: true } })
-    if (!admin) throw new AppError(404, 'ADMIN_NOT_FOUND', 'No active admin found for this company')
+    const admin = await this.tenantRepo.findUsersByTenant(companyId, { role: 'admin', isActive: true })
+    if (!admin.length) throw new AppError(404, 'ADMIN_NOT_FOUND', 'No active admin found for this company')
 
     const rawPassword = this.generatePassword()
     const passwordHash = await bcrypt.hash(rawPassword, this.saltRounds)
 
-    await prisma.user.update({ where: { id: admin.id }, data: { passwordHash } })
+    await this.tenantRepo.updateAdminPassword(admin[0].id, passwordHash)
 
-    sendWelcomeEmail(admin.email, admin.name, admin.email, rawPassword)
+    sendWelcomeEmail(admin[0].email, admin[0].name, admin[0].email, rawPassword)
       .then((sent) => {
-        if (sent) console.log(`[SuperAdmin] Credentials re-sent to ${admin.email}`)
-        else console.warn(`[SuperAdmin] Could not resend credentials to ${admin.email}`)
+        if (sent) logger.info({ email: admin[0].email }, 'SuperAdmin: credentials re-sent')
+        else logger.warn({ email: admin[0].email }, 'SuperAdmin: could not resend credentials')
       })
-      .catch((err) => console.warn(`[SuperAdmin] Email error:`, err.message))
+      .catch((err) => logger.warn({ err, email: admin[0].email }, 'SuperAdmin: email error'))
 
-    return { message: 'Credentials re-sent successfully', email: admin.email }
+    return { message: 'Credentials re-sent successfully', email: admin[0].email }
   }
 
   private generatePassword(length = 12): string {

@@ -8,11 +8,10 @@ export class GetSalesSummaryUseCase {
   ) {}
 
   async execute(tenantId: string) {
-    const orders = await this.analyticsRepo.findOrders(tenantId, {
-      status: 'paid',
-      createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-      include: { items: true },
-    })
+    const orders = await this.analyticsRepo.findOrders(tenantId,
+      { status: 'paid', createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
+      { include: { items: true } },
+    )
 
     const totalRevenue = orders.reduce((sum: number, o: any) => sum + Number(o.total), 0)
     const totalOrders = orders.length

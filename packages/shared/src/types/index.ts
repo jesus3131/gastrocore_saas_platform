@@ -86,9 +86,10 @@ export interface PaginationParams {
 
 export interface JwtPayload {
   sub: string          // user id
-  tenantId: string
+  tenantId?: string
   role: EmployeeRole
   email: string
+  authMethod?: 'password' | 'pin'
 }
 
 export interface AuthTokens {

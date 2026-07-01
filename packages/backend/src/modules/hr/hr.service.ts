@@ -1,16 +1,21 @@
-import { prisma } from '../../config/database/prisma.js'
+import jwt from 'jsonwebtoken'
+import { inject, injectable } from 'tsyringe'
 import { AppError } from '../../common/filters/error-handler.js'
 import { ROLE_PERMISSIONS } from '@gastrocore/shared'
+import { env } from '../../config/env.js'
 import { container } from '../../infrastructure/di/container.js'
 import { CreateEmployeeUseCase } from '../../core/use-cases/hr/create-employee.use-case.js'
+import type { EmployeeRepository } from '../../core/ports/repositories/employee.repository.js'
+import type { JwtPayload } from '@gastrocore/shared'
 
+@injectable()
 export class HrService {
-  async getEmployees(tenantId: string) {
-    return prisma.employee.findMany({
-      where: { tenantId },
-      include: { shifts: { orderBy: { date: 'desc' }, take: 5 } },
-      orderBy: { name: 'asc' },
-    })
+  constructor(
+    @inject('EmployeeRepository') private readonly employeeRepo: EmployeeRepository,
+  ) {}
+
+  async getEmployees(tenantId: string, opts?: { limit?: number; offset?: number }) {
+    return this.employeeRepo.findMany(tenantId, opts)
   }
 
   async createEmployee(tenantId: string, data: any) {
@@ -19,39 +24,21 @@ export class HrService {
   }
 
   async updateEmployee(tenantId: string, id: string, data: any) {
-    const employee = await prisma.employee.findFirst({ where: { tenantId, id } })
+    const employee = await this.employeeRepo.findById(tenantId, id)
     if (!employee) throw new AppError(404, 'EMPLOYEE_NOT_FOUND', 'Employee not found')
-    return prisma.employee.update({ where: { id }, data })
+    return this.employeeRepo.update(tenantId, id, data)
   }
 
-  async getShifts(tenantId: string) {
-    return prisma.shift.findMany({
-      where: { employee: { tenantId } },
-      include: { employee: { select: { id: true, name: true, role: true } } },
-      orderBy: { date: 'desc' },
-      take: 50,
-    })
+  async getShifts(tenantId: string, opts?: { limit?: number; offset?: number }) {
+    return this.employeeRepo.findManyShifts(tenantId, opts)
   }
 
-  async createShift(data: any) {
-    return prisma.shift.create({
-      data: {
-        employeeId: data.employeeId,
-        date: new Date(data.date),
-        startTime: new Date(data.startTime),
-        endTime: data.endTime ? new Date(data.endTime) : null,
-        notes: data.notes,
-      },
-      include: { employee: { select: { id: true, name: true } } },
-    })
+  async createShift(tenantId: string, data: any) {
+    return this.employeeRepo.createShift({ ...data, tenantId })
   }
 
-  async updateShiftStatus(id: string, status: any) {
-    return prisma.shift.update({
-      where: { id },
-      data: { status },
-      include: { employee: { select: { id: true, name: true } } },
-    })
+  async updateShiftStatus(tenantId: string, id: string, status: any) {
+    return this.employeeRepo.updateShift(id, { status })
   }
 
   async getRoles() {
@@ -61,21 +48,28 @@ export class HrService {
     }))
   }
 
+  /**
+   * Nivel 3 - POS PIN authentication.
+   * Returns scoped JWT with authMethod='pin' for POS operations.
+   */
   async verifyPin(tenantId: string, pin: string, role?: string) {
-    const employee = await prisma.employee.findFirst({
-      where: { tenantId, pinCode: pin, isActive: true, ...(role ? { role: role as any } : {}) },
-      select: { id: true, name: true, role: true },
-    })
+    const employee = await this.employeeRepo.findByPin(tenantId, pin, role)
     if (!employee) throw new AppError(401, 'INVALID_PIN', 'PIN inválido')
-    return employee
+
+    const token = jwt.sign({
+      sub: employee.id,
+      tenantId,
+      role: employee.role as JwtPayload['role'],
+      email: employee.email,
+      authMethod: 'pin',
+    } satisfies JwtPayload, env.JWT_SECRET, {
+      expiresIn: env.JWT_EXPIRATION,
+    } as jwt.SignOptions)
+
+    return { employee, token }
   }
 
-  async getCommissions(tenantId: string) {
-    return prisma.commission.findMany({
-      where: { employee: { tenantId } },
-      include: { employee: { select: { id: true, name: true } } },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    })
+  async getCommissions(tenantId: string, opts?: { limit?: number; offset?: number }) {
+    return this.employeeRepo.findManyCommissions(tenantId, opts)
   }
 }

@@ -16,4 +16,17 @@ export class PrismaTableRepository implements TableRepository {
     const client = getClient()
     return client.table.findUnique({ where: { id } })
   }
+
+  async findAllWithBranches(tenantId: string): Promise<any[]> {
+    const client = getClient()
+    return client.branch.findMany({
+      where: { tenantId, isActive: true },
+      include: {
+        areas: {
+          include: { tables: { orderBy: { label: 'asc' } } },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    })
+  }
 }

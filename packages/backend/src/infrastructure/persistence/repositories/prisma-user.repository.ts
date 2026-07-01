@@ -11,16 +11,16 @@ export class PrismaUserRepository implements UserRepository {
     return getClient().user.findFirst({ where: { email } })
   }
 
-  async findById(id: string) {
-    return getClient().user.findUnique({ where: { id } })
+  async findById(id: string, select?: any) {
+    return getClient().user.findUnique({ where: { id }, ...(select ? { select } : {}) })
   }
 
   async create(data: any) {
     return getClient().user.create({ data })
   }
 
-  async update(id: string, data: any) {
-    return getClient().user.update({ where: { id }, data })
+  async update(id: string, data: any, select?: any) {
+    return getClient().user.update({ where: { id }, data, ...(select ? { select } : {}) })
   }
 
   async findFirst(where: any) {

@@ -1,10 +1,15 @@
-import { prisma } from '../../config/database/prisma.js'
+import { inject, injectable } from 'tsyringe'
 import type { BcgMatrixItem, SalesSummary } from '@gastrocore/shared'
 import { GetSalesSummaryUseCase } from '../../core/use-cases/analytics/get-sales-summary.use-case.js'
 import { withCache, clearCache } from '../../common/cache/cache.js'
+import type { AnalyticsRepository } from '../../core/ports/repositories/analytics.repository.js'
 
+@injectable()
 export class AnalyticsService {
-  constructor(private readonly getSalesSummaryUseCase?: GetSalesSummaryUseCase) {}
+  constructor(
+    @inject('AnalyticsRepository') private readonly analyticsRepo: AnalyticsRepository,
+    private readonly getSalesSummaryUseCase?: GetSalesSummaryUseCase,
+  ) {}
 
   async getSalesSummary(tenantId: string): Promise<SalesSummary> {
     return withCache(`sales-summary:${tenantId}`, () => this._getSalesSummary(tenantId), 120_000)
@@ -17,10 +22,10 @@ export class AnalyticsService {
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
-    const paidOrders = await prisma.order.findMany({
-      where: { tenantId, status: 'paid', createdAt: { gte: thirtyDaysAgo } },
-      select: { total: true, createdAt: true, items: { select: { menuItemId: true, name: true, quantity: true, totalPrice: true } } },
-    })
+    const paidOrders = await this.analyticsRepo.findOrders(tenantId,
+      { status: 'paid', createdAt: { gte: thirtyDaysAgo } },
+      { select: { total: true, createdAt: true, items: { select: { menuItemId: true, name: true, quantity: true, totalPrice: true } } } },
+    )
 
     const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total), 0)
     const totalOrders = paidOrders.length
@@ -38,7 +43,7 @@ export class AnalyticsService {
 
     const itemMap: Record<string, { name: string; quantity: number; revenue: number }> = {}
     paidOrders.forEach((o) => {
-      o.items.forEach((item) => {
+      (o.items ?? []).forEach((item: any) => {
         if (!itemMap[item.menuItemId]) {
           itemMap[item.menuItemId] = { name: item.name, quantity: 0, revenue: 0 }
         }
@@ -61,25 +66,24 @@ export class AnalyticsService {
   private async _getBcgMatrix(tenantId: string): Promise<BcgMatrixItem[]> {
     const twelveMonthsAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
 
-    const orders = await prisma.order.findMany({
-      where: { tenantId, status: 'paid', createdAt: { gte: twelveMonthsAgo } },
-      select: { createdAt: true, items: { select: { menuItemId: true, name: true, quantity: true, totalPrice: true } } },
-    })
+    const orders = await this.analyticsRepo.findOrders(tenantId,
+      { status: 'paid', createdAt: { gte: twelveMonthsAgo } },
+      { select: { createdAt: true, items: { select: { menuItemId: true, name: true, quantity: true, totalPrice: true } } } },
+    )
 
-    const items = await prisma.menuItem.findMany({
-      where: { tenantId },
+    const items = await this.analyticsRepo.findMenuItems(tenantId, {
       include: { recipes: { include: { ingredients: { include: { ingredient: true } } } } },
     })
 
     const itemStats: Record<string, { revenue: number; quantity: number; cost: number; firstDate: Date; lastDate: Date }> = {}
 
-    orders.forEach((o) => {
-      o.items.forEach((item) => {
+    orders.forEach((o: any) => {
+      o.items.forEach((item: any) => {
         if (!itemStats[item.menuItemId]) {
-          const menuItem = items.find((mi) => mi.id === item.menuItemId)
-          const recipeCost = menuItem?.recipes[0]?.ingredients.reduce(
-            (sum, ri) => sum + Number(ri.ingredient.unitCost) * Number(ri.quantity), 0
-          ) || 0
+          const menuItem = items.find((mi: any) => mi.id === item.menuItemId)
+          const recipeCost = menuItem?.recipes?.[0]?.ingredients?.reduce(
+            (sum: number, ri: any) => sum + Number(ri.ingredient.unitCost) * Number(ri.quantity), 0
+          ) ?? 0
           itemStats[item.menuItemId] = {
             revenue: 0, quantity: 0, cost: recipeCost,
             firstDate: o.createdAt, lastDate: o.createdAt,
@@ -120,16 +124,14 @@ export class AnalyticsService {
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
     const [currentMonth, prevMonth] = await Promise.all([
-      prisma.order.aggregate({
-        where: { tenantId, status: 'paid', createdAt: { gte: currentMonthStart } },
-        _sum: { total: true },
-        _count: { id: true },
-      }),
-      prisma.order.aggregate({
-        where: { tenantId, status: 'paid', createdAt: { gte: prevMonthStart, lt: currentMonthStart } },
-        _sum: { total: true },
-        _count: { id: true },
-      }),
+      this.analyticsRepo.aggregateOrder(tenantId,
+        { status: 'paid', createdAt: { gte: currentMonthStart } },
+        { _sum: { total: true }, _count: { id: true } },
+      ),
+      this.analyticsRepo.aggregateOrder(tenantId,
+        { status: 'paid', createdAt: { gte: prevMonthStart, lt: currentMonthStart } },
+        { _sum: { total: true }, _count: { id: true } },
+      ),
     ])
 
     return {
@@ -147,10 +149,10 @@ export class AnalyticsService {
   }
 
   private async _getPeakHours(tenantId: string) {
-    const orders = await prisma.order.findMany({
-      where: { tenantId, status: 'paid' },
-      select: { createdAt: true },
-    })
+    const orders = await this.analyticsRepo.findOrders(tenantId,
+      { status: 'paid' },
+      { select: { createdAt: true } },
+    )
 
     const hourDistribution: Record<number, number> = {}
     orders.forEach((o) => {
@@ -168,15 +170,14 @@ export class AnalyticsService {
   }
 
   private async _getMultiBranchReport(tenantId: string) {
-    const branches = await prisma.branch.findMany({ where: { tenantId, isActive: true } })
+    const branches = await this.analyticsRepo.findBranches(tenantId)
 
     const reports = await Promise.all(
       branches.map(async (branch) => {
-        const stats = await prisma.order.aggregate({
-          where: { tenantId, branchId: branch.id, status: 'paid' },
-          _sum: { total: true },
-          _count: { id: true },
-        })
+        const stats = await this.analyticsRepo.aggregateOrder(tenantId,
+          { branchId: branch.id, status: 'paid' },
+          { _sum: { total: true }, _count: { id: true } },
+        )
         const revenue = Number(stats._sum.total || 0)
         const ordersCount = stats._count.id
         return {

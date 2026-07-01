@@ -27,6 +27,12 @@ export async function authGuard(req: Request, _res: Response, next: NextFunction
     req.user = payload
     req.tenantId = payload.tenantId
 
+    // Super Admin doesn't need tenantId; all others must have one
+    if (payload.role !== 'super_admin' && !payload.tenantId) {
+      return next(new AppError(401, 'INVALID_TOKEN', 'Token missing tenant association'))
+    }
+
+    // For non-super-admin, validate x-tenant-id matches the token's tenant
     const headerTenantId = req.headers['x-tenant-id'] as string | undefined
     if (headerTenantId && payload.role !== 'super_admin' && headerTenantId !== payload.tenantId) {
       return next(new AppError(403, 'TENANT_MISMATCH', 'x-tenant-id does not match your tenant'))
@@ -35,6 +41,37 @@ export async function authGuard(req: Request, _res: Response, next: NextFunction
     next()
   } catch {
     return next(new AppError(401, 'UNAUTHORIZED', 'Invalid or expired token'))
+  }
+}
+
+/**
+ * Ensures the authenticated user is an admin of the tenant in the request.
+ * Blocks super_admin (who must use super-admin routes) and non-admin roles.
+ */
+export async function requireTenantAdmin(req: Request, _res: Response, next: NextFunction) {
+  try {
+    const user = req.user
+    if (!user) {
+      return next(new AppError(401, 'UNAUTHORIZED', 'Authentication required'))
+    }
+    if (user.role === 'super_admin') {
+      return next(new AppError(403, 'FORBIDDEN', 'Super Admin cannot manage tenant employees. Use Super Admin panel.'))
+    }
+    if (user.role !== 'admin') {
+      return next(new AppError(403, 'FORBIDDEN', `Role '${user.role}' is not allowed to manage employees`))
+    }
+    if (!user.tenantId) {
+      return next(new AppError(403, 'FORBIDDEN', 'Admin without tenant association'))
+    }
+    // x-tenant-id header must match the admin's tenant
+    const headerTenant = req.headers['x-tenant-id'] as string | undefined
+    if (headerTenant && headerTenant !== user.tenantId) {
+      return next(new AppError(403, 'TENANT_MISMATCH', 'x-tenant-id does not match your tenant'))
+    }
+    req.tenantId = user.tenantId
+    next()
+  } catch (err) {
+    return next(err)
   }
 }
 

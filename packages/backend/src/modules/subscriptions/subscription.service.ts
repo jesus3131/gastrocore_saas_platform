@@ -1,11 +1,19 @@
-import { prisma } from '../../config/database/prisma.js'
+import { inject, injectable } from 'tsyringe'
 import { AppError } from '../../common/filters/error-handler.js'
+import { logger } from '../../config/logger.js'
 import { SUBSCRIPTION_PLANS } from '@gastrocore/shared'
 import { sendCredentialsEmail } from '../notifications/email.service.js'
 import { ChangePlanUseCase } from '../../core/use-cases/subscriptions/change-plan.use-case.js'
+import type { SubscriptionRepository } from '../../core/ports/repositories/subscription.repository.js'
+import type { TenantRepository } from '../../core/ports/repositories/tenant.repository.js'
 
+@injectable()
 export class SubscriptionService {
-  constructor(private readonly changePlanUseCase?: ChangePlanUseCase) {}
+  constructor(
+    @inject('SubscriptionRepository') private readonly subscriptionRepo: SubscriptionRepository,
+    @inject('TenantRepository') private readonly tenantRepo: TenantRepository,
+    private readonly changePlanUseCase?: ChangePlanUseCase,
+  ) {}
 
   async getPlans() {
     return Object.entries(SUBSCRIPTION_PLANS).map(([id, plan]) => ({
@@ -15,18 +23,16 @@ export class SubscriptionService {
   }
 
   async getCurrentSubscription(tenantId: string) {
-    const subscription = await prisma.subscription.findFirst({
-      where: { tenantId },
-      orderBy: { createdAt: 'desc' },
-      include: { invoices: { orderBy: { createdAt: 'desc' }, take: 6 } },
+    const subscription = await this.subscriptionRepo.findFirst(
+      { tenantId },
+      { invoices: { orderBy: { createdAt: 'desc' }, take: 6 } },
+    )
+
+    const tenant = await this.tenantRepo.findById(tenantId, {
+      subscriptionPlan: true, subscriptionStatus: true, customFields: true,
     })
 
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-      select: { subscriptionPlan: true, subscriptionStatus: true, customFields: true },
-    })
-
-    const plan = tenant ? SUBSCRIPTION_PLANS[tenant.subscriptionPlan] : null
+    const plan = tenant ? SUBSCRIPTION_PLANS[tenant.subscriptionPlan as keyof typeof SUBSCRIPTION_PLANS] : null
     const extraUsers = (tenant?.customFields as any)?.extraUsers || 0
 
     return {
@@ -50,36 +56,27 @@ export class SubscriptionService {
     const plan = SUBSCRIPTION_PLANS[newPlan as keyof typeof SUBSCRIPTION_PLANS]
     if (!plan) throw new AppError(404, 'PLAN_NOT_FOUND', 'Plan not found')
 
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: { subscriptionPlan: newPlan as any },
+    await this.tenantRepo.update(tenantId, { subscriptionPlan: newPlan as any })
+
+    const subscription = await this.subscriptionRepo.create({
+      tenantId,
+      plan: newPlan as any,
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     })
 
-    const subscription = await prisma.subscription.create({
-      data: {
-        tenantId,
-        plan: newPlan as any,
-        status: 'active',
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
+    await this.subscriptionRepo.createInvoice({
+      subscriptionId: subscription.id,
+      amount: plan.priceMonthly,
+      status: 'pending',
+      periodStart: subscription.currentPeriodStart,
+      periodEnd: subscription.currentPeriodEnd,
     })
 
-    await prisma.subscriptionInvoice.create({
-      data: {
-        subscriptionId: subscription.id,
-        amount: plan.priceMonthly,
-        status: 'pending',
-        periodStart: subscription.currentPeriodStart,
-        periodEnd: subscription.currentPeriodEnd,
-      },
-    })
-
-    await prisma.tenantFeatureFlag.deleteMany({ where: { tenantId } })
+    await this.tenantRepo.deleteFeatureFlags({ tenantId })
     for (const feature of plan.features) {
-      await prisma.tenantFeatureFlag.create({
-        data: { tenantId, feature, enabled: true },
-      })
+      await this.tenantRepo.upsertFeatureFlag(tenantId, feature, true)
     }
 
     this.notifyPlanChange(tenantId, newPlan)
@@ -89,23 +86,16 @@ export class SubscriptionService {
 
   private async notifyPlanChange(tenantId: string, newPlan: string) {
     try {
-      const admins = await prisma.user.findMany({
-        where: { tenantId, role: 'admin', isActive: true },
-        select: { email: true, name: true },
-      })
+      const admins = await this.tenantRepo.findManyAdmins(tenantId)
       for (const admin of admins) {
         await sendCredentialsEmail(admin.email, admin.email, '')
       }
     } catch (err) {
-      console.warn(`[Subscription] Failed to notify plan change for tenant ${tenantId}:`, (err as Error).message)
+      logger.warn({ err, tenantId }, 'Failed to notify plan change')
     }
   }
 
   async getInvoices(tenantId: string) {
-    return prisma.subscriptionInvoice.findMany({
-      where: { subscription: { tenantId } },
-      orderBy: { createdAt: 'desc' },
-      take: 12,
-    })
+    return this.subscriptionRepo.findInvoices(tenantId)
   }
 }

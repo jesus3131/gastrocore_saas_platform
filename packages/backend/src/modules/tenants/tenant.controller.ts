@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express'
+import { container } from 'tsyringe'
 import { TenantService } from './tenant.service.js'
 
 export class TenantController {
-  private service = new TenantService()
+  private service = container.resolve(TenantService)
 
   async getConfig(req: Request, res: Response, next: NextFunction) {
     try {

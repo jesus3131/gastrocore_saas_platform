@@ -1,24 +1,23 @@
-import { prisma } from '../../config/database/prisma.js'
+import { inject, injectable } from 'tsyringe'
 import { AppError } from '../../common/filters/error-handler.js'
 import { ConnectDeliveryUseCase } from '../../core/use-cases/integrations/connect-delivery.use-case.js'
+import type { IntegrationRepository } from '../../core/ports/repositories/integration.repository.js'
 
+@injectable()
 export class IntegrationService {
-  constructor(private readonly connectDeliveryUseCase?: ConnectDeliveryUseCase) {}
+  constructor(
+    @inject('IntegrationRepository') private readonly integrationRepo: IntegrationRepository,
+    private readonly connectDeliveryUseCase?: ConnectDeliveryUseCase,
+  ) {}
 
   async getDeliveries(tenantId: string) {
-    return prisma.integration.findMany({
-      where: { tenantId, type: 'delivery' },
-      select: { id: true, provider: true, enabled: true, createdAt: true, updatedAt: true },
-      orderBy: { provider: 'asc' },
-    })
+    const integrations = await this.integrationRepo.findMany(tenantId, 'delivery')
+    return integrations.map(({ config, ...rest }: any) => ({ ...rest, hasConfig: !!config }))
   }
 
   async getPayments(tenantId: string) {
-    return prisma.integration.findMany({
-      where: { tenantId, type: 'payment' },
-      select: { id: true, provider: true, enabled: true, createdAt: true, updatedAt: true },
-      orderBy: { provider: 'asc' },
-    })
+    const integrations = await this.integrationRepo.findMany(tenantId, 'payment')
+    return integrations.map(({ config, ...rest }: any) => ({ ...rest, hasConfig: !!config }))
   }
 
   async connectDelivery(tenantId: string, data: { provider: string; apiKey: string; storeId: string; config?: Record<string, unknown> }) {
@@ -26,37 +25,37 @@ export class IntegrationService {
       return this.connectDeliveryUseCase.execute(tenantId, data)
     }
 
-    const existing = await prisma.integration.findUnique({
+    const existing = await this.integrationRepo.findUnique({
       where: { tenantId_provider: { tenantId, provider: data.provider } },
     })
     if (existing) throw new AppError(409, 'INTEGRATION_EXISTS', `Already connected to ${data.provider}`)
 
-    return prisma.integration.create({
-      data: { tenantId, provider: data.provider, type: 'delivery', config: { apiKey: data.apiKey, storeId: data.storeId, ...data.config } },
+    return this.integrationRepo.create({
+      tenantId, provider: data.provider, type: 'delivery', config: { apiKey: data.apiKey, storeId: data.storeId, ...data.config },
     })
   }
 
   async connectPayment(tenantId: string, data: { provider: string; apiKey: string; webhookSecret?: string; config?: Record<string, unknown> }) {
-    const existing = await prisma.integration.findUnique({
+    const existing = await this.integrationRepo.findUnique({
       where: { tenantId_provider: { tenantId, provider: data.provider } },
     })
     if (existing) throw new AppError(409, 'INTEGRATION_EXISTS', `Already connected to ${data.provider}`)
 
-    return prisma.integration.create({
-      data: { tenantId, provider: data.provider, type: 'payment', config: { apiKey: data.apiKey, webhookSecret: data.webhookSecret, ...data.config } },
+    return this.integrationRepo.create({
+      tenantId, provider: data.provider, type: 'payment', config: { apiKey: data.apiKey, webhookSecret: data.webhookSecret, ...data.config },
     })
   }
 
   async toggleIntegration(tenantId: string, id: string, data: { enabled?: boolean; config?: Record<string, unknown> }) {
-    const integration = await prisma.integration.findFirst({ where: { id, tenantId } })
+    const integration = await this.integrationRepo.findFirst({ where: { id, tenantId } })
     if (!integration) throw new AppError(404, 'INTEGRATION_NOT_FOUND', 'Integration not found')
-    return prisma.integration.update({ where: { id }, data: { enabled: data.enabled, config: data.config as any } })
+    return this.integrationRepo.update(id, { enabled: data.enabled, config: data.config as any })
   }
 
   async disconnect(tenantId: string, id: string) {
-    const integration = await prisma.integration.findFirst({ where: { id, tenantId } })
+    const integration = await this.integrationRepo.findFirst({ where: { id, tenantId } })
     if (!integration) throw new AppError(404, 'INTEGRATION_NOT_FOUND', 'Integration not found')
-    await prisma.integration.delete({ where: { id } })
+    await this.integrationRepo.delete(id)
     return { message: `Disconnected from ${integration.provider}` }
   }
 

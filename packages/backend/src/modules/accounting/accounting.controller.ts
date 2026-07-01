@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express'
+import { container } from 'tsyringe'
 import { AccountingService } from './accounting.service.js'
 
 export class AccountingController {
-  private service = new AccountingService()
+  private service = container.resolve(AccountingService)
 
   async getAccounts(req: Request, res: Response, next: NextFunction) {
     try {

@@ -7,8 +7,8 @@ function getClient(): any {
 }
 
 export class PrismaSubscriptionRepository implements SubscriptionRepository {
-  async findFirst(where: any) {
-    return getClient().subscription.findFirst({ where, orderBy: { createdAt: 'desc' } })
+  async findFirst(where: any, include?: any) {
+    return getClient().subscription.findFirst({ where, orderBy: { createdAt: 'desc' }, ...(include ? { include } : {}) })
   }
 
   async create(data: any) {

@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express'
+import { container } from 'tsyringe'
 import { AnalyticsService } from './analytics.service.js'
 
 export class AnalyticsController {
-  private service = new AnalyticsService()
+  private service = container.resolve(AnalyticsService)
 
   async getSalesSummary(req: Request, res: Response, next: NextFunction) {
     try {

@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express'
+import { container } from 'tsyringe'
 import { IntegrationService } from './integration.service.js'
 
 export class IntegrationController {
-  private service = new IntegrationService()
+  private service = container.resolve(IntegrationService)
 
   async getDeliveries(req: Request, res: Response, next: NextFunction) {
     try {

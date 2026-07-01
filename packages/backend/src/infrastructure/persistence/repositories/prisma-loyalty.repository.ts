@@ -25,4 +25,13 @@ export class PrismaLoyaltyRepository implements LoyaltyRepository {
       orderBy: { createdAt: 'desc' },
     })
   }
+
+  async findRedemptionsByTenant(tenantId: string) {
+    return getClient().loyaltyRedemption.findMany({
+      where: { program: { tenantId } },
+      include: { customer: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    })
+  }
 }

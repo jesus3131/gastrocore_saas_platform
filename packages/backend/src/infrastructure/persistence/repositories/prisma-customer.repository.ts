@@ -11,8 +11,8 @@ export class PrismaCustomerRepository implements CustomerRepository {
     return getClient().customer.findMany({ where: { tenantId, ...opts?.where }, ...opts?.options })
   }
 
-  async findFirst(where: any) {
-    return getClient().customer.findFirst({ where })
+  async findFirst(where: any, include?: any) {
+    return getClient().customer.findFirst({ where, include })
   }
 
   async create(data: any) {

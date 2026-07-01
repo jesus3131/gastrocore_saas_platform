@@ -11,12 +11,16 @@ export class PrismaAccountRepository implements AccountRepository {
     return getClient().account.findMany({ where: { tenantId, ...opts?.where }, ...opts?.options })
   }
 
-  async findFirst(where: any) {
-    return getClient().account.findFirst({ where })
+  async findFirst(where: any, include?: any) {
+    return getClient().account.findFirst({ where, ...(include ? { include } : {}) })
   }
 
   async create(data: any) {
     return getClient().account.create({ data })
+  }
+
+  async createMany(data: any[]) {
+    return getClient().account.createMany({ data })
   }
 
   async update(id: string, data: any) {
@@ -25,5 +29,9 @@ export class PrismaAccountRepository implements AccountRepository {
 
   async delete(id: string) {
     return getClient().account.delete({ where: { id } })
+  }
+
+  async count(where: any) {
+    return getClient().account.count({ where })
   }
 }

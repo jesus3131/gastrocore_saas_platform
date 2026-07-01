@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express'
+import { container } from 'tsyringe'
 import { OnboardingService } from './onboarding.service.js'
 
 export class OnboardingController {
-  private service = new OnboardingService()
+  private service = container.resolve(OnboardingService)
 
   async saveProfile(req: Request, res: Response, next: NextFunction) {
     try {

@@ -15,16 +15,16 @@ export class PrismaJournalRepository implements JournalRepository {
     return { entries, total }
   }
 
-  async findFirst(where: any) {
-    return getClient().journalEntry.findFirst({ where })
+  async findFirst(where: any, include?: any) {
+    return getClient().journalEntry.findFirst({ where, ...(include ? { include } : {}) })
   }
 
-  async create(data: any) {
-    return getClient().journalEntry.create({ data })
+  async create(data: any, include?: any) {
+    return getClient().journalEntry.create({ data, ...(include ? { include } : {}) })
   }
 
-  async update(id: string, data: any) {
-    return getClient().journalEntry.update({ where: { id }, data })
+  async update(id: string, data: any, include?: any) {
+    return getClient().journalEntry.update({ where: { id }, data, ...(include ? { include } : {}) })
   }
 
   async delete(id: string) {
@@ -33,5 +33,13 @@ export class PrismaJournalRepository implements JournalRepository {
 
   async count(where: any) {
     return getClient().journalEntry.count({ where })
+  }
+
+  async findManyLines(where: any, opts?: any) {
+    return getClient().journalLine.findMany({ where, ...opts })
+  }
+
+  async countLines(where: any) {
+    return getClient().journalLine.count({ where })
   }
 }

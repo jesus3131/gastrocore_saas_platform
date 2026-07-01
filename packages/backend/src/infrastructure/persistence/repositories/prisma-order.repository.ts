@@ -56,8 +56,44 @@ export class PrismaOrderRepository implements OrderRepository {
     })
   }
 
+  async findMany(tenantId: string, query?: { status?: string; limit?: number; offset?: number }): Promise<any[]> {
+    const client = getClient()
+    const where: any = { tenantId }
+    if (query?.status) where.status = query.status
+    return client.order.findMany({
+      where,
+      include: { items: { include: { modifiers: true } }, table: true, customer: true },
+      orderBy: { createdAt: 'desc' },
+      take: query?.limit || 50,
+      skip: query?.offset || 0,
+    })
+  }
+
+  async findActiveByTables(tableIds: string[]): Promise<any[]> {
+    const client = getClient()
+    const orders = await client.order.findMany({
+      where: { tableId: { in: tableIds }, status: { notIn: ['paid', 'canceled'] } },
+      select: { id: true, total: true, status: true, tableId: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    })
+    const seen = new Set<string>()
+    const result: any[] = []
+    for (const o of orders) {
+      if (o.tableId && !seen.has(o.tableId)) {
+        seen.add(o.tableId)
+        result.push({ tableId: o.tableId, id: o.id, total: Number(o.total), status: o.status })
+      }
+    }
+    return result
+  }
+
   async updateStatus(id: string, status: string): Promise<any> {
     const client = getClient()
     return client.order.update({ where: { id }, data: { status } })
+  }
+
+  async updatePaymentMethod(id: string, method: string): Promise<any> {
+    const client = getClient()
+    return client.order.update({ where: { id }, data: { paymentMethod: method } })
   }
 }

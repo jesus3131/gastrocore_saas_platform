@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express'
+import { container } from 'tsyringe'
 import { SuperAdminService } from './super-admin.service.js'
 
 export class SuperAdminController {
-  private service = new SuperAdminService()
+  private service = container.resolve(SuperAdminService)
 
   async getCompanies(_req: Request, res: Response, next: NextFunction) {
     try {

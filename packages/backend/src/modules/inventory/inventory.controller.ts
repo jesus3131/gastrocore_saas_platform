@@ -1,12 +1,14 @@
 import type { Request, Response, NextFunction } from 'express'
+import { container } from 'tsyringe'
 import { InventoryService } from './inventory.service.js'
 
 export class InventoryController {
-  private service = new InventoryService()
+  private service = container.resolve(InventoryService)
 
   async getIngredients(req: Request, res: Response, next: NextFunction) {
     try {
-      const ingredients = await this.service.getIngredients(req.tenantId!)
+      const { limit, offset } = req.query
+      const ingredients = await this.service.getIngredients(req.tenantId!, { limit: Number(limit) || undefined, offset: Number(offset) || undefined })
       res.json({ success: true, data: ingredients })
     } catch (err) { next(err) }
   }
@@ -27,7 +29,8 @@ export class InventoryController {
 
   async getRecipes(req: Request, res: Response, next: NextFunction) {
     try {
-      const recipes = await this.service.getRecipes(req.tenantId!)
+      const { limit, offset } = req.query
+      const recipes = await this.service.getRecipes(req.tenantId!, { limit: Number(limit) || undefined, offset: Number(offset) || undefined })
       res.json({ success: true, data: recipes })
     } catch (err) { next(err) }
   }
@@ -55,14 +58,16 @@ export class InventoryController {
 
   async getStockAlerts(req: Request, res: Response, next: NextFunction) {
     try {
-      const alerts = await this.service.getStockAlerts(req.tenantId!)
+      const { limit, offset } = req.query
+      const alerts = await this.service.getStockAlerts(req.tenantId!, { limit: Number(limit) || undefined, offset: Number(offset) || undefined })
       res.json({ success: true, data: alerts })
     } catch (err) { next(err) }
   }
 
   async getStockMovements(req: Request, res: Response, next: NextFunction) {
     try {
-      const movements = await this.service.getStockMovements(req.tenantId!)
+      const { limit, offset } = req.query
+      const movements = await this.service.getStockMovements(req.tenantId!, { limit: Number(limit) || undefined, offset: Number(offset) || undefined })
       res.json({ success: true, data: movements })
     } catch (err) { next(err) }
   }

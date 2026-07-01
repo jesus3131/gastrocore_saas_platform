@@ -1,13 +1,21 @@
 import type { Request, Response, NextFunction } from 'express'
+import { container } from 'tsyringe'
 import { AuthService } from './auth.service.js'
 import { AppError } from '../../common/filters/error-handler.js'
 
 export class AuthController {
-  private service = new AuthService()
+  private service = container.resolve(AuthService)
 
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await this.service.login(req.body.email, req.body.password)
+      res.json({ success: true, data: result })
+    } catch (err) { next(err) }
+  }
+
+  async superAdminLogin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await this.service.superAdminLogin(req.body.email, req.body.password)
       res.json({ success: true, data: result })
     } catch (err) { next(err) }
   }

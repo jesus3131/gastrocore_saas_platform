@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express'
+import { container } from 'tsyringe'
 import { PosService } from './pos.service.js'
 
 export class PosController {
-  private service = new PosService()
+  private service = container.resolve(PosService)
 
   async getMenu(req: Request, res: Response, next: NextFunction) {
     try {

@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express'
+import { container } from 'tsyringe'
 import { SubscriptionService } from './subscription.service.js'
 
 export class SubscriptionController {
-  private service = new SubscriptionService()
+  private service = container.resolve(SubscriptionService)
 
   async getPlans(_req: Request, res: Response, next: NextFunction) {
     try {

@@ -17,8 +17,10 @@ import type { AccountingPeriodRepository } from '../../core/ports/repositories/a
 import type { SubscriptionRepository } from '../../core/ports/repositories/subscription.repository.js'
 import type { IntegrationRepository } from '../../core/ports/repositories/integration.repository.js'
 import type { AnalyticsRepository } from '../../core/ports/repositories/analytics.repository.js'
+import type { PaymentRepository } from '../../core/ports/repositories/payment.repository.js'
+import type { RefreshTokenRepository } from '../../core/ports/repositories/refresh-token.repository.js'
 import { PrismaUnitOfWork } from '../persistence/unit-of-work.js'
-import { InMemoryEventBus } from '../events/in-memory-event-bus.js'
+import { OutboxEventBus } from '../events/outbox-event-bus.js'
 import { PrismaEventStore } from '../persistence/repositories/prisma-event-store.js'
 import { PrismaOrderRepository } from '../persistence/repositories/prisma-order.repository.js'
 import { PrismaMenuRepository } from '../persistence/repositories/prisma-menu.repository.js'
@@ -35,6 +37,8 @@ import { PrismaAccountingPeriodRepository } from '../persistence/repositories/pr
 import { PrismaSubscriptionRepository } from '../persistence/repositories/prisma-subscription.repository.js'
 import { PrismaIntegrationRepository } from '../persistence/repositories/prisma-integration.repository.js'
 import { PrismaAnalyticsRepository } from '../persistence/repositories/prisma-analytics.repository.js'
+import { PrismaRefreshTokenRepository } from '../persistence/repositories/prisma-refresh-token.repository.js'
+import { PrismaPaymentRepository } from '../persistence/repositories/prisma-payment.repository.js'
 import { CreateOrderUseCase } from '../../core/use-cases/pos/create-order.use-case.js'
 import { CreateEmployeeUseCase } from '../../core/use-cases/hr/create-employee.use-case.js'
 import { UpdateFeaturesUseCase } from '../../core/use-cases/tenants/update-features.use-case.js'
@@ -47,10 +51,24 @@ import { ConnectDeliveryUseCase } from '../../core/use-cases/integrations/connec
 import { RegisterTenantUseCase } from '../../core/use-cases/auth/register-tenant.use-case.js'
 import { CreateCompanyUseCase } from '../../core/use-cases/super-admin/create-company.use-case.js'
 import { CompleteOnboardingUseCase } from '../../core/use-cases/onboarding/complete-onboarding.use-case.js'
+import { PosService } from '../../modules/pos/pos.service.js'
+import { AuthService } from '../../modules/auth/auth.service.js'
+import { AccountingService } from '../../modules/accounting/accounting.service.js'
+import { AnalyticsService } from '../../modules/analytics/analytics.service.js'
+import { CrmService } from '../../modules/crm/crm.service.js'
+import { HrService } from '../../modules/hr/hr.service.js'
+import { InventoryService } from '../../modules/inventory/inventory.service.js'
+import { IntegrationService } from '../../modules/integrations/integration.service.js'
+import { OnboardingService } from '../../modules/onboarding/onboarding.service.js'
+import { SubscriptionService } from '../../modules/subscriptions/subscription.service.js'
+import { SuperAdminService } from '../../modules/super-admin/super-admin.service.js'
+import { TenantService } from '../../modules/tenants/tenant.service.js'
 
 export function registerDependencies() {
   container.registerSingleton<UnitOfWork>('UnitOfWork', PrismaUnitOfWork)
-  container.registerSingleton<EventBus>('EventBus', InMemoryEventBus)
+  const eventBus = new OutboxEventBus()
+  container.registerInstance<EventBus>('EventBus', eventBus)
+  container.registerInstance<OutboxEventBus>(OutboxEventBus, eventBus)
   container.registerSingleton<EventStore>('EventStore', PrismaEventStore)
 
   // Repositories
@@ -69,6 +87,22 @@ export function registerDependencies() {
   container.registerSingleton<SubscriptionRepository>('SubscriptionRepository', PrismaSubscriptionRepository)
   container.registerSingleton<IntegrationRepository>('IntegrationRepository', PrismaIntegrationRepository)
   container.registerSingleton<AnalyticsRepository>('AnalyticsRepository', PrismaAnalyticsRepository)
+  container.registerSingleton<RefreshTokenRepository>('RefreshTokenRepository', PrismaRefreshTokenRepository)
+  container.registerSingleton<PaymentRepository>('PaymentRepository', PrismaPaymentRepository)
+
+  // Services
+  container.registerSingleton(PosService)
+  container.registerSingleton(AuthService)
+  container.registerSingleton(AccountingService)
+  container.registerSingleton(AnalyticsService)
+  container.registerSingleton(CrmService)
+  container.registerSingleton(HrService)
+  container.registerSingleton(InventoryService)
+  container.registerSingleton(IntegrationService)
+  container.registerSingleton(OnboardingService)
+  container.registerSingleton(SubscriptionService)
+  container.registerSingleton(SuperAdminService)
+  container.registerSingleton(TenantService)
 
   // Use Cases
   container.registerSingleton(CreateOrderUseCase)
