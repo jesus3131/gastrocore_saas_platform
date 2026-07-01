@@ -1,6 +1,8 @@
 import { prisma } from '../../config/database/prisma.js'
 import { AppError } from '../../common/filters/error-handler.js'
-import { ROLE_PERMISSIONS, SUBSCRIPTION_PLANS } from '@gastrocore/shared'
+import { ROLE_PERMISSIONS } from '@gastrocore/shared'
+import { container } from '../../infrastructure/di/container.js'
+import { CreateEmployeeUseCase } from '../../core/use-cases/hr/create-employee.use-case.js'
 
 export class HrService {
   async getEmployees(tenantId: string) {
@@ -12,19 +14,8 @@ export class HrService {
   }
 
   async createEmployee(tenantId: string, data: any) {
-    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
-    if (!tenant) throw new AppError(404, 'TENANT_NOT_FOUND', 'Tenant not found')
-
-    const plan = SUBSCRIPTION_PLANS[tenant.subscriptionPlan]
-    const extraUsers = (tenant.customFields as any)?.extraUsers || 0
-    const maxAllowed = plan.maxUsers + extraUsers
-
-    const currentCount = await prisma.employee.count({ where: { tenantId, isActive: true } })
-    if (currentCount >= maxAllowed) {
-      throw new AppError(403, 'USER_LIMIT_REACHED', `Límite de usuarios alcanzado (${maxAllowed}). Contacta al super admin para aumentar el cupo.`)
-    }
-
-    return prisma.employee.create({ data: { ...data, tenantId } })
+    const useCase = container.resolve(CreateEmployeeUseCase)
+    return useCase.execute({ tenantId, ...data })
   }
 
   async updateEmployee(tenantId: string, id: string, data: any) {

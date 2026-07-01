@@ -4,9 +4,12 @@ import { prisma } from '../../config/database/prisma.js'
 import { AppError } from '../../common/filters/error-handler.js'
 import { sendWelcomeEmail } from '../notifications/email.service.js'
 import { SUBSCRIPTION_PLANS } from '@gastrocore/shared'
+import { CreateCompanyUseCase } from '../../core/use-cases/super-admin/create-company.use-case.js'
 
 export class SuperAdminService {
   private readonly saltRounds = 12
+
+  constructor(private readonly createCompanyUseCase?: CreateCompanyUseCase) {}
 
   async getCompanies() {
     const tenants = await prisma.tenant.findMany({
@@ -75,6 +78,19 @@ export class SuperAdminService {
     address?: string
     phone?: string
   }) {
+    if (this.createCompanyUseCase) {
+      const result = await this.createCompanyUseCase.execute(data)
+
+      sendWelcomeEmail(data.adminEmail, data.adminName, data.adminEmail, result.credentials.password)
+        .then((sent) => {
+          if (sent) console.log(`[SuperAdmin] Welcome email sent to ${data.adminEmail}`)
+          else console.warn(`[SuperAdmin] Could not send welcome email to ${data.adminEmail}`)
+        })
+        .catch((err) => console.warn(`[SuperAdmin] Email error:`, err.message))
+
+      return result
+    }
+
     const existing = await prisma.user.findFirst({ where: { email: data.adminEmail } })
     if (existing) throw new AppError(409, 'EMAIL_EXISTS', 'Email already registered')
 
@@ -138,7 +154,6 @@ export class SuperAdminService {
       }
     }
 
-    // Send credentials email (non-blocking)
     sendWelcomeEmail(data.adminEmail, data.adminName, data.adminEmail, rawPassword)
       .then((sent) => {
         if (sent) console.log(`[SuperAdmin] Welcome email sent to ${data.adminEmail}`)
@@ -166,7 +181,6 @@ export class SuperAdminService {
     if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
 
     const customFields = { ...(tenant.customFields as Record<string, unknown>) }
-
     const updateData: Record<string, unknown> = {}
 
     if (data.companyName) updateData.name = data.companyName
@@ -180,12 +194,8 @@ export class SuperAdminService {
 
     updateData.customFields = customFields
 
-    const updated = await prisma.tenant.update({
-      where: { id },
-      data: updateData as any,
-    })
+    const updated = await prisma.tenant.update({ where: { id }, data: updateData as any })
 
-    // If plan changed, update subscription and feature flags
     if (data.planId) {
       const plan = SUBSCRIPTION_PLANS[data.planId as keyof typeof SUBSCRIPTION_PLANS]
       if (plan) {
@@ -199,23 +209,14 @@ export class SuperAdminService {
           },
         })
 
-        // Replace feature flags with new plan's features
         await prisma.tenantFeatureFlag.deleteMany({ where: { tenantId: id } })
         for (const feature of plan.features) {
-          await prisma.tenantFeatureFlag.create({
-            data: { tenantId: id, feature, enabled: true },
-          })
+          await prisma.tenantFeatureFlag.create({ data: { tenantId: id, feature, enabled: true } })
         }
       }
     }
 
-    return {
-      id: updated.id,
-      name: updated.name,
-      businessType: updated.businessType,
-      subscriptionPlan: updated.subscriptionPlan,
-      customFields: updated.customFields,
-    }
+    return { id: updated.id, name: updated.name, businessType: updated.businessType, subscriptionPlan: updated.subscriptionPlan, customFields: updated.customFields }
   }
 
   async updateModules(companyId: string, features: { feature: string; enabled: boolean }[]) {
@@ -234,18 +235,13 @@ export class SuperAdminService {
   }
 
   async resendCredentials(companyId: string) {
-    const admin = await prisma.user.findFirst({
-      where: { tenantId: companyId, role: 'admin', isActive: true },
-    })
+    const admin = await prisma.user.findFirst({ where: { tenantId: companyId, role: 'admin', isActive: true } })
     if (!admin) throw new AppError(404, 'ADMIN_NOT_FOUND', 'No active admin found for this company')
 
     const rawPassword = this.generatePassword()
     const passwordHash = await bcrypt.hash(rawPassword, this.saltRounds)
 
-    await prisma.user.update({
-      where: { id: admin.id },
-      data: { passwordHash },
-    })
+    await prisma.user.update({ where: { id: admin.id }, data: { passwordHash } })
 
     sendWelcomeEmail(admin.email, admin.name, admin.email, rawPassword)
       .then((sent) => {

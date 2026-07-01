@@ -1,7 +1,10 @@
 import { prisma } from '../../config/database/prisma.js'
 import { AppError } from '../../common/filters/error-handler.js'
+import { RedeemPointsUseCase } from '../../core/use-cases/crm/redeem-points.use-case.js'
 
 export class CrmService {
+  constructor(private readonly redeemPointsUseCase?: RedeemPointsUseCase) {}
+
   async getCustomers(tenantId: string) {
     return prisma.customer.findMany({
       where: { tenantId },
@@ -38,7 +41,6 @@ export class CrmService {
   async getSegments(tenantId: string) {
     const customers = await prisma.customer.findMany({ where: { tenantId } })
 
-    // Dynamic segment analysis
     const totalSpentValues = customers.map((c) => Number(c.totalSpent))
     const avgSpent = totalSpentValues.reduce((a, b) => a + b, 0) / (totalSpentValues.length || 1)
 
@@ -54,7 +56,6 @@ export class CrmService {
     let program = await prisma.loyaltyProgram.findFirst({ where: { tenantId, isActive: true } })
 
     if (!program) {
-      // Create default loyalty program
       program = await prisma.loyaltyProgram.create({
         data: {
           tenantId,
@@ -71,7 +72,6 @@ export class CrmService {
       })
     }
 
-    // Ensure tiers is a parsed array (not a JSON string)
     if (program && typeof program.tiers === 'string') {
       program.tiers = JSON.parse(program.tiers as string)
     }
@@ -79,6 +79,10 @@ export class CrmService {
   }
 
   async redeemPoints(tenantId: string, data: { customerId: string; points: number; reward: string }) {
+    if (this.redeemPointsUseCase) {
+      return this.redeemPointsUseCase.execute(tenantId, data.customerId, data.points, data.reward)
+    }
+
     const customer = await prisma.customer.findFirst({ where: { tenantId, id: data.customerId } })
     if (!customer) throw new AppError(404, 'CUSTOMER_NOT_FOUND', 'Customer not found')
     if (customer.loyaltyPoints < data.points) throw new AppError(400, 'INSUFFICIENT_POINTS', 'Insufficient loyalty points')

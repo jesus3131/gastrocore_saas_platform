@@ -730,3 +730,20 @@ model AuditLog {
   @@index([tenantId, createdAt])
   @@map("audit_logs")
 }
+
+// ─── EVENT STORE (Domain Events) ─────────────────────────────
+
+model Event {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String?  @db.Uuid    // nullable for system-wide events
+  eventName     String   @db.VarChar(100)
+  aggregateId   String   @db.VarChar(100)
+  aggregateType String   @db.VarChar(50)
+  payload       Json     @default("{}")
+  occurredOn    DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([tenantId, occurredOn])
+  @@index([eventName, occurredOn])
+  @@map("events")
+}

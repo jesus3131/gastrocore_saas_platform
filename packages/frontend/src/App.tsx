@@ -1,38 +1,45 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './app/store/auth.store'
 import { DashboardLayout } from './layouts/dashboard.layout'
 import { AuthLayout } from './layouts/auth.layout'
 import { api } from './lib/api'
-import { LoginPage } from './features/auth/pages/login.page'
-import { RegisterPage } from './features/auth/pages/register.page'
-import { DashboardPage } from './features/dashboard/pages/dashboard.page'
-import { PosOrderPage } from './features/pos/pages/pos-order.page'
-import { TableMapPage } from './features/pos/pages/table-map.page'
-import { CheckoutPage } from './features/pos/pages/checkout.page'
-import { KdsPage } from './features/pos/pages/kds.page'
-import { PosServicePage } from './features/pos/pages/pos-service.page'
-import { InventoryPage } from './features/inventory/pages/inventory.page'
-import { RecipePage } from './features/inventory/pages/recipe.page'
-import { HrDashboardPage } from './features/hr/pages/hr-dashboard.page'
-import { AnalyticsPage } from './features/analytics/pages/analytics.page'
-import { CustomersPage } from './features/crm/pages/customers.page'
-import { LoyaltyPage } from './features/crm/pages/loyalty.page'
-import { OnboardingPage } from './features/onboarding/pages/onboarding.page'
-import { SettingsPage } from './features/settings/pages/settings.page'
-import { ProfilePage } from './features/settings/pages/profile.page'
-import { DeliveryHubPage } from './features/integrations/pages/delivery-hub.page'
-import { ChannelConfigPage } from './features/integrations/pages/channel-config.page'
-import { AccountingOverviewPage } from './features/accounting/pages/accounting-overview.page'
-import { ChartOfAccountsPage } from './features/accounting/pages/chart-of-accounts.page'
-import { JournalEntriesPage } from './features/accounting/pages/journal-entries.page'
-import { FinancialStatementsPage } from './features/accounting/pages/financial-statements.page'
-import { AccountingSettingsPage } from './features/accounting/pages/accounting-settings.page'
-import { SuperAdminPage } from './features/super-admin/pages/super-admin.page'
-import { CompanyDetailPage } from './features/super-admin/pages/company-detail.page'
+
+const LoginPage = lazy(() => import('./features/auth/pages/login.page').then(m => ({ default: m.LoginPage })))
+const RegisterPage = lazy(() => import('./features/auth/pages/register.page').then(m => ({ default: m.RegisterPage })))
+const DashboardPage = lazy(() => import('./features/dashboard/pages/dashboard.page').then(m => ({ default: m.DashboardPage })))
+const PosOrderPage = lazy(() => import('./features/pos/pages/pos-order.page').then(m => ({ default: m.PosOrderPage })))
+const TableMapPage = lazy(() => import('./features/pos/pages/table-map.page').then(m => ({ default: m.TableMapPage })))
+const CheckoutPage = lazy(() => import('./features/pos/pages/checkout.page').then(m => ({ default: m.CheckoutPage })))
+const KdsPage = lazy(() => import('./features/pos/pages/kds.page').then(m => ({ default: m.KdsPage })))
+const PosServicePage = lazy(() => import('./features/pos/pages/pos-service.page').then(m => ({ default: m.PosServicePage })))
+const InventoryPage = lazy(() => import('./features/inventory/pages/inventory.page').then(m => ({ default: m.InventoryPage })))
+const RecipePage = lazy(() => import('./features/inventory/pages/recipe.page').then(m => ({ default: m.RecipePage })))
+const HrDashboardPage = lazy(() => import('./features/hr/pages/hr-dashboard.page').then(m => ({ default: m.HrDashboardPage })))
+const AnalyticsPage = lazy(() => import('./features/analytics/pages/analytics.page').then(m => ({ default: m.AnalyticsPage })))
+const CustomersPage = lazy(() => import('./features/crm/pages/customers.page').then(m => ({ default: m.CustomersPage })))
+const LoyaltyPage = lazy(() => import('./features/crm/pages/loyalty.page').then(m => ({ default: m.LoyaltyPage })))
+const OnboardingPage = lazy(() => import('./features/onboarding/pages/onboarding.page').then(m => ({ default: m.OnboardingPage })))
+const SettingsPage = lazy(() => import('./features/settings/pages/settings.page').then(m => ({ default: m.SettingsPage })))
+const ProfilePage = lazy(() => import('./features/settings/pages/profile.page').then(m => ({ default: m.ProfilePage })))
+const DeliveryHubPage = lazy(() => import('./features/integrations/pages/delivery-hub.page').then(m => ({ default: m.DeliveryHubPage })))
+const ChannelConfigPage = lazy(() => import('./features/integrations/pages/channel-config.page').then(m => ({ default: m.ChannelConfigPage })))
+const AccountingOverviewPage = lazy(() => import('./features/accounting/pages/accounting-overview.page').then(m => ({ default: m.AccountingOverviewPage })))
+const ChartOfAccountsPage = lazy(() => import('./features/accounting/pages/chart-of-accounts.page').then(m => ({ default: m.ChartOfAccountsPage })))
+const JournalEntriesPage = lazy(() => import('./features/accounting/pages/journal-entries.page').then(m => ({ default: m.JournalEntriesPage })))
+const FinancialStatementsPage = lazy(() => import('./features/accounting/pages/financial-statements.page').then(m => ({ default: m.FinancialStatementsPage })))
+const AccountingSettingsPage = lazy(() => import('./features/accounting/pages/accounting-settings.page').then(m => ({ default: m.AccountingSettingsPage })))
+const SuperAdminPage = lazy(() => import('./features/super-admin/pages/super-admin.page').then(m => ({ default: m.SuperAdminPage })))
+const CompanyDetailPage = lazy(() => import('./features/super-admin/pages/company-detail.page').then(m => ({ default: m.CompanyDetailPage })))
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-full min-h-[200px]">
+    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+)
 
 function SessionGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, tokens, logout, setAuth, user } = useAuthStore()
+  const { isAuthenticated, tokens, logout, setAuth } = useAuthStore()
   const [checking, setChecking] = useState(isAuthenticated)
 
   useEffect(() => {
@@ -49,7 +56,7 @@ function SessionGuard({ children }: { children: React.ReactNode }) {
         logout()
         setChecking(false)
       })
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (checking) return null
   return <>{children}</>
@@ -80,15 +87,15 @@ export function App() {
     <Routes>
       {/* Auth routes */}
       <Route element={<AuthLayout />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<Suspense fallback={<PageLoader />}><LoginPage /></Suspense>} />
+        <Route path="/register" element={<Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>} />
       </Route>
 
       {/* Onboarding */}
       <Route path="/onboarding" element={
         <SessionGuard>
           <ProtectedRoute>
-            <OnboardingPage />
+            <Suspense fallback={<PageLoader />}><OnboardingPage /></Suspense>
           </ProtectedRoute>
         </SessionGuard>
       } />
@@ -106,29 +113,29 @@ export function App() {
         </SessionGuard>
       }>
         <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="pos" element={<PosOrderPage />} />
-        <Route path="pos/tables" element={<TableMapPage />} />
-        <Route path="pos/checkout" element={<CheckoutPage />} />
-        <Route path="pos/kds" element={<KdsPage />} />
-        <Route path="pos/service" element={<PosServicePage />} />
-        <Route path="inventory" element={<InventoryPage />} />
-        <Route path="inventory/recipes" element={<RecipePage />} />
-        <Route path="hr" element={<HrDashboardPage />} />
-        <Route path="analytics" element={<AnalyticsPage />} />
-        <Route path="crm" element={<CustomersPage />} />
-        <Route path="crm/loyalty" element={<LoyaltyPage />} />
-        <Route path="integrations" element={<DeliveryHubPage />} />
-        <Route path="integrations/channels" element={<ChannelConfigPage />} />
-        <Route path="accounting" element={<AccountingOverviewPage />} />
-        <Route path="accounting/accounts" element={<ChartOfAccountsPage />} />
-        <Route path="accounting/journal-entries" element={<JournalEntriesPage />} />
-        <Route path="accounting/statements" element={<FinancialStatementsPage />} />
-        <Route path="accounting/settings" element={<AccountingSettingsPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-        <Route path="settings/profile" element={<ProfilePage />} />
-        <Route path="super-admin" element={<SuperAdminPage />} />
-        <Route path="super-admin/companies/:id" element={<CompanyDetailPage />} />
+        <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
+        <Route path="pos" element={<Suspense fallback={<PageLoader />}><PosOrderPage /></Suspense>} />
+        <Route path="pos/tables" element={<Suspense fallback={<PageLoader />}><TableMapPage /></Suspense>} />
+        <Route path="pos/checkout" element={<Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense>} />
+        <Route path="pos/kds" element={<Suspense fallback={<PageLoader />}><KdsPage /></Suspense>} />
+        <Route path="pos/service" element={<Suspense fallback={<PageLoader />}><PosServicePage /></Suspense>} />
+        <Route path="inventory" element={<Suspense fallback={<PageLoader />}><InventoryPage /></Suspense>} />
+        <Route path="inventory/recipes" element={<Suspense fallback={<PageLoader />}><RecipePage /></Suspense>} />
+        <Route path="hr" element={<Suspense fallback={<PageLoader />}><HrDashboardPage /></Suspense>} />
+        <Route path="analytics" element={<Suspense fallback={<PageLoader />}><AnalyticsPage /></Suspense>} />
+        <Route path="crm" element={<Suspense fallback={<PageLoader />}><CustomersPage /></Suspense>} />
+        <Route path="crm/loyalty" element={<Suspense fallback={<PageLoader />}><LoyaltyPage /></Suspense>} />
+        <Route path="integrations" element={<Suspense fallback={<PageLoader />}><DeliveryHubPage /></Suspense>} />
+        <Route path="integrations/channels" element={<Suspense fallback={<PageLoader />}><ChannelConfigPage /></Suspense>} />
+        <Route path="accounting" element={<Suspense fallback={<PageLoader />}><AccountingOverviewPage /></Suspense>} />
+        <Route path="accounting/accounts" element={<Suspense fallback={<PageLoader />}><ChartOfAccountsPage /></Suspense>} />
+        <Route path="accounting/journal-entries" element={<Suspense fallback={<PageLoader />}><JournalEntriesPage /></Suspense>} />
+        <Route path="accounting/statements" element={<Suspense fallback={<PageLoader />}><FinancialStatementsPage /></Suspense>} />
+        <Route path="accounting/settings" element={<Suspense fallback={<PageLoader />}><AccountingSettingsPage /></Suspense>} />
+        <Route path="settings" element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
+        <Route path="settings/profile" element={<Suspense fallback={<PageLoader />}><ProfilePage /></Suspense>} />
+        <Route path="super-admin" element={<Suspense fallback={<PageLoader />}><SuperAdminPage /></Suspense>} />
+        <Route path="super-admin/companies/:id" element={<Suspense fallback={<PageLoader />}><CompanyDetailPage /></Suspense>} />
       </Route>
     </Routes>
   )

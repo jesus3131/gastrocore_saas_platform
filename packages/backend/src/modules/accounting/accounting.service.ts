@@ -1,7 +1,10 @@
 import { prisma } from '../../config/database/prisma.js'
 import { AppError } from '../../common/filters/error-handler.js'
+import { CreateJournalEntryUseCase } from '../../core/use-cases/accounting/create-journal-entry.use-case.js'
+import { withCache } from '../../common/cache/cache.js'
 
 export class AccountingService {
+  constructor(private readonly createJournalEntryUseCase?: CreateJournalEntryUseCase) {}
 
   // ─── Chart of Accounts ──────────────────────────────────────
 
@@ -48,30 +51,22 @@ export class AccountingService {
   }
 
   async importAccounts(tenantId: string, data: { accounts: any[] }) {
-    const created = []
-    for (const acc of data.accounts) {
-      let parentId: string | undefined
-      if (acc.parentCode) {
-        const parent = await prisma.account.findFirst({ where: { tenantId, code: acc.parentCode } })
-        if (parent) parentId = parent.id
-      }
-      try {
-        const account = await prisma.account.create({
-          data: {
-            tenantId,
-            code: acc.code,
-            name: acc.name,
-            type: acc.type,
-            subtype: acc.subtype,
-            parentId,
-          },
-        })
-        created.push(account)
-      } catch {
-        // skip duplicates
-      }
-    }
-    return created
+    const parentCodes = data.accounts.map((a) => a.parentCode).filter(Boolean)
+    const parentAccounts = parentCodes.length > 0
+      ? await prisma.account.findMany({ where: { tenantId, code: { in: [...new Set(parentCodes)] } }, select: { id: true, code: true } })
+      : []
+    const parentMap = new Map(parentAccounts.map((p) => [p.code, p.id]))
+
+    const existingAccounts = await prisma.account.findMany({ where: { tenantId }, select: { code: true } })
+    const existingCodes = new Set(existingAccounts.map((a) => a.code))
+
+    const newAccounts = data.accounts
+      .filter((a) => !existingCodes.has(a.code))
+      .map((a) => ({ tenantId, code: a.code, name: a.name, type: a.type, subtype: a.subtype, parentId: parentMap.get(a.parentCode) || undefined }))
+
+    if (newAccounts.length === 0) return []
+    await prisma.account.createMany({ data: newAccounts })
+    return prisma.account.findMany({ where: { tenantId, code: { in: newAccounts.map((a) => a.code) } } })
   }
 
   // ─── Journal Entries ────────────────────────────────────────
@@ -104,23 +99,23 @@ export class AccountingService {
   async getJournalEntry(tenantId: string, id: string) {
     const entry = await prisma.journalEntry.findFirst({
       where: { tenantId, id },
-      include: {
-        lines: { include: { account: true } },
-        period: { select: { id: true, name: true } },
-      },
+      include: { lines: { include: { account: true } }, period: { select: { id: true, name: true } } },
     })
     if (!entry) throw new AppError(404, 'ENTRY_NOT_FOUND', 'Journal entry not found')
     return entry
   }
 
   async createJournalEntry(tenantId: string, data: any, userId?: string) {
+    if (this.createJournalEntryUseCase) {
+      return this.createJournalEntryUseCase.execute(tenantId, data, userId)
+    }
+
     if (data.periodId) {
       const period = await prisma.accountingPeriod.findFirst({ where: { tenantId, id: data.periodId } })
       if (!period) throw new AppError(404, 'PERIOD_NOT_FOUND', 'Period not found')
       if (period.isClosed) throw new AppError(400, 'PERIOD_CLOSED', 'Cannot add entries to closed period')
     }
 
-    // Verify all accounts belong to tenant
     for (const line of data.lines) {
       const account = await prisma.account.findFirst({ where: { tenantId, id: line.accountId } })
       if (!account) throw new AppError(404, 'ACCOUNT_NOT_FOUND', `Account ${line.accountId} not found`)
@@ -146,10 +141,7 @@ export class AccountingService {
           })),
         },
       },
-      include: {
-        lines: { include: { account: true } },
-        period: { select: { id: true, name: true } },
-      },
+      include: { lines: { include: { account: true } }, period: { select: { id: true, name: true } } },
     })
   }
 
@@ -180,40 +172,24 @@ export class AccountingService {
   // ─── Automated Entries from POS Transactions ───────────────
 
   async createAutoEntryFromOrder(tenantId: string, order: any) {
-    // Find or create cash account
-    let cashAccount = await prisma.account.findFirst({
-      where: { tenantId, code: '1101' },
-    })
+    let cashAccount = await prisma.account.findFirst({ where: { tenantId, code: '1101' } })
     if (!cashAccount) {
       cashAccount = await prisma.account.create({
-        data: {
-          tenantId, code: '1101', name: 'Caja y Bancos',
-          type: 'asset', subtype: 'current_asset', isSystem: true,
-        },
+        data: { tenantId, code: '1101', name: 'Caja y Bancos', type: 'asset', subtype: 'current_asset', isSystem: true },
       })
     }
 
-    let revenueAccount = await prisma.account.findFirst({
-      where: { tenantId, code: '4101' },
-    })
+    let revenueAccount = await prisma.account.findFirst({ where: { tenantId, code: '4101' } })
     if (!revenueAccount) {
       revenueAccount = await prisma.account.create({
-        data: {
-          tenantId, code: '4101', name: 'Ingresos por Ventas',
-          type: 'income', subtype: 'operating_revenue', isSystem: true,
-        },
+        data: { tenantId, code: '4101', name: 'Ingresos por Ventas', type: 'income', subtype: 'operating_revenue', isSystem: true },
       })
     }
 
-    let taxAccount = await prisma.account.findFirst({
-      where: { tenantId, code: '2101' },
-    })
+    let taxAccount = await prisma.account.findFirst({ where: { tenantId, code: '2101' } })
     if (!taxAccount) {
       taxAccount = await prisma.account.create({
-        data: {
-          tenantId, code: '2101', name: 'IVA por Pagar',
-          type: 'liability', subtype: 'current_liability', isSystem: true,
-        },
+        data: { tenantId, code: '2101', name: 'IVA por Pagar', type: 'liability', subtype: 'current_liability', isSystem: true },
       })
     }
 
@@ -223,7 +199,6 @@ export class AccountingService {
 
     const period = await this.getOrCreatePeriod(tenantId, order.createdAt)
 
-    // Find period
     return prisma.journalEntry.create({
       data: {
         tenantId,
@@ -247,6 +222,11 @@ export class AccountingService {
   // ─── Financial Statements ───────────────────────────────────
 
   async getTrialBalance(tenantId: string, query: { periodId?: string; from?: string; to?: string }) {
+    const cacheKey = `trial-balance:${tenantId}:${query.from || ''}:${query.to || ''}`
+    return withCache(cacheKey, () => this._getTrialBalance(tenantId, query), 60_000)
+  }
+
+  private async _getTrialBalance(tenantId: string, query: { periodId?: string; from?: string; to?: string }) {
     const dateFilter: any = {}
     if (query.from || query.to) {
       if (query.from) dateFilter.gte = new Date(query.from)
@@ -257,14 +237,10 @@ export class AccountingService {
     if (Object.keys(dateFilter).length) entriesWhere.entryDate = dateFilter
 
     const lines = await prisma.journalLine.findMany({
-      where: {
-        entry: entriesWhere,
-        account: { tenantId },
-      },
+      where: { entry: entriesWhere, account: { tenantId } },
       include: { account: true },
     })
 
-    // Aggregate by account
     const totals: Record<string, { account: any; totalDebit: number; totalCredit: number }> = {}
     for (const line of lines) {
       if (!totals[line.accountId]) {
@@ -278,14 +254,16 @@ export class AccountingService {
   }
 
   async getBalanceSheet(tenantId: string, query: { periodId?: string; asOf?: string }) {
+    const cacheKey = `balance-sheet:${tenantId}:${query.asOf || ''}`
+    return withCache(cacheKey, () => this._getBalanceSheet(tenantId, query), 60_000)
+  }
+
+  private async _getBalanceSheet(tenantId: string, query: { periodId?: string; asOf?: string }) {
     const asOf = query.asOf ? new Date(query.asOf) : new Date()
     const entriesWhere: any = { tenantId, status: 'posted', entryDate: { lte: asOf } }
 
     const lines = await prisma.journalLine.findMany({
-      where: {
-        entry: entriesWhere,
-        account: { tenantId, type: { in: ['asset', 'liability', 'equity'] } },
-      },
+      where: { entry: entriesWhere, account: { tenantId, type: { in: ['asset', 'liability', 'equity'] } } },
       include: { account: true },
     })
 
@@ -329,6 +307,11 @@ export class AccountingService {
   }
 
   async getIncomeStatement(tenantId: string, query: { periodId?: string; from?: string; to?: string }) {
+    const cacheKey = `income-statement:${tenantId}:${query.from || ''}:${query.to || ''}`
+    return withCache(cacheKey, () => this._getIncomeStatement(tenantId, query), 60_000)
+  }
+
+  private async _getIncomeStatement(tenantId: string, query: { periodId?: string; from?: string; to?: string }) {
     const dateFilter: any = {}
     if (query.from || query.to) {
       if (query.from) dateFilter.gte = new Date(query.from)
@@ -339,10 +322,7 @@ export class AccountingService {
     if (Object.keys(dateFilter).length) entriesWhere.entryDate = dateFilter
 
     const lines = await prisma.journalLine.findMany({
-      where: {
-        entry: entriesWhere,
-        account: { tenantId, type: { in: ['income', 'expense'] } },
-      },
+      where: { entry: entriesWhere, account: { tenantId, type: { in: ['income', 'expense'] } } },
       include: { account: true },
     })
 
@@ -372,14 +352,7 @@ export class AccountingService {
       }
     }
 
-    return {
-      period: query,
-      incomes,
-      expenses,
-      totalIncome,
-      totalExpense,
-      netIncome: totalIncome - totalExpense,
-    }
+    return { period: query, incomes, expenses, totalIncome, totalExpense, netIncome: totalIncome - totalExpense }
   }
 
   async getGeneralLedger(tenantId: string, query: { accountId?: string; from?: string; to?: string; limit?: number; offset?: number }) {
@@ -397,10 +370,7 @@ export class AccountingService {
     const [lines, total] = await Promise.all([
       prisma.journalLine.findMany({
         where,
-        include: {
-          account: true,
-          entry: { select: { id: true, entryDate: true, description: true, reference: true } },
-        },
+        include: { account: true, entry: { select: { id: true, entryDate: true, description: true, reference: true } } },
         orderBy: [{ entry: { entryDate: 'asc' } }, { id: 'asc' }],
         take: query.limit || 100,
         skip: query.offset || 0,
@@ -414,21 +384,11 @@ export class AccountingService {
   // ─── Accounting Periods ─────────────────────────────────────
 
   async getPeriods(tenantId: string) {
-    return prisma.accountingPeriod.findMany({
-      where: { tenantId },
-      orderBy: { startDate: 'desc' },
-    })
+    return prisma.accountingPeriod.findMany({ where: { tenantId }, orderBy: { startDate: 'desc' } })
   }
 
   async createPeriod(tenantId: string, data: any) {
-    return prisma.accountingPeriod.create({
-      data: {
-        tenantId,
-        name: data.name,
-        startDate: new Date(data.startDate),
-        endDate: new Date(data.endDate),
-      },
-    })
+    return prisma.accountingPeriod.create({ data: { tenantId, name: data.name, startDate: new Date(data.startDate), endDate: new Date(data.endDate) } })
   }
 
   async closePeriod(tenantId: string, periodId: string) {
@@ -439,10 +399,7 @@ export class AccountingService {
     const draftEntries = await prisma.journalEntry.count({ where: { tenantId, periodId, status: 'draft' } })
     if (draftEntries > 0) throw new AppError(400, 'DRAFT_ENTRIES', `Cannot close period: ${draftEntries} draft entries`)
 
-    return prisma.accountingPeriod.update({
-      where: { id: periodId },
-      data: { isClosed: true, closedAt: new Date() },
-    })
+    return prisma.accountingPeriod.update({ where: { id: periodId }, data: { isClosed: true, closedAt: new Date() } })
   }
 
   // ─── OData / Export ─────────────────────────────────────────
@@ -456,22 +413,13 @@ export class AccountingService {
     if (entity === 'accounts') {
       data = await prisma.account.findMany({ where: { tenantId }, take: top, skip })
     } else if (entity === 'journalEntries') {
-      const entries = await prisma.journalEntry.findMany({
-        where: { tenantId },
-        include: { lines: true },
-        take: top, skip,
-        orderBy: { entryDate: 'desc' },
-      })
+      const entries = await prisma.journalEntry.findMany({ where: { tenantId }, include: { lines: true }, take: top, skip, orderBy: { entryDate: 'desc' } })
       data = entries
     } else if (entity === 'trialBalance') {
       data = await this.getTrialBalance(tenantId, query)
     }
 
-    return {
-      '@odata.context': `${baseUrl}/$metadata#${entity}`,
-      value: data,
-      '@odata.nextLink': data.length === top ? `${baseUrl}?$skip=${skip + top}&$top=${top}` : null,
-    }
+    return { '@odata.context': `${baseUrl}/$metadata#${entity}`, value: data, '@odata.nextLink': data.length === top ? `${baseUrl}?$skip=${skip + top}&$top=${top}` : null }
   }
 
   // ─── Helpers ────────────────────────────────────────────────
@@ -482,13 +430,9 @@ export class AccountingService {
     const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
     const periodName = `${monthNames[date.getMonth()]} ${date.getFullYear()}`
 
-    let period = await prisma.accountingPeriod.findFirst({
-      where: { tenantId, name: periodName },
-    })
+    let period = await prisma.accountingPeriod.findFirst({ where: { tenantId, name: periodName } })
     if (!period) {
-      period = await prisma.accountingPeriod.create({
-        data: { tenantId, name: periodName, startDate: startOfMonth, endDate: endOfMonth },
-      })
+      period = await prisma.accountingPeriod.create({ data: { tenantId, name: periodName, startDate: startOfMonth, endDate: endOfMonth } })
     }
     return period
   }

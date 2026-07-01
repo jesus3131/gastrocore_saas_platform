@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
@@ -8,8 +9,11 @@ import { connectRedis } from './redis/redis.js'
 import { errorHandler } from '../common/filters/error-handler.js'
 import { requestLogger } from '../common/interceptors/request-logger.js'
 import { registerRoutes } from './routes.js'
+import { registerDependencies } from '../infrastructure/di/container.js'
 
 export async function createApp() {
+  registerDependencies()
+
   const app = express()
 
   // ─── Connect infrastructure ─────────────────────────────

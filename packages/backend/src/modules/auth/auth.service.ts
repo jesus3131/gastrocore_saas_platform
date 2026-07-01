@@ -5,11 +5,13 @@ import { prisma } from '../../config/database/prisma.js'
 import { env } from '../../config/env.js'
 import { AppError } from '../../common/filters/error-handler.js'
 import { sendWelcomeEmail } from '../notifications/email.service.js'
-import { SUBSCRIPTION_PLANS } from '@gastrocore/shared'
 import type { JwtPayload, AuthTokens } from '@gastrocore/shared'
+import { RegisterTenantUseCase } from '../../core/use-cases/auth/register-tenant.use-case.js'
 
 export class AuthService {
-  private readonly saltRounds = 12
+  private readonly saltRounds = 10
+
+  constructor(private readonly registerTenant?: RegisterTenantUseCase) {}
 
   async login(email: string, password: string) {
     const user = await prisma.user.findFirst({ where: { email } })
@@ -58,12 +60,33 @@ export class AuthService {
     businessType: string
     planId?: string
   }) {
+    if (this.registerTenant) {
+      const result = await this.registerTenant.execute(data)
+
+      const tokens = this.generateTokens({
+        sub: result.user.id,
+        tenantId: result.tenant.id,
+        role: result.user.role as any,
+        email: result.user.email,
+      })
+
+      sendWelcomeEmail(data.email, data.name, data.email, result.credentials.password)
+        .then((sent) => {
+          if (sent) console.log(`[Auth] Welcome email sent to ${data.email}`)
+          else console.warn(`[Auth] Could not send welcome email to ${data.email}`)
+        })
+        .catch((err) => console.warn(`[Auth] Email error for ${data.email}:`, err.message))
+
+      return { ...result, tokens }
+    }
+
+    const { SUBSCRIPTION_PLANS } = await import('@gastrocore/shared')
+
     const existing = await prisma.user.findFirst({ where: { email: data.email } })
     if (existing) {
       throw new AppError(409, 'EMAIL_EXISTS', 'Email already registered')
     }
 
-    // Auto-generate password if not provided
     const rawPassword = data.password || this.generatePassword()
     const passwordHash = await bcrypt.hash(rawPassword, this.saltRounds)
 
@@ -90,7 +113,6 @@ export class AuthService {
       },
     })
 
-    // Create subscription record if plan has features
     if (plan) {
       const subscription = await prisma.subscription.create({
         data: {
@@ -112,7 +134,6 @@ export class AuthService {
         },
       })
 
-      // Create feature flags from plan
       for (const feature of plan.features) {
         await prisma.tenantFeatureFlag.create({
           data: { tenantId: tenant.id, feature, enabled: true },
@@ -127,7 +148,6 @@ export class AuthService {
       email: user.email,
     })
 
-    // Send welcome email with credentials (non-blocking)
     sendWelcomeEmail(data.email, data.name, data.email, rawPassword)
       .then((sent) => {
         if (sent) console.log(`[Auth] Welcome email sent to ${data.email}`)

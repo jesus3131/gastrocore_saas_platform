@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { api } from '../../../lib/api'
 import { LoadingSkeleton, EmptyState, ErrorState, MetricCard } from '../../../shared/components/ui'
 import { Clock, ChefHat, UtensilsCrossed, RefreshCw, Bell } from 'lucide-react'
+import { useWebsocket } from '../../../app/hooks/use-websocket'
 
 const STATUS_ORDER = ['pending', 'preparing', 'ready', 'served']
 const STATUS_LABELS: Record<string, string> = {
@@ -27,13 +28,29 @@ const BADGE_COLORS: Record<string, string> = {
 
 export function KdsPage() {
   const [notiSound, setNotiSound] = useState(false)
+  const newOrderRef = useRef(false)
   const queryClient = useQueryClient()
+  const { subscribe } = useWebsocket()
 
   const { data: orders, isLoading, error, refetch } = useQuery({
     queryKey: ['pos', 'orders'],
     queryFn: () => api.get('/pos/orders').then((r) => r.data.data),
-    refetchInterval: 15000,
   })
+
+  useEffect(() => {
+    const unsub = subscribe('order.created', () => {
+      if (!newOrderRef.current) {
+        newOrderRef.current = true
+        setNotiSound(true)
+        setTimeout(() => {
+          setNotiSound(false)
+          newOrderRef.current = false
+        }, 4000)
+      }
+      queryClient.invalidateQueries({ queryKey: ['pos', 'orders'] })
+    })
+    return () => unsub()
+  }, [subscribe, queryClient])
 
   const updateStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>

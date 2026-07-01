@@ -7,6 +7,9 @@ import type { Server } from 'http'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') })
 
+// Telemetry must initialize before PrismaClient is created
+await import('./infrastructure/observability/instrumentation.js')
+
 const [{ createApp }, { logger }, { env }, { disconnectDatabase }, { disconnectRedis }] = await Promise.all([
   import('./config/app.js'),
   import('./config/logger.js'),
@@ -15,11 +18,27 @@ const [{ createApp }, { logger }, { env }, { disconnectDatabase }, { disconnectR
   import('./config/redis/redis.js'),
 ])
 
+const [{ container }, { WebSocketGateway }, { EventPersister }, { EventBroadcaster }] = await Promise.all([
+  import('./infrastructure/di/container.js'),
+  import('./infrastructure/websocket/websocket-gateway.js'),
+  import('./infrastructure/events/event-persister.js'),
+  import('./infrastructure/websocket/event-broadcaster.js'),
+])
+
 let server: Server
 
 async function bootstrap() {
   const app = await createApp()
   server = createServer(app)
+
+  const gateway = new WebSocketGateway()
+  gateway.initialize(server)
+
+  const eventStore = container.resolve<import('./core/ports/event-store.js').EventStore>('EventStore')
+  const eventBus = container.resolve<import('./core/ports/event-bus.js').EventBus>('EventBus')
+
+  new EventPersister(eventStore, eventBus).start()
+  new EventBroadcaster(eventBus, gateway).start()
 
   server.listen(env.PORT, () => {
     logger.info({ port: env.PORT, env: env.NODE_ENV }, 'GastroCore API started')

@@ -1,8 +1,11 @@
 import { prisma } from '../../config/database/prisma.js'
 import { BUSINESS_TYPE_FEATURES } from '@gastrocore/shared'
 import type { BusinessType } from '@gastrocore/shared'
+import { CompleteOnboardingUseCase } from '../../core/use-cases/onboarding/complete-onboarding.use-case.js'
 
 export class OnboardingService {
+  constructor(private readonly completeOnboardingUseCase?: CompleteOnboardingUseCase) {}
+
   // Step 1: Business Profile
   async saveProfile(tenantId: string, data: { name: string; businessType: string; locale: string; timezone: string; currency: string }) {
     const tenant = await prisma.tenant.update({
@@ -20,7 +23,6 @@ export class OnboardingService {
       },
     })
 
-    // Auto-configure feature flags based on business type
     const defaultFeatures = BUSINESS_TYPE_FEATURES[data.businessType as BusinessType] || []
     for (const feature of defaultFeatures) {
       await prisma.tenantFeatureFlag.upsert({
@@ -37,30 +39,17 @@ export class OnboardingService {
   async saveAreas(tenantId: string, data: { branches: { name: string; areas: { name: string; type: string; tables: { label: string; capacity: number }[] }[] }[] }) {
     for (const branchData of data.branches) {
       const branch = await prisma.branch.create({
-        data: {
-          tenantId,
-          name: branchData.name,
-          settings: { onboardingStep: 'modules' },
-        },
+        data: { tenantId, name: branchData.name, settings: { onboardingStep: 'modules' } },
       })
 
       for (const areaData of branchData.areas) {
         const area = await prisma.serviceArea.create({
-          data: {
-            branchId: branch.id,
-            name: areaData.name,
-            type: areaData.type,
-          },
+          data: { branchId: branch.id, name: areaData.name, type: areaData.type },
         })
 
         for (const tableData of areaData.tables) {
           await prisma.table.create({
-            data: {
-              branchId: branch.id,
-              areaId: area.id,
-              label: tableData.label,
-              capacity: tableData.capacity,
-            },
+            data: { branchId: branch.id, areaId: area.id, label: tableData.label, capacity: tableData.capacity },
           })
         }
       }
@@ -89,6 +78,10 @@ export class OnboardingService {
 
   // Step 4: Launch
   async launch(tenantId: string) {
+    if (this.completeOnboardingUseCase) {
+      return this.completeOnboardingUseCase.execute(tenantId)
+    }
+
     await prisma.tenant.update({
       where: { id: tenantId },
       data: {

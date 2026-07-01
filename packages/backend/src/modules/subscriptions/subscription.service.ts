@@ -2,8 +2,11 @@ import { prisma } from '../../config/database/prisma.js'
 import { AppError } from '../../common/filters/error-handler.js'
 import { SUBSCRIPTION_PLANS } from '@gastrocore/shared'
 import { sendCredentialsEmail } from '../notifications/email.service.js'
+import { ChangePlanUseCase } from '../../core/use-cases/subscriptions/change-plan.use-case.js'
 
 export class SubscriptionService {
+  constructor(private readonly changePlanUseCase?: ChangePlanUseCase) {}
+
   async getPlans() {
     return Object.entries(SUBSCRIPTION_PLANS).map(([id, plan]) => ({
       id,
@@ -35,6 +38,10 @@ export class SubscriptionService {
   }
 
   async changePlan(tenantId: string, newPlan: string) {
+    if (this.changePlanUseCase) {
+      return this.changePlanUseCase.execute(tenantId, newPlan)
+    }
+
     const validPlans = ['basic', 'pro', 'enterprise']
     if (!validPlans.includes(newPlan)) {
       throw new AppError(400, 'INVALID_PLAN', `Plan must be one of: ${validPlans.join(', ')}`)
@@ -43,13 +50,11 @@ export class SubscriptionService {
     const plan = SUBSCRIPTION_PLANS[newPlan as keyof typeof SUBSCRIPTION_PLANS]
     if (!plan) throw new AppError(404, 'PLAN_NOT_FOUND', 'Plan not found')
 
-    // Update tenant
     await prisma.tenant.update({
       where: { id: tenantId },
       data: { subscriptionPlan: newPlan as any },
     })
 
-    // Create subscription record
     const subscription = await prisma.subscription.create({
       data: {
         tenantId,
@@ -60,7 +65,6 @@ export class SubscriptionService {
       },
     })
 
-    // Create invoice
     await prisma.subscriptionInvoice.create({
       data: {
         subscriptionId: subscription.id,
@@ -71,7 +75,6 @@ export class SubscriptionService {
       },
     })
 
-    // Sync feature flags with new plan
     await prisma.tenantFeatureFlag.deleteMany({ where: { tenantId } })
     for (const feature of plan.features) {
       await prisma.tenantFeatureFlag.create({
@@ -79,7 +82,6 @@ export class SubscriptionService {
       })
     }
 
-    // Notify tenant admins about plan change (non-blocking)
     this.notifyPlanChange(tenantId, newPlan)
 
     return { subscription, plan }
@@ -91,7 +93,6 @@ export class SubscriptionService {
         where: { tenantId, role: 'admin', isActive: true },
         select: { email: true, name: true },
       })
-      const planName = SUBSCRIPTION_PLANS[newPlan as keyof typeof SUBSCRIPTION_PLANS]?.name || newPlan
       for (const admin of admins) {
         await sendCredentialsEmail(admin.email, admin.email, '')
       }

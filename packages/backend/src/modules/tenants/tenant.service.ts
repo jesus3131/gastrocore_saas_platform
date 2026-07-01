@@ -1,8 +1,10 @@
 import { prisma } from '../../config/database/prisma.js'
 import { AppError } from '../../common/filters/error-handler.js'
 import { BUSINESS_TYPE_FEATURES } from '@gastrocore/shared'
+import { UpdateFeaturesUseCase } from '../../core/use-cases/tenants/update-features.use-case.js'
 
 export class TenantService {
+  constructor(private readonly updateFeaturesUseCase?: UpdateFeaturesUseCase) {}
   async getConfig(tenantId: string) {
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
     if (!tenant) throw new AppError(404, 'TENANT_NOT_FOUND', 'Tenant not found')
@@ -48,10 +50,13 @@ export class TenantService {
   }
 
   async updateFeatures(tenantId: string, features: { feature: string; enabled: boolean }[]) {
+    if (this.updateFeaturesUseCase) {
+      return this.updateFeaturesUseCase.execute(tenantId, features)
+    }
+
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
     if (!tenant) throw new AppError(404, 'TENANT_NOT_FOUND', 'Tenant not found')
 
-    // Upsert each feature flag
     for (const { feature, enabled } of features) {
       await prisma.tenantFeatureFlag.upsert({
         where: { tenantId_feature: { tenantId, feature } },

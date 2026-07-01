@@ -1,6 +1,8 @@
 import { prisma } from '../../config/database/prisma.js'
 import { AppError } from '../../common/filters/error-handler.js'
 import { logger } from '../../config/logger.js'
+import { container } from '../../infrastructure/di/container.js'
+import { CreateOrderUseCase } from '../../core/use-cases/pos/create-order.use-case.js'
 import type { OrderStatus, PaymentMethod } from '@prisma/client'
 
 export class PosService {
@@ -35,15 +37,31 @@ export class PosService {
       },
     })
 
-    // Enrich tables with active order info
+    const tableIds = branches.flatMap((b) => b.areas.flatMap((a) => a.tables.map((t) => t.id)))
+
+    let activeOrders: { tableId: string; id: string; total: number; status: string }[] = []
+    if (tableIds.length > 0) {
+      const orders = await prisma.order.findMany({
+        where: { tableId: { in: tableIds }, status: { notIn: ['paid', 'canceled'] } },
+        select: { id: true, total: true, status: true, tableId: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      })
+      // Deduplicate: keep the most recent order per table
+      const seen = new Set<string>()
+      for (const o of orders) {
+        if (o.tableId && !seen.has(o.tableId)) {
+          seen.add(o.tableId)
+          activeOrders.push({ tableId: o.tableId, id: o.id, total: Number(o.total), status: o.status })
+        }
+      }
+    }
+
+    const orderMap = new Map(activeOrders.map((o) => [o.tableId, { id: o.id, total: o.total, status: o.status }]))
+
     for (const branch of branches) {
       for (const area of branch.areas) {
         for (const table of area.tables) {
-          const activeOrder = await prisma.order.findFirst({
-            where: { tenantId, tableId: table.id, status: { notIn: ['paid', 'canceled'] } },
-            select: { id: true, total: true, status: true },
-          })
-          ;(table as any).activeOrder = activeOrder
+          ;(table as any).activeOrder = orderMap.get(table.id) || null
         }
       }
     }
@@ -56,63 +74,35 @@ export class PosService {
   }
 
   // ─── Orders ──────────────────────────────────────────────
-  async getOrders(tenantId: string) {
+  async getOrders(tenantId: string, query?: { status?: string; limit?: number; offset?: number }) {
+    const where: any = { tenantId }
+    if (query?.status) where.status = query.status
+
     return prisma.order.findMany({
-      where: { tenantId },
+      where,
       include: { items: { include: { modifiers: true } }, table: true, customer: true },
       orderBy: { createdAt: 'desc' },
-      take: 50,
+      take: query?.limit || 50,
+      skip: query?.offset || 0,
     })
   }
 
   async createOrder(tenantId: string, data: any, userId: string) {
-    const order = await prisma.order.create({
-      data: {
-        tenantId,
-        branchId: data.branchId,
-        tableId: data.tableId,
-        userId,
-        customerId: data.customerId,
-        type: data.type || 'dine_in',
-        subtotal: data.subtotal,
-        tax: data.tax || 0,
-        discount: data.discount || 0,
-        total: data.total,
-        notes: data.notes,
-        items: {
-          create: data.items.map((item: any) => ({
-            menuItemId: item.menuItemId,
-            name: item.name,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            totalPrice: item.unitPrice * item.quantity,
-            notes: item.notes,
-            modifiers: {
-              create: (item.modifiers || []).map((mod: any) => ({
-                groupId: mod.groupId,
-                optionId: mod.optionId,
-                name: mod.name,
-                price: mod.price,
-              })),
-            },
-          })),
-        },
-      },
-      include: { items: { include: { modifiers: true } }, table: true },
+    const useCase = container.resolve(CreateOrderUseCase)
+    return useCase.execute({
+      tenantId,
+      branchId: data.branchId,
+      tableId: data.tableId,
+      userId,
+      customerId: data.customerId,
+      type: data.type || 'dine_in',
+      subtotal: data.subtotal,
+      tax: data.tax || 0,
+      discount: data.discount || 0,
+      total: data.total,
+      notes: data.notes,
+      items: data.items,
     })
-
-    // Update table status if dine-in
-    if (data.tableId) {
-      await prisma.table.update({
-        where: { id: data.tableId },
-        data: { status: 'occupied' },
-      })
-    }
-
-    // Deduct inventory if auto-inventory is enabled
-    await this.deductInventory(tenantId, data.items)
-
-    return order
   }
 
   async getOrder(tenantId: string, id: string) {
@@ -172,7 +162,6 @@ export class PosService {
     })
     if (!order) throw new AppError(404, 'ORDER_NOT_FOUND', 'Order not found')
 
-    // Create split payments
     const payments = await Promise.all(
       data.splits.map((split) =>
         prisma.payment.create({
@@ -192,40 +181,46 @@ export class PosService {
 
   // ─── Inventory Deduction ────────────────────────────────
   private async deductInventory(tenantId: string, items: any[]) {
+    const menuItemIds = [...new Set(items.map((i: any) => i.menuItemId))]
+    const recipes = await prisma.recipe.findMany({
+      where: { menuItemId: { in: menuItemIds } },
+      include: { ingredients: true },
+    })
+
+    const recipeMap = new Map(recipes.map((r) => [r.menuItemId, r]))
+    const deductions: { ingredientId: string; qty: number; ref: string }[] = []
+
     for (const item of items) {
-      const recipe = await prisma.recipe.findFirst({
-        where: { menuItemId: item.menuItemId },
-        include: { ingredients: true },
-      })
-
+      const recipe = recipeMap.get(item.menuItemId)
       if (!recipe) continue
-
-      for (const ingredient of recipe.ingredients) {
-        const qtyToDeduct = Number(ingredient.quantity) * item.quantity
-
-        await prisma.ingredient.updateMany({
-          where: { tenantId, id: ingredient.ingredientId },
-          data: { currentStock: { decrement: qtyToDeduct } },
-        })
-
-        await prisma.stockMovement.create({
-          data: {
-            ingredientId: ingredient.ingredientId,
-            type: 'out',
-            quantity: qtyToDeduct,
-            reference: `order-${item.menuItemId}`,
-          },
-        })
-
-        // Check stock alert
-        const updatedIngredient = await prisma.ingredient.findFirst({
-          where: { tenantId, id: ingredient.ingredientId },
-        })
-        if (updatedIngredient && updatedIngredient.currentStock <= updatedIngredient.minimumStock) {
-          // TODO: Trigger notification via notification service
-          logger.warn({ ingredient: updatedIngredient.name, stock: updatedIngredient.currentStock, unit: updatedIngredient.unit }, 'Low stock alert')
-        }
+      for (const ing of recipe.ingredients) {
+        deductions.push({ ingredientId: ing.ingredientId, qty: Number(ing.quantity) * item.quantity, ref: `order-${item.menuItemId}` })
       }
+    }
+
+    if (deductions.length === 0) return
+
+    // Batch update ingredient stocks
+    for (const d of deductions) {
+      await prisma.ingredient.updateMany({
+        where: { tenantId, id: d.ingredientId },
+        data: { currentStock: { decrement: d.qty } },
+      })
+    }
+
+    // Single batch create for stock movements
+    await prisma.stockMovement.createMany({
+      data: deductions.map((d) => ({ ingredientId: d.ingredientId, type: 'out', quantity: d.qty, reference: d.ref })),
+    })
+
+    // Single query for stock alerts
+    const ingredientIds = [...new Set(deductions.map((d) => d.ingredientId))]
+    const lowStock = await prisma.ingredient.findMany({
+      where: { tenantId, id: { in: ingredientIds }, currentStock: { lte: prisma.ingredient.fields.minimumStock } },
+      select: { name: true, currentStock: true, unit: true },
+    })
+    for (const ing of lowStock) {
+      logger.warn({ ingredient: ing.name, stock: ing.currentStock, unit: ing.unit }, 'Low stock alert')
     }
   }
 }

@@ -1,14 +1,16 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, ShoppingCart, ClipboardList, Users, BarChart3,
-  Settings, LogOut, User, ChevronDown, Bell, Table2, Gift,
+  Settings, LogOut, User, Bell, Table2, Gift,
   Truck, CreditCard, ChefHat, UtensilsCrossed, BookOpen,
   FileSpreadsheet, ScrollText, Menu, X, Sun, Moon, Building2,
 } from 'lucide-react'
 import { useAuthStore } from '../app/store/auth.store'
 import { useThemeStore } from '../app/store/theme.store'
 import { useLogout } from '../app/hooks/use-auth'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useWebsocket } from '../app/hooks/use-websocket'
+import { useRealtimeOrders, useRealtimeTables } from '../app/hooks/use-realtime'
 
 interface NavItem { to: string; icon: any; label: string; feature?: string }
 
@@ -58,9 +60,10 @@ export function DashboardLayout() {
   const { user, waiter } = useAuthStore()
   const isSuperAdmin = user?.role === 'super_admin'
   const flags: string[] = user?.featureFlags || []
-  const navItems: NavItem[] = isSuperAdmin
+  const navItems: NavItem[] = useMemo(() => isSuperAdmin
     ? superAdminNavItems
-    : navItemsAll.filter(item => !item.feature || flags.includes(item.feature))
+    : navItemsAll.filter(item => !item.feature || flags.includes(item.feature)),
+  [isSuperAdmin, flags.join(',')])
   const { theme, toggle: toggleTheme } = useThemeStore()
   const logout = useLogout()
   const location = useLocation()
@@ -69,6 +72,10 @@ export function DashboardLayout() {
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [location.pathname])
+
+  useWebsocket()
+  useRealtimeOrders()
+  useRealtimeTables()
 
   if (waiter) {
     return (
