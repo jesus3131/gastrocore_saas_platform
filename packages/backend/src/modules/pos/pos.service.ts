@@ -46,7 +46,15 @@ export class PosService {
     return branches
   }
 
-  async updateTableStatus(id: string, status: string) {
+  async updateTableStatus(tenantId: string, id: string, status: string) {
+    const table = await this.tableRepo.findById(id)
+    if (!table) throw new AppError(404, 'TABLE_NOT_FOUND', 'Table not found')
+
+    const branch = await this.tableRepo.findBranchByTable(id)
+    if (!branch || branch.tenantId !== tenantId) {
+      throw new AppError(403, 'FORBIDDEN', 'You do not have access to this table')
+    }
+
     return this.tableRepo.updateStatus(id, status)
   }
 
@@ -89,6 +97,7 @@ export class PosService {
     if (!order) throw new AppError(404, 'ORDER_NOT_FOUND', 'Order not found')
 
     const payment = await this.paymentRepo.create({
+      tenantId,
       orderId: data.orderId,
       method: data.method,
       amount: data.amount,
@@ -112,6 +121,7 @@ export class PosService {
 
     return this.paymentRepo.createMany(
       data.splits.map((split) => ({
+        tenantId,
         orderId: data.orderId,
         method: 'cash',
         amount: split.amount,

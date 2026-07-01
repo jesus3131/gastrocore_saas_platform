@@ -27,6 +27,13 @@ export class HrController {
     } catch (err) { next(err) }
   }
 
+  async deleteEmployee(req: Request, res: Response, next: NextFunction) {
+    try {
+      await this.service.deleteEmployee(req.tenantId!, req.params.id as string, req.user!.sub)
+      res.json({ success: true, data: { message: 'Employee deleted successfully' } })
+    } catch (err) { next(err) }
+  }
+
   async getShifts(req: Request, res: Response, next: NextFunction) {
     try {
       const { limit, offset } = req.query

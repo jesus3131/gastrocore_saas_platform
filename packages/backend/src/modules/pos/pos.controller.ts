@@ -28,7 +28,7 @@ export class PosController {
 
   async updateTableStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const table = await this.service.updateTableStatus(req.params.id as string, req.body.status)
+      const table = await this.service.updateTableStatus(req.tenantId!, req.params.id as string, req.body.status)
       res.json({ success: true, data: table })
     } catch (err) { next(err) }
   }

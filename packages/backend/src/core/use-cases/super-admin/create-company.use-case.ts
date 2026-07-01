@@ -52,12 +52,22 @@ export class CreateCompanyUseCase {
       },
     })
 
+    const employee = await prisma.employee.create({
+      data: {
+        tenantId: tenant.id,
+        name: data.adminName,
+        email: data.adminEmail,
+        role: 'admin',
+      },
+    })
+
     const user = await this.userRepo.create({
       tenantId: tenant.id,
+      employeeId: employee.id,
       email: data.adminEmail,
       passwordHash,
       name: data.adminName,
-      role: 'admin',
+      tenantRole: 'admin',
     })
 
     if (plan) {
@@ -90,7 +100,7 @@ export class CreateCompanyUseCase {
 
     return {
       company: { id: tenant.id, name: tenant.name },
-      admin: { id: user.id, email: user.email, name: user.name },
+      admin: { id: user.id, email: user.email, name: user.name, tenantRole: user.tenantRole ?? 'admin', globalRole: user.globalRole ?? null },
       credentials: { email: data.adminEmail, password: rawPassword },
     }
   }

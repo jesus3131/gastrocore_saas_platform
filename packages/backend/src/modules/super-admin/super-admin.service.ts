@@ -26,7 +26,7 @@ export class SuperAdminService {
       orderBy: { createdAt: 'desc' },
       include: {
         users: {
-          where: { role: 'admin' },
+          where: { tenantRole: 'admin' },
           select: { id: true, email: true, name: true, createdAt: true },
           take: 1,
         },
@@ -64,8 +64,8 @@ export class SuperAdminService {
       where: { id },
       include: {
         users: {
-          where: { role: 'admin' },
-          select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true, lastLoginAt: true },
+          where: { tenantRole: 'admin' },
+          select: { id: true, email: true, name: true, tenantRole: true, globalRole: true, isActive: true, createdAt: true, lastLoginAt: true },
         },
         subscriptions: { orderBy: { createdAt: 'desc' }, take: 3, include: { invoices: true } },
         featureFlags: { select: { feature: true, enabled: true } },
@@ -129,12 +129,23 @@ export class SuperAdminService {
       customFields: customFields as any,
     })
 
+    const { prisma } = await import('../../config/database/prisma.js')
+    const employee = await prisma.employee.create({
+      data: {
+        tenantId: tenant.id,
+        name: data.adminName,
+        email: data.adminEmail,
+        role: 'admin',
+      },
+    })
+
     const user = await this.userRepo.create({
       tenantId: tenant.id,
+      employeeId: employee.id,
       email: data.adminEmail,
       passwordHash,
       name: data.adminName,
-      role: 'admin',
+      tenantRole: 'admin',
     })
 
     if (plan) {
@@ -234,7 +245,7 @@ export class SuperAdminService {
   }
 
   async resendCredentials(companyId: string) {
-    const admin = await this.tenantRepo.findUsersByTenant(companyId, { role: 'admin', isActive: true })
+    const admin = await this.tenantRepo.findUsersByTenant(companyId, { tenantRole: 'admin', isActive: true })
     if (!admin.length) throw new AppError(404, 'ADMIN_NOT_FOUND', 'No active admin found for this company')
 
     const rawPassword = this.generatePassword()

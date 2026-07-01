@@ -17,6 +17,13 @@ export class PrismaTableRepository implements TableRepository {
     return client.table.findUnique({ where: { id } })
   }
 
+  async findBranchByTable(tableId: string): Promise<any> {
+    const client = getClient()
+    const table = await client.table.findUnique({ where: { id: tableId }, select: { branchId: true } })
+    if (!table?.branchId) return null
+    return client.branch.findUnique({ where: { id: table.branchId }, select: { id: true, tenantId: true } })
+  }
+
   async findAllWithBranches(tenantId: string): Promise<any[]> {
     const client = getClient()
     return client.branch.findMany({

@@ -53,7 +53,6 @@ enum PaymentMethod {
 }
 
 enum EmployeeRole {
-  super_admin
   admin
   manager
   chef
@@ -62,6 +61,10 @@ enum EmployeeRole {
   host
   delivery
   accountant
+}
+
+enum GlobalRole {
+  super_admin
 }
 
 enum ShiftStatus {
@@ -107,21 +110,25 @@ model Tenant {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
-  users           User[]
-  branches        Branch[]
-  menuCategories  MenuCategory[]
-  orders          Order[]
-  customers       Customer[]
-  employees       Employee[]
-  ingredients     Ingredient[]
-  menuItems       MenuItem[]
-  featureFlags    TenantFeatureFlag[]
-  subscriptions   Subscription[]
-  loyaltyPrograms LoyaltyProgram[]
-  integrations    Integration[]
-  accounts        Account[]
-  journalEntries  JournalEntry[]
+  users             User[]
+  branches          Branch[]
+  menuCategories    MenuCategory[]
+  orders            Order[]
+  customers         Customer[]
+  employees         Employee[]
+  ingredients       Ingredient[]
+  menuItems         MenuItem[]
+  featureFlags      TenantFeatureFlag[]
+  subscriptions     Subscription[]
+  loyaltyPrograms   LoyaltyProgram[]
+  integrations      Integration[]
+  accounts          Account[]
+  journalEntries    JournalEntry[]
   accountingPeriods AccountingPeriod[]
+  payments          Payment[]
+  auditLogs         AuditLog[]
+  rolePermissions   RolePermission[]
+  userPermissions   UserPermission[]
 
   @@index([slug])
   @@map("tenants")
@@ -130,25 +137,29 @@ model Tenant {
 // ─── USERS & AUTH ─────────────────────────────────────────────
 
 model User {
-  id             String       @id @default(uuid()) @db.Uuid
-  tenantId       String?      @db.Uuid
-  email          String       @db.VarChar(255)
-  passwordHash   String       @db.VarChar(255)
-  name           String       @db.VarChar(255)
-  role           EmployeeRole @default(waiter)
-  pinCode        String?      @db.VarChar(6)
-  isActive       Boolean      @default(true)
+  id             String        @id @default(uuid()) @db.Uuid
+  tenantId       String?       @db.Uuid
+  employeeId     String?       @unique @db.Uuid
+  email          String        @db.VarChar(255)
+  passwordHash   String        @db.VarChar(255)
+  name           String        @db.VarChar(255)
+  globalRole     GlobalRole?
+  tenantRole     EmployeeRole?
+  pinCode        String?       @db.VarChar(6)
+  isActive       Boolean       @default(true)
   lastLoginAt    DateTime?
   refreshToken   String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  orders Order[] @relation("UserOrders")
-  permissions UserPermission[]
+  tenant       Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee     Employee?        @relation(fields: [employeeId], references: [id])
+  orders       Order[]          @relation("UserOrders")
+  permissions  UserPermission[]
 
   @@unique([email])
   @@index([tenantId])
+  @@index([globalRole])
   @@map("users")
 }
 
@@ -171,21 +182,35 @@ model Permission {
 }
 
 model RolePermission {
+  id           String        @id @default(uuid()) @db.Uuid
+  tenantId     String?       @db.Uuid
   role         EmployeeRole
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  permissionId String     @db.Uuid
+  permission   Permission    @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String        @db.Uuid
+  grantedBy    String?       @db.Uuid
 
-  @@id([role, permissionId])
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, role, permissionId])
+  @@index([tenantId, role])
   @@map("role_permissions")
 }
 
 model UserPermission {
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String     @id @default(uuid()) @db.Uuid
   userId       String     @db.Uuid
+  tenantId     String     @db.Uuid
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   permissionId String     @db.Uuid
+  grantedBy    String?    @db.Uuid
+  expiresAt    DateTime?
+  createdAt    DateTime   @default(now())
 
-  @@id([userId, permissionId])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@index([userId, tenantId])
   @@map("user_permissions")
 }
 
@@ -393,6 +418,7 @@ model OrderItemModifier {
 
 model Payment {
   id          String        @id @default(uuid()) @db.Uuid
+  tenantId    String        @db.Uuid
   orderId     String        @db.Uuid
   method      PaymentMethod
   amount      Decimal       @db.Decimal(10, 2)
@@ -401,8 +427,10 @@ model Payment {
   metadata    Json          @default("{}")
   createdAt   DateTime      @default(now())
 
-  order Order @relation(fields: [orderId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  order  Order  @relation(fields: [orderId], references: [id])
 
+  @@index([tenantId, createdAt])
   @@index([orderId])
   @@map("payments")
 }
@@ -496,8 +524,9 @@ model Employee {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  shifts Shift[]
+  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user     User?
+  shifts   Shift[]
   commissions Commission[]
 
   @@unique([tenantId, email])
@@ -769,7 +798,7 @@ model AccountingPeriod {
 
 model AuditLog {
   id        String   @id @default(uuid()) @db.Uuid
-  tenantId  String   @db.Uuid
+  tenantId  String?  @db.Uuid
   userId    String?  @db.Uuid
   action    String   @db.VarChar(100)
   entity    String   @db.VarChar(100)
@@ -778,6 +807,8 @@ model AuditLog {
   newValue  Json?
   ipAddress String?  @db.VarChar(45)
   createdAt DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, createdAt])
   @@index([entity, entityId])

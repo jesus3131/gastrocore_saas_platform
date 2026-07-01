@@ -33,8 +33,15 @@ export class PrismaTenantRepository implements TenantRepository {
     })
   }
 
-  async findUsersByTenant(tenantId: string, opts?: { role?: string; isActive?: boolean }) {
-    return getClient().user.findMany({ where: { tenantId, ...opts } })
+  async findUsersByTenant(tenantId: string, opts?: { role?: string; tenantRole?: string; isActive?: boolean }) {
+    const { role, tenantRole, ...rest } = opts || {}
+    const where: any = { tenantId, ...rest }
+    if (role) {
+      where.tenantRole = role
+    } else if (tenantRole) {
+      where.tenantRole = tenantRole
+    }
+    return getClient().user.findMany({ where })
   }
 
   async findManyTenants(options?: any) {
@@ -59,7 +66,7 @@ export class PrismaTenantRepository implements TenantRepository {
 
   async findManyAdmins(tenantId: string) {
     return getClient().user.findMany({
-      where: { tenantId, role: 'admin', isActive: true },
+      where: { tenantId, tenantRole: 'admin', isActive: true },
       select: { email: true, name: true },
     })
   }

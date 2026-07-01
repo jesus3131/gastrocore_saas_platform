@@ -31,7 +31,7 @@ export class WebSocketGateway {
         ;(socket as any).user = {
           tenantId: payload.tenantId as string,
           userId: payload.sub,
-          role: payload.role,
+          role: payload.tenantRole || payload.globalRole || payload.role || 'user',
         } satisfies AuthenticatedSocket
         next()
       } catch {

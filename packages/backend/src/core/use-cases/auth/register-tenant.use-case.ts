@@ -44,12 +44,22 @@ export class RegisterTenantUseCase {
       },
     })
 
+    const employee = await prisma.employee.create({
+      data: {
+        tenantId: tenant.id,
+        name: data.name,
+        email: data.email,
+        role: 'admin',
+      },
+    })
+
     const user = await this.userRepo.create({
       tenantId: tenant.id,
+      employeeId: employee.id,
       email: data.email,
       passwordHash,
       name: data.name,
-      role: 'admin',
+      tenantRole: 'admin',
     })
 
     if (plan) {
@@ -80,7 +90,7 @@ export class RegisterTenantUseCase {
       }
     }
 
-    return { user: { id: user.id, email: user.email, name: user.name, role: user.role }, tenant, credentials: { email: data.email, password: rawPassword } }
+    return { user: { id: user.id, email: user.email, name: user.name, tenantRole: user.tenantRole ?? 'admin', globalRole: user.globalRole ?? null }, tenant, credentials: { email: data.email, password: rawPassword } }
   }
 
   private generatePassword(length = 12): string {

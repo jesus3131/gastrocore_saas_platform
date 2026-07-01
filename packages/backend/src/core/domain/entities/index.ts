@@ -252,10 +252,13 @@ export interface LoyaltyRedemption {
 export interface AuthUser {
   id: string
   tenantId?: string | null
+  employeeId?: string | null
   email: string
   passwordHash: string
   name: string
-  role: string
+  role?: string
+  globalRole?: string | null
+  tenantRole?: string | null
   isActive: boolean
   lastLoginAt?: Date | null
   refreshToken?: RefreshTokenEntity | null

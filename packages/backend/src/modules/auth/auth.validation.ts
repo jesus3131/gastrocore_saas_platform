@@ -28,3 +28,7 @@ export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
   newPassword: z.string().min(6).max(100),
 })
+
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(20),
+})

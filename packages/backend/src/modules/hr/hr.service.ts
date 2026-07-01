@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { inject, injectable } from 'tsyringe'
 import { AppError } from '../../common/filters/error-handler.js'
+import { prisma } from '../../config/database/prisma.js'
 import { ROLE_PERMISSIONS } from '@gastrocore/shared'
 import { env } from '../../config/env.js'
 import { container } from '../../infrastructure/di/container.js'
@@ -27,6 +28,19 @@ export class HrService {
     const employee = await this.employeeRepo.findById(tenantId, id)
     if (!employee) throw new AppError(404, 'EMPLOYEE_NOT_FOUND', 'Employee not found')
     return this.employeeRepo.update(tenantId, id, data)
+  }
+
+  async deleteEmployee(tenantId: string, id: string, currentUserId: string) {
+    const employee = await this.employeeRepo.findById(tenantId, id)
+    if (!employee) throw new AppError(404, 'EMPLOYEE_NOT_FOUND', 'Employee not found')
+
+    const linkedUser = await prisma.user.findFirst({ where: { employeeId: id, tenantId }, select: { id: true } })
+    if (linkedUser?.id === currentUserId) {
+      throw new AppError(403, 'SELF_DELETE_FORBIDDEN', 'You cannot delete your own employee account')
+    }
+
+    await prisma.user.updateMany({ where: { employeeId: id, tenantId }, data: { isActive: false } })
+    return this.employeeRepo.update(tenantId, id, { isActive: false })
   }
 
   async getShifts(tenantId: string, opts?: { limit?: number; offset?: number }) {
@@ -60,6 +74,7 @@ export class HrService {
       sub: employee.id,
       tenantId,
       role: employee.role as JwtPayload['role'],
+      tenantRole: employee.role as JwtPayload['tenantRole'],
       email: employee.email,
       authMethod: 'pin',
     } satisfies JwtPayload, env.JWT_SECRET, {

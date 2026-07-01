@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 import { describe, it, expect, vi } from 'vitest'
 import { requirePermission, requireRole } from './permission.guard.js'
+import { superAdminGuard } from '../../modules/super-admin/super-admin.guard.js'
 
 function mockReq(user?: any) {
   return { user } as any
@@ -38,20 +39,40 @@ describe('requirePermission', () => {
     expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401, code: 'UNAUTHORIZED' }))
   })
 
-  it('allows any permission for admin role', () => {
-    const req = mockReq({ role: 'admin' })
+  it('allows explicit module permissions for admin role', () => {
+    const req = mockReq({ tenantRole: 'admin' })
     const next = vi.fn()
 
-    requirePermission('anything:write')(req, mockRes(), next)
+    requirePermission('pos:read')(req, mockRes(), next)
 
     expect(next).toHaveBeenCalledWith()
   })
 
-  it('allows any permission for super_admin role', () => {
-    const req = mockReq({ role: 'super_admin' })
+  it('blocks super:* permissions for admin role', () => {
+    const req = mockReq({ tenantRole: 'admin' })
     const next = vi.fn()
 
     requirePermission('super:manage')(req, mockRes(), next)
+
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403, code: 'FORBIDDEN' }))
+  })
+
+  it('allows super:* permissions for super_admin role', () => {
+    const req = mockReq({ globalRole: 'super_admin' })
+    const next = vi.fn()
+
+    requirePermission('super:manage')(req, mockRes(), next)
+
+    expect(next).toHaveBeenCalledWith()
+  })
+})
+
+describe('superAdminGuard', () => {
+  it('allows super admins identified by globalRole', () => {
+    const req = mockReq({ globalRole: 'super_admin' })
+    const next = vi.fn()
+
+    superAdminGuard(req, mockRes(), next)
 
     expect(next).toHaveBeenCalledWith()
   })

@@ -94,8 +94,20 @@ export const BUSINESS_TYPE_FEATURES: Record<BusinessType, FeatureFlag[]> = {
 // ─── Employee Permission Matrix ──────────────────────────────
 
 export const ROLE_PERMISSIONS: Record<string, string[]> = {
-  super_admin: ['*', 'super:manage'],
-  admin: ['*'],
+  super_admin: ['super:manage', 'super:companies', 'super:subscriptions', 'super:metrics'],
+  admin: [
+    'pos:read', 'pos:write', 'pos:delete',
+    'menu:read', 'menu:write', 'menu:delete',
+    'inventory:read', 'inventory:write', 'inventory:delete',
+    'hr:read', 'hr:write', 'hr:delete',
+    'analytics:read',
+    'crm:read', 'crm:write',
+    'accounting:read', 'accounting:write',
+    'tenants:read', 'tenants:write',
+    'reports:read',
+    'delivery:read',
+    'kds:read',
+  ],
   manager: ['pos:read', 'pos:write', 'inventory:read', 'inventory:write', 'hr:read', 'hr:write', 'analytics:read', 'crm:read', 'crm:write'],
   chef: ['pos:read', 'inventory:read', 'inventory:write', 'kds:read'],
   waiter: ['pos:read', 'pos:write', 'crm:read'],

@@ -6,7 +6,7 @@ export interface TenantRepository {
   create(data: any): Promise<Tenant>
   getFeatureFlags(tenantId: string, opts?: { enabled?: boolean }): Promise<TenantFeatureFlagEntity[]>
   upsertFeatureFlag(tenantId: string, feature: string, enabled: boolean): Promise<void>
-  findUsersByTenant(tenantId: string, opts?: { role?: string; isActive?: boolean }): Promise<AuthUser[]>
+  findUsersByTenant(tenantId: string, opts?: { role?: string; tenantRole?: string; isActive?: boolean }): Promise<AuthUser[]>
 
   findManyTenants(options?: any): Promise<Tenant[]>
   createBranch(data: any): Promise<Branch>

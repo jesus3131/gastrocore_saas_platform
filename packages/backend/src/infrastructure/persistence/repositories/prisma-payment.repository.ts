@@ -8,6 +8,7 @@ function getClient(): any {
 
 export class PrismaPaymentRepository implements PaymentRepository {
   async create(data: {
+    tenantId?: string
     orderId: string
     method: string
     amount: number
@@ -20,6 +21,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
   }
 
   async createMany(data: Array<{
+    tenantId?: string
     orderId: string
     method: string
     amount: number

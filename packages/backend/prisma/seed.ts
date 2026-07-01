@@ -74,23 +74,32 @@ async function main() {
   const superPasswordHash = await bcrypt.hash('RestoPro2024!', 12)
   await prisma.user.create({
     data: {
-      tenantId: superTenant.id,
       email: 'superadmin@restopro.com',
       passwordHash: superPasswordHash,
       name: 'Super Admin',
-      role: 'super_admin',
+      globalRole: 'super_admin',
     },
   })
 
   // ─── User ─────────────────────────────────────────────────
+  const adminEmployee = await prisma.employee.create({
+    data: {
+      tenantId: tenant.id,
+      name: 'Juan Admin',
+      email: 'admin@lacocina.com',
+      role: 'admin',
+    },
+  })
+
   const passwordHash = await bcrypt.hash('admin123', 12)
   await prisma.user.create({
     data: {
       tenantId: tenant.id,
+      employeeId: adminEmployee.id,
       email: 'admin@lacocina.com',
       passwordHash,
       name: 'Juan Admin',
-      role: 'admin',
+      tenantRole: 'admin',
     },
   })
 
@@ -235,9 +244,23 @@ async function main() {
   ]
   const employees: any[] = []
   for (const e of empDefs) {
-    employees.push(await prisma.employee.create({
+    const emp = await prisma.employee.create({
       data: { tenantId: tenant.id, name: e.name, email: e.email, role: e.role, pinCode: (e as any).pin || null, hourlyRate: e.rate, commissionPct: (e as any).comm || null },
-    }))
+    })
+    employees.push(emp)
+
+    const empPasswordHash = await bcrypt.hash('password123', 12)
+    await prisma.user.create({
+      data: {
+        tenantId: tenant.id,
+        employeeId: emp.id,
+        email: e.email,
+        passwordHash: empPasswordHash,
+        name: e.name,
+        tenantRole: e.role,
+        pinCode: (e as any).pin || null,
+      },
+    })
   }
 
   // ─── Shifts ───────────────────────────────────────────────
@@ -317,7 +340,7 @@ async function main() {
     }
 
     await prisma.payment.create({
-      data: { orderId: order.id, method: i % 2 === 0 ? 'card' : 'cash', amount: total, status: 'completed' },
+      data: { tenantId: tenant.id, orderId: order.id, method: i % 2 === 0 ? 'card' : 'cash', amount: total, status: 'completed' },
     })
   }
 

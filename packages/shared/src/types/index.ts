@@ -10,7 +10,9 @@ export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'served' | 'paid' 
 
 export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'mercadopago' | 'stripe'
 
-export type EmployeeRole = 'super_admin' | 'admin' | 'manager' | 'chef' | 'waiter' | 'cashier' | 'host' | 'delivery' | 'accountant'
+export type GlobalRole = 'super_admin'
+
+export type EmployeeRole = 'admin' | 'manager' | 'chef' | 'waiter' | 'cashier' | 'host' | 'delivery' | 'accountant'
 
 export type ShiftStatus = 'scheduled' | 'checked_in' | 'on_break' | 'checked_out' | 'absent'
 
@@ -87,7 +89,9 @@ export interface PaginationParams {
 export interface JwtPayload {
   sub: string          // user id
   tenantId?: string
-  role: EmployeeRole
+  globalRole?: GlobalRole
+  tenantRole?: EmployeeRole
+  role?: string
   email: string
   authMethod?: 'password' | 'pin'
 }

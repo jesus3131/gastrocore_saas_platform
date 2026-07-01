@@ -31,7 +31,7 @@ export class AuthService {
    */
   async superAdminLogin(email: string, password: string) {
     const user = await this.userRepo.findByEmail(email)
-    if (!user || !user.isActive || user.role !== 'super_admin') {
+    if (!user || !user.isActive || user.globalRole !== 'super_admin') {
       throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid super admin credentials')
     }
 
@@ -42,7 +42,7 @@ export class AuthService {
 
     const tokens = this.generateTokens({
       sub: user.id,
-      role: 'super_admin',
+      globalRole: 'super_admin',
       email: user.email,
       authMethod: 'password',
     })
@@ -74,7 +74,8 @@ export class AuthService {
     const tokens = this.generateTokens({
       sub: user.id,
       tenantId: user.tenantId,
-      role: user.role as JwtPayload['role'],
+      globalRole: user.globalRole as JwtPayload['globalRole'],
+      tenantRole: user.tenantRole as JwtPayload['tenantRole'],
       email: user.email,
       authMethod: 'password',
     })
@@ -104,13 +105,17 @@ export class AuthService {
     businessType: string
     planId?: string
   }) {
+    if (!data.tenantName || !data.businessType) {
+      throw new AppError(400, 'INVALID_REGISTER_REQUEST', 'Tenant onboarding data is required')
+    }
     if (this.registerTenant) {
       const result = await this.registerTenant.execute(data)
 
       const tokens = this.generateTokens({
         sub: result.user.id,
         tenantId: result.tenant.id,
-        role: result.user.role as JwtPayload['role'],
+        globalRole: result.user.globalRole as JwtPayload['globalRole'],
+        tenantRole: result.user.tenantRole as JwtPayload['tenantRole'],
         email: result.user.email,
         authMethod: 'password',
       })
@@ -148,12 +153,23 @@ export class AuthService {
       subscriptionStatus: 'trial',
     })
 
+    const { prisma } = await import('../../config/database/prisma.js')
+    const employee = await prisma.employee.create({
+      data: {
+        tenantId: tenant.id,
+        name: data.name,
+        email: data.email,
+        role: 'admin',
+      },
+    })
+
     const user = await this.userRepo.create({
       tenantId: tenant.id,
+      employeeId: employee.id,
       email: data.email,
       passwordHash,
       name: data.name,
-      role: 'admin',
+      tenantRole: 'admin',
     })
 
     if (plan) {
@@ -181,7 +197,8 @@ export class AuthService {
     const tokens = this.generateTokens({
       sub: user.id,
       tenantId: user.tenantId ?? undefined,
-      role: user.role as JwtPayload['role'],
+      globalRole: user.globalRole as JwtPayload['globalRole'],
+      tenantRole: user.tenantRole as JwtPayload['tenantRole'],
       email: user.email,
       authMethod: 'password',
     })
@@ -196,7 +213,7 @@ export class AuthService {
       .catch((err) => logger.warn({ err, email: data.email }, 'Email error'))
 
     return {
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      user: { id: user.id, email: user.email, name: user.name, tenantRole: user.tenantRole, globalRole: user.globalRole },
       tenant,
       tokens,
       credentials: { email: data.email, password: rawPassword },
@@ -233,7 +250,8 @@ export class AuthService {
     const tokens = this.generateTokens({
       sub: user.id,
       tenantId: user.tenantId ?? undefined,
-      role: user.role as JwtPayload['role'],
+      globalRole: user.globalRole as JwtPayload['globalRole'],
+      tenantRole: user.tenantRole as JwtPayload['tenantRole'],
       email: user.email,
       authMethod: 'password',
     })
@@ -249,12 +267,12 @@ export class AuthService {
 
   async getProfile(userId: string) {
     const user = await this.userRepo.findById(userId, {
-      id: true, email: true, name: true, role: true, tenantId: true, lastLoginAt: true, createdAt: true,
+      id: true, email: true, name: true, globalRole: true, tenantRole: true, tenantId: true, lastLoginAt: true, createdAt: true,
     })
     if (!user) throw new AppError(404, 'USER_NOT_FOUND', 'User not found')
 
     // Super Admin profile — no tenant context
-    if (user.role === 'super_admin') {
+    if (user.globalRole === 'super_admin') {
       return { ...user, tenantName: null, tenantPlan: null, tenantCurrency: null, onboardingCompleted: false, featureFlags: [] }
     }
 
@@ -282,7 +300,7 @@ export class AuthService {
       if (existing) throw new AppError(409, 'EMAIL_EXISTS', 'Email already in use')
     }
     const user = await this.userRepo.update(userId, data, {
-      id: true, email: true, name: true, role: true,
+      id: true, email: true, name: true, globalRole: true, tenantRole: true,
     })
     return user
   }

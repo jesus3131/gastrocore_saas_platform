@@ -20,10 +20,10 @@ export function requirePermission(...permissions: string[]) {
       return next(new AppError(401, 'UNAUTHORIZED', 'Authentication required'))
     }
 
-    const role = user.role as EmployeeRole
+    const role = (user.globalRole || user.tenantRole || (user as any).role) as string
     const allowed = ROLE_PERMISSIONS[role] || []
 
-    const hasAll = permissions.every(p => allowed.includes('*') || allowed.includes(p))
+    const hasAll = permissions.every((p) => allowed.includes(p) || (role === 'super_admin' && p.startsWith('super:')))
     if (!hasAll) {
       return next(
         new AppError(403, 'FORBIDDEN', `Role '${role}' lacks required permissions: ${permissions.join(', ')}`)
@@ -34,16 +34,17 @@ export function requirePermission(...permissions: string[]) {
   }
 }
 
-export function requireRole(...roles: EmployeeRole[]) {
+export function requireRole(...roles: string[]) {
   return (req: Request, _res: Response, next: NextFunction) => {
     const user = req.user
     if (!user) {
       return next(new AppError(401, 'UNAUTHORIZED', 'Authentication required'))
     }
 
-    if (!roles.includes(user.role as EmployeeRole)) {
+    const userRole = (user.globalRole || user.tenantRole || (user as any).role) as string
+    if (!roles.includes(userRole)) {
       return next(
-        new AppError(403, 'FORBIDDEN', `Role '${user.role}' not allowed. Required: ${roles.join(', ')}`)
+        new AppError(403, 'FORBIDDEN', `Role '${userRole}' not allowed. Required: ${roles.join(', ')}`)
       )
     }
 
