@@ -1,12 +1,17 @@
+import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../../config/database/prisma.js'
 import { env } from '../../config/env.js'
 import { AppError } from '../../common/filters/error-handler.js'
+import { sendWelcomeEmail } from '../notifications/email.service.js'
 import type { JwtPayload, AuthTokens } from '@gastrocore/shared'
+import { RegisterTenantUseCase } from '../../core/use-cases/auth/register-tenant.use-case.js'
 
 export class AuthService {
-  private readonly saltRounds = 12
+  private readonly saltRounds = 10
+
+  constructor(private readonly registerTenant?: RegisterTenantUseCase) {}
 
   async login(email: string, password: string) {
     const user = await prisma.user.findFirst({ where: { email } })
@@ -26,6 +31,16 @@ export class AuthService {
       email: user.email,
     })
 
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: user.tenantId },
+      select: { name: true, subscriptionPlan: true, subscriptionStatus: true, settings: true, currency: true },
+    })
+
+    const flags = await prisma.tenantFeatureFlag.findMany({
+      where: { tenantId: user.tenantId, enabled: true },
+      select: { feature: true },
+    })
+
     await prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date(), refreshToken: tokens.refreshToken },
@@ -34,29 +49,56 @@ export class AuthService {
     const { passwordHash, refreshToken, ...safeUser } = user
     void passwordHash
     void refreshToken
-    return { user: safeUser, tokens }
+    return { user: { ...safeUser, tenantName: tenant?.name, tenantPlan: tenant?.subscriptionPlan, tenantCurrency: tenant?.currency, onboardingCompleted: (tenant?.settings as any)?.onboardingCompleted || false, featureFlags: flags.map(f => f.feature) }, tokens }
   }
 
   async register(data: {
     email: string
-    password: string
+    password?: string
     name: string
     tenantName: string
     businessType: string
+    planId?: string
   }) {
+    if (this.registerTenant) {
+      const result = await this.registerTenant.execute(data)
+
+      const tokens = this.generateTokens({
+        sub: result.user.id,
+        tenantId: result.tenant.id,
+        role: result.user.role as any,
+        email: result.user.email,
+      })
+
+      sendWelcomeEmail(data.email, data.name, data.email, result.credentials.password)
+        .then((sent) => {
+          if (sent) console.log(`[Auth] Welcome email sent to ${data.email}`)
+          else console.warn(`[Auth] Could not send welcome email to ${data.email}`)
+        })
+        .catch((err) => console.warn(`[Auth] Email error for ${data.email}:`, err.message))
+
+      return { ...result, tokens }
+    }
+
+    const { SUBSCRIPTION_PLANS } = await import('@gastrocore/shared')
+
     const existing = await prisma.user.findFirst({ where: { email: data.email } })
     if (existing) {
       throw new AppError(409, 'EMAIL_EXISTS', 'Email already registered')
     }
 
-    const passwordHash = await bcrypt.hash(data.password, this.saltRounds)
+    const rawPassword = data.password || this.generatePassword()
+    const passwordHash = await bcrypt.hash(rawPassword, this.saltRounds)
+
+    const planId = (data.planId || 'basic') as keyof typeof SUBSCRIPTION_PLANS
+    const plan = SUBSCRIPTION_PLANS[planId]
 
     const tenant = await prisma.tenant.create({
       data: {
         name: data.tenantName,
         slug: data.tenantName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
         businessType: data.businessType as never,
-        subscriptionPlan: 'basic',
+        subscriptionPlan: planId,
         subscriptionStatus: 'trial',
       },
     })
@@ -71,6 +113,34 @@ export class AuthService {
       },
     })
 
+    if (plan) {
+      const subscription = await prisma.subscription.create({
+        data: {
+          tenantId: tenant.id,
+          plan: planId as any,
+          status: 'trial',
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      })
+
+      await prisma.subscriptionInvoice.create({
+        data: {
+          subscriptionId: subscription.id,
+          amount: plan.priceMonthly,
+          status: 'pending',
+          periodStart: subscription.currentPeriodStart,
+          periodEnd: subscription.currentPeriodEnd,
+        },
+      })
+
+      for (const feature of plan.features) {
+        await prisma.tenantFeatureFlag.create({
+          data: { tenantId: tenant.id, feature, enabled: true },
+        })
+      }
+    }
+
     const tokens = this.generateTokens({
       sub: user.id,
       tenantId: tenant.id,
@@ -78,7 +148,24 @@ export class AuthService {
       email: user.email,
     })
 
-    return { user: { id: user.id, email: user.email, name: user.name, role: user.role }, tenant, tokens }
+    sendWelcomeEmail(data.email, data.name, data.email, rawPassword)
+      .then((sent) => {
+        if (sent) console.log(`[Auth] Welcome email sent to ${data.email}`)
+        else console.warn(`[Auth] Could not send welcome email to ${data.email}`)
+      })
+      .catch((err) => console.warn(`[Auth] Email error for ${data.email}:`, err.message))
+
+    return {
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      tenant,
+      tokens,
+      credentials: { email: data.email, password: rawPassword },
+    }
+  }
+
+  private generatePassword(length = 12): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*'
+    return Array.from(crypto.randomBytes(length), (byte) => chars[byte % chars.length]).join('')
   }
 
   async refresh(refreshToken: string): Promise<AuthTokens> {
@@ -110,10 +197,58 @@ export class AuthService {
   async getProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, role: true, tenantId: true, lastLoginAt: true },
+      select: { id: true, email: true, name: true, role: true, tenantId: true, lastLoginAt: true, createdAt: true },
     })
     if (!user) throw new AppError(404, 'USER_NOT_FOUND', 'User not found')
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: user.tenantId },
+      select: { name: true, subscriptionPlan: true, subscriptionStatus: true, settings: true, currency: true },
+    })
+
+    const flags = await prisma.tenantFeatureFlag.findMany({
+      where: { tenantId: user.tenantId, enabled: true },
+      select: { feature: true },
+    })
+
+    return {
+      ...user,
+      tenantName: tenant?.name,
+      tenantPlan: tenant?.subscriptionPlan,
+      tenantCurrency: tenant?.currency,
+      onboardingCompleted: (tenant?.settings as any)?.onboardingCompleted || false,
+      featureFlags: flags.map(f => f.feature),
+    }
+  }
+
+  async updateProfile(userId: string, data: { name?: string; email?: string }) {
+    if (data.email) {
+      const existing = await prisma.user.findFirst({
+        where: { email: data.email, id: { not: userId } },
+      })
+      if (existing) throw new AppError(409, 'EMAIL_EXISTS', 'Email already in use')
+    }
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data,
+      select: { id: true, email: true, name: true, role: true },
+    })
     return user
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user) throw new AppError(404, 'USER_NOT_FOUND', 'User not found')
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash)
+    if (!valid) throw new AppError(400, 'INVALID_PASSWORD', 'Current password is incorrect')
+
+    const passwordHash = await bcrypt.hash(newPassword, this.saltRounds)
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    })
+    return { message: 'Password changed successfully' }
   }
 
   private generateTokens(payload: JwtPayload): AuthTokens {

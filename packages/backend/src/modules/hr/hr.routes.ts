@@ -1,11 +1,14 @@
 import { Router } from 'express'
 import { HrController } from './hr.controller.js'
-import { authGuard } from '../../common/guards/auth.guard.js'
+import { authGuard, tenantGuard } from '../../common/guards/auth.guard.js'
 import { validate } from '../../common/decorators/validate.js'
-import { createEmployeeSchema, updateEmployeeSchema, createShiftSchema, updateShiftStatusSchema } from './hr.validation.js'
+import { createEmployeeSchema, updateEmployeeSchema, createShiftSchema, updateShiftStatusSchema, verifyPinSchema } from './hr.validation.js'
 
 const router = Router()
 const controller = new HrController()
+
+// Public PIN verification for waiters (requires tenant header but not full auth)
+router.post('/employees/verify-pin', tenantGuard, validate(verifyPinSchema), controller.verifyPin.bind(controller))
 
 router.use(authGuard)
 

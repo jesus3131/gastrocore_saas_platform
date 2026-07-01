@@ -20,7 +20,7 @@ export class InventoryController {
 
   async updateIngredient(req: Request, res: Response, next: NextFunction) {
     try {
-      const ingredient = await this.service.updateIngredient(req.params.id as string, req.body)
+      const ingredient = await this.service.updateIngredient(req.tenantId!, req.params.id as string, req.body)
       res.json({ success: true, data: ingredient })
     } catch (err) { next(err) }
   }
@@ -36,6 +36,13 @@ export class InventoryController {
     try {
       const recipe = await this.service.createRecipe(req.tenantId!, req.body)
       res.status(201).json({ success: true, data: recipe })
+    } catch (err) { next(err) }
+  }
+
+  async updateRecipe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const recipe = await this.service.updateRecipe(req.tenantId!, req.params.id as string, req.body)
+      res.json({ success: true, data: recipe })
     } catch (err) { next(err) }
   }
 

@@ -1,24 +1,86 @@
-import { createApp } from './config/app.js'
-import { logger } from './config/logger.js'
-import { env } from './config/env.js'
+import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { createServer } from 'http'
+import type { Server } from 'http'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') })
+
+// Telemetry must initialize before PrismaClient is created
+await import('./infrastructure/observability/instrumentation.js')
+
+const [{ createApp }, { logger }, { env }, { disconnectDatabase }, { disconnectRedis }] = await Promise.all([
+  import('./config/app.js'),
+  import('./config/logger.js'),
+  import('./config/env.js'),
+  import('./config/database/prisma.js'),
+  import('./config/redis/redis.js'),
+])
+
+const [{ container }, { WebSocketGateway }, { EventPersister }, { EventBroadcaster }] = await Promise.all([
+  import('./infrastructure/di/container.js'),
+  import('./infrastructure/websocket/websocket-gateway.js'),
+  import('./infrastructure/events/event-persister.js'),
+  import('./infrastructure/websocket/event-broadcaster.js'),
+])
+
+let server: Server
 
 async function bootstrap() {
   const app = await createApp()
+  server = createServer(app)
 
-  app.listen(env.PORT, () => {
-    logger.info({ port: env.PORT, env: env.NODE_ENV }, '🚀 GastroCore API started')
+  const gateway = new WebSocketGateway()
+  gateway.initialize(server)
+
+  const eventStore = container.resolve<import('./core/ports/event-store.js').EventStore>('EventStore')
+  const eventBus = container.resolve<import('./core/ports/event-bus.js').EventBus>('EventBus')
+
+  new EventPersister(eventStore, eventBus).start()
+  new EventBroadcaster(eventBus, gateway).start()
+
+  server.listen(env.PORT, () => {
+    logger.info({ port: env.PORT, env: env.NODE_ENV }, 'GastroCore API started')
   })
-
-  const shutdown = async (signal: string) => {
-    logger.info({ signal }, 'Shutdown signal received')
-    process.exit(0)
-  }
-
-  process.on('SIGTERM', () => shutdown('SIGTERM'))
-  process.on('SIGINT', () => shutdown('SIGINT'))
 }
 
-bootstrap().catch((err) => {
-  logger.error(err, 'Fatal error during bootstrap')
-  process.exit(1)
+async function gracefulShutdown(signal: string) {
+  logger.info({ signal }, 'Shutdown signal received')
+
+  server?.close(async (err) => {
+    if (err) {
+      logger.error(err, 'Error closing HTTP server')
+    } else {
+      logger.info('HTTP server closed')
+    }
+
+    await Promise.allSettled([
+      disconnectDatabase(),
+      disconnectRedis(),
+    ])
+
+    logger.info('Graceful shutdown complete')
+    process.exit(0)
+  })
+
+  setTimeout(() => {
+    logger.error('Forced shutdown after timeout')
+    process.exit(1)
+  }, 10_000).unref()
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
+process.on('SIGINT', () => gracefulShutdown('SIGINT'))
+
+process.on('uncaughtException', (err) => {
+  logger.error(err, 'Uncaught exception — shutting down')
+  gracefulShutdown('uncaughtException')
 })
+
+process.on('unhandledRejection', (reason) => {
+  logger.error({ reason }, 'Unhandled rejection — shutting down')
+  gracefulShutdown('unhandledRejection')
+})
+
+bootstrap()

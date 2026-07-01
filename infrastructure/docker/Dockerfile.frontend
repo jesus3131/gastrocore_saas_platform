@@ -2,23 +2,32 @@
 FROM node:20-alpine AS base
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 WORKDIR /app
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
 
 # ─── Dependencies ────────────────────────────────────────────
 FROM base AS deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
 COPY packages/frontend/package.json packages/frontend/
 COPY packages/shared/package.json packages/shared/
 RUN pnpm install --frozen-lockfile
-COPY . .
 
 # ─── Development ─────────────────────────────────────────────
 FROM deps AS development
+COPY packages/shared/src ./packages/shared/src
+COPY packages/shared/tsconfig.json ./packages/shared/
+COPY packages/frontend/tsconfig.json packages/frontend/tsconfig.node.json packages/frontend/index.html packages/frontend/vite.config.ts packages/frontend/tailwind.config.ts packages/frontend/postcss.config.js packages/frontend/
+COPY packages/frontend/src ./packages/frontend/src
+COPY packages/frontend/public ./packages/frontend/public
 EXPOSE 5173
 CMD ["pnpm", "--filter", "@gastrocore/frontend", "dev", "--host"]
 
 # ─── Builder ─────────────────────────────────────────────────
 FROM deps AS builder
-RUN pnpm --filter @gastrocore/frontend build
+COPY packages/shared/src ./packages/shared/src
+COPY packages/shared/tsconfig.json ./packages/shared/
+COPY packages/frontend/tsconfig.json packages/frontend/tsconfig.node.json packages/frontend/index.html packages/frontend/vite.config.ts packages/frontend/tailwind.config.ts packages/frontend/postcss.config.js packages/frontend/
+COPY packages/frontend/src ./packages/frontend/src
+COPY packages/frontend/public ./packages/frontend/public
+RUN cd packages/frontend && pnpm exec tsc -b && pnpm exec vite build
 
 # ─── Production (Nginx) ──────────────────────────────────────
 FROM nginx:1.25-alpine AS production

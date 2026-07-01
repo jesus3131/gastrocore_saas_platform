@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Geofencing - RestoPro Marketing</title>
+<script src="../../shared/design-tokens.js"></script>
+<script src="../../shared/utils.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,200..200" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../css/marketing-campaigns.css">
+<script src="../js/marketing-geofencing.js"></script>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex">
+<nav class="w-64 h-screen sticky left-0 top-0 bg-surface-container-lowest border-r border-outline-variant flex flex-col p-md z-40 hidden md:flex">
+<div class="mb-xl px-sm">
+<div class="flex items-center gap-sm mb-lg">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary flex items-center justify-center font-bold text-lg">RM</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-[#1e3a8a] truncate">RestoPro</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Marketing Hub v2.4</p>
+</div>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-xs overflow-y-auto">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="../../pos/vista/pos-table-map.html">
+<span class="material-symbols-outlined">point_of_sale</span>
+<span class="font-body-md text-body-md">POS</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="../../inventory/vista/inventory-recipes.html">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-body-md text-body-md">Inventory</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="../../analytics/vista/analytics-bi-dashboard.html">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="../../hr/vista/hr-staff-dashboard.html">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-body-md text-body-md">HR</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="../../crm/vista/crm-customer-directory.html">
+<span class="material-symbols-outlined">diversity_3</span>
+<span class="font-body-md text-body-md">CRM</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg bg-secondary-container text-on-secondary-container font-semibold transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">campaign</span>
+<span class="font-body-md text-body-md">Marketing</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Integrations</span>
+</a>
+</div>
+<div class="pt-md border-t border-outline-variant flex flex-col gap-xs mt-auto">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-body-md text-body-md">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md text-body-md">Sign Out</span>
+</a>
+</div>
+</nav>
+<div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+<header class="w-full h-16 sticky top-0 z-30 bg-surface border-b border-outline-variant flex justify-between items-center px-xl">
+<div class="flex items-center gap-lg flex-1">
+<div class="md:hidden font-headline-md text-headline-md font-bold text-[#1e3a8a]">Marketing</div>
+<div class="hidden md:flex relative w-64">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full pl-[36px] pr-sm py-sm bg-surface-container-lowest border border-outline-variant rounded-lg font-body-sm text-body-sm focus:border-[#1e3a8a] focus:ring-2 focus:ring-[#1e3a8a] focus:ring-opacity-20 transition-all outline-none" placeholder="Search geofences..." type="text" id="searchGeofences"/>
+</div>
+</div>
+<nav class="hidden md:flex items-center gap-lg absolute left-1/2 -translate-x-1/2 h-full">
+<a class="h-full flex items-center text-on-surface-variant hover:text-on-surface transition-colors font-label-md text-label-md" href="marketing-campaigns.html">Campaigns</a>
+<a class="h-full flex items-center text-[#1e3a8a] border-b-2 border-[#1e3a8a] pb-1 font-bold font-label-md text-label-md" href="marketing-geofencing.html">Geofencing</a>
+</nav>
+<div class="flex items-center gap-md">
+<button class="px-md py-sm bg-[#1e3a8a] text-white font-label-md text-label-md rounded-lg hover:opacity-90 transition-opacity flex items-center gap-sm" id="btnNewGeofence">
+<span class="material-symbols-outlined text-[18px]">add</span> New Geofence
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-sm cursor-pointer">
+<img alt="User Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLTyiYxrDvTOIyYMY27q8iIU0k04wispdZG_UGULBN4Vd75UquT1Wnaw761jh-D_E1QF2VuVn96tB1rYMBiU4NUQ3VBj0LdWMT_Lfbh7nChLXaAsxJPYsooJ3VqnWO0_9PyM3L9Xi_07cy7pVBu9p0Nywltbh_6e8ie1orhrq2lhKIfgAmop2VNyyXcmenOxze_7RRNNXn6b4ccxTnbViUotVMsTUA7xVzqfqsvT8cgO64LItEpE9HKVlUll4SdT9tufpvvtPISlnc"/>
+</div>
+</div>
+</header>
+<main class="flex-1 p-xl max-w-container-max mx-auto w-full">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-lg gap-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-xs">Geofencing</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage location-based marketing zones and track engagement.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md mb-xl" id="kpiContainer3"></div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-md mb-xl">
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-xl overflow-hidden">
+<div class="p-md border-b border-surface-container-high">
+<h3 class="font-headline-md text-headline-md text-on-surface">Map Overview</h3>
+</div>
+<div class="relative" id="mapPlaceholder" style="height:600px;background:linear-gradient(135deg, #e8f0fe 0%, #d4e4f7 30%, #c8daf5 50%, #d4e4f7 70%, #e8f0fe 100%);overflow:hidden">
+<div class="absolute inset-0 opacity-20" style="background-image: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(30,58,138,0.1) 40px, rgba(30,58,138,0.1) 41px), repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(30,58,138,0.1) 40px, rgba(30,58,138,0.1) 41px);"></div>
+<div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow text-sm font-medium text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-[#1e3a8a]">map</span>
+<span>Satellite</span>
+<span class="w-px h-4 bg-gray-300 mx-1"></span>
+<span class="text-on-surface-variant">Terrain</span>
+</div>
+<div class="absolute top-4 right-4 flex flex-col gap-1">
+<div class="w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 cursor-pointer"><span class="material-symbols-outlined text-[18px]">add</span></div>
+<div class="w-8 h-8 bg-white rounded shadow flex items-center justify-center hover:bg-gray-100 cursor-pointer"><span class="material-symbols-outlined text-[18px]">remove</span></div>
+</div>
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow text-xs text-on-surface-variant flex items-center gap-3">
+<span>Map data &copy; RestoPro Geospatial</span>
+<span class="w-1 h-1 rounded-full bg-gray-400"></span>
+<span>Terms</span>
+</div>
+<div id="geofenceMarkers" class="absolute inset-0"></div>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-xl overflow-hidden flex flex-col">
+<div class="p-md border-b border-surface-container-high flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-on-surface">Geofence Zones</h3>
+</div>
+<div class="overflow-y-auto flex-1" id="geofencesList"></div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

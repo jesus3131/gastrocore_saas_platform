@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: restopro
+  labels:
+    app.kubernetes.io/name: restopro
+    app.kubernetes.io/part-of: restopro-enterprise

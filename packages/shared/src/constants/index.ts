@@ -24,6 +24,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, {
       'kds',
       'table_management',
       'split_bills',
+      'pos',
     ],
   },
   pro: {
@@ -44,6 +45,9 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, {
       'electronic_invoice',
       'delivery_integration',
       'crm_full',
+      'pos',
+      'analytics',
+      'accounting',
     ],
   },
   enterprise: {
@@ -67,6 +71,9 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, {
       'bcg_matrix',
       'loyalty_program',
       'multi_branch',
+      'pos',
+      'analytics',
+      'accounting',
     ],
   },
 }
@@ -74,19 +81,20 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, {
 // ─── Business Type → Default Features ───────────────────────
 
 export const BUSINESS_TYPE_FEATURES: Record<BusinessType, FeatureFlag[]> = {
-  fine_dining: ['table_management', 'split_bills', 'kds', 'crm_full', 'loyalty_program', 'bcg_matrix', 'inventory_auto', 'hr_scheduling'],
-  fast_food: ['kds', 'online_ordering', 'delivery_integration', 'inventory_auto'],
-  cafe: ['kds', 'online_ordering', 'loyalty_program', 'inventory_auto'],
-  food_truck: ['kds', 'online_ordering', 'delivery_integration'],
-  bar: ['table_management', 'split_bills', 'kds', 'loyalty_program', 'hr_scheduling'],
-  franchise: ['multi_branch', 'kds', 'table_management', 'split_bills', 'inventory_auto', 'hr_scheduling', 'bcg_matrix', 'crm_full'],
-  bakery: ['kds', 'online_ordering', 'inventory_auto', 'loyalty_program'],
-  ghost_kitchen: ['kds', 'online_ordering', 'delivery_integration', 'inventory_auto', 'bcg_matrix'],
+  fine_dining: ['table_management', 'split_bills', 'kds', 'crm_full', 'loyalty_program', 'bcg_matrix', 'inventory_auto', 'hr_scheduling', 'pos', 'analytics', 'accounting'],
+  fast_food: ['kds', 'online_ordering', 'delivery_integration', 'inventory_auto', 'pos', 'analytics'],
+  cafe: ['kds', 'online_ordering', 'loyalty_program', 'inventory_auto', 'pos', 'analytics'],
+  food_truck: ['kds', 'online_ordering', 'delivery_integration', 'pos'],
+  bar: ['table_management', 'split_bills', 'kds', 'loyalty_program', 'hr_scheduling', 'pos', 'analytics', 'accounting'],
+  franchise: ['multi_branch', 'kds', 'table_management', 'split_bills', 'inventory_auto', 'hr_scheduling', 'bcg_matrix', 'crm_full', 'pos', 'analytics', 'accounting'],
+  bakery: ['kds', 'online_ordering', 'inventory_auto', 'loyalty_program', 'pos', 'analytics'],
+  ghost_kitchen: ['kds', 'online_ordering', 'delivery_integration', 'inventory_auto', 'bcg_matrix', 'pos', 'analytics'],
 }
 
 // ─── Employee Permission Matrix ──────────────────────────────
 
 export const ROLE_PERMISSIONS: Record<string, string[]> = {
+  super_admin: ['*', 'super:manage'],
   admin: ['*'],
   manager: ['pos:read', 'pos:write', 'inventory:read', 'inventory:write', 'hr:read', 'hr:write', 'analytics:read', 'crm:read', 'crm:write'],
   chef: ['pos:read', 'inventory:read', 'inventory:write', 'kds:read'],
@@ -94,6 +102,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   cashier: ['pos:read', 'pos:write'],
   host: ['pos:read', 'crm:read'],
   delivery: ['pos:read', 'delivery:read'],
+  accountant: ['analytics:read', 'accounting:read', 'accounting:write', 'crm:read', 'reports:read'],
 }
 
 // ─── Locales ─────────────────────────────────────────────────

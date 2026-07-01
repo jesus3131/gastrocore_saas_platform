@@ -1,460 +1,364 @@
+document.addEventListener('DOMContentLoaded', function () {
+  const STORAGE_KEY = 'analytics_data';
+  const BCG_STORAGE_KEY = 'analytics_bcg_data';
 
-const metricCards = [
-  { value: "$14,520.00", change: "+12.5%", trend: "trending_up", pos: true, subtitle: "vs $12,900.00 ayer" },
-  { value: "$42.50", change: null, trend: null, pos: true, subtitle: "Objetivo: $45.00" },
-  { value: "82", change: "82%", trend: null, pos: true, subtitle: null, isProgress: true },
-  { value: "24.5", change: "-1.2%", trend: "trending_down", pos: false, subtitle: "Afectado por costo proteína", suffix: "%" }
-];
-const bcgQuadrants = {
-  estrella: { items: ["Salm\u00f3n Glaseado", "Risotto de Hongos"] },
-  interrogante: { items: ["Ceviche Vegano", "Tarta de Higo"] },
-  vaca: { items: ["Hamburguesa Cl\u00e1sica", "Ensalada C\u00e9sar", "Gaseosas"] },
-  perro: { items: ["Sopa de Cebolla", "Carpaccio Zucchini"] }
-};
-const peakHours = [
-  { time: "13:00 - 15:00", label: "Alta (85%)", width: 85, cls: "bg-primary-container" },
-  { time: "16:00 - 18:00", label: "Baja (20%)", width: 20, cls: "bg-secondary-fixed-dim" },
-  { time: "19:00 - 21:00", label: "Cr\u00edtica (98%)", width: 98, cls: "bg-error relative z-10" },
-  { time: "22:00 - 23:30", label: "Media (45%)", width: 45, cls: "bg-primary-fixed-dim" }
-];
-const topDishes = [
-  { name: "Salm\u00f3n Glaseado", cat: "Plato Fuerte", cost: "$8.50", price: "$28.00", margin: "70% ($19.50)" },
-  { name: "Risotto de Hongos", cat: "Plato Fuerte", cost: "$4.20", price: "$22.00", margin: "81% ($17.80)" },
-  { name: "Copa de Malbec (Casa)", cat: "Bebidas", cost: "$1.50", price: "$9.00", margin: "83% ($7.50)" },
-  { name: "Volc\u00e1n de Chocolate", cat: "Postres", cost: "$2.10", price: "$11.00", margin: "81% ($8.90)" },
-  { name: "Limonada Menta Jengibre", cat: "Bebidas", cost: "$0.80", price: "$5.50", margin: "85% ($4.70)" }
-];
-</script>
-</head>
-<body class="bg-surface text-on-surface font-body-md text-body-md m-0 p-0 flex min-h-screen">
-<!-- SideNavBar (Shared Component) -->
-<aside class="bg-surface-container border-r border-outline-variant h-screen w-64 fixed left-0 top-0 flex flex-col py-md px-sm z-50">
-<!-- Header / Brand -->
-<div class="flex items-center gap-sm mb-lg px-sm">
-<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-lowest border border-outline-variant flex items-center justify-center shrink-0">
-<img alt="Logo del Restaurante" class="w-full h-full object-cover" data-alt="A sleek, minimalist corporate logo for a high-end restaurant management software, featuring geometric shapes in deep cobalt blue on a pristine white background. Bright, modern, flat design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDYdwEDOgs4EZ-O4ZErbj_4nMAGhZlAsFzUcL5wRE9sCPyCSIBKUHnV9F9vQw_VTlUpkVXGPo0KkBR_Xt-cMJk9t-bGUfhpAZVGUdJTDQSAFwFT1joRR4rHu7M3fxCV4dn5e1-af57xNI5NfRKG8PvcK2b8zU-IZCYzLkWfhvConOGdM7NWexdi9J_gsiXbYcQo-IR9pbscc9MTc3EmisWpewHE1NloR6qvRJwpQMmD1oN-wwXZVy1Uta58xPeEnNAeoFEV-dajH3j"/>
-</div>
-<div>
-<h1 class="font-headline-md text-headline-md font-bold text-primary">RestoPro Enterprise</h1>
-<p class="font-label-md text-label-md text-on-surface-variant">Administrador</p>
-</div>
-</div>
-<!-- Navigation Tabs -->
-<nav class="flex-1 overflow-y-auto">
-<ul class="flex flex-col gap-xs">
-<li>
-<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
-<span class="material-symbols-outlined">point_of_sale</span>
-<span class="font-body-md text-body-md">POS</span>
-</a>
-</li>
-<li>
-<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
-<span class="material-symbols-outlined">inventory_2</span>
-<span class="font-body-md text-body-md">Inventario</span>
-</a>
-</li>
-<!-- ACTIVE TAB -->
-<li>
-<a class="flex items-center gap-sm px-md py-sm rounded-lg bg-secondary-container text-on-secondary-container font-bold Active: scale-95 transition-transform duration-150" href="#">
-<span class="material-symbols-outlined filled">analytics</span>
-<span class="font-body-md text-body-md">Analítica</span>
-</a>
-</li>
-<li>
-<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
-<span class="material-symbols-outlined">badge</span>
-<span class="font-body-md text-body-md">Personal</span>
-</a>
-</li>
-<li>
-<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200" href="#">
-<span class="material-symbols-outlined">settings</span>
-<span class="font-body-md text-body-md">Configuración</span>
-</a>
-</li>
-</ul>
-</nav>
-<!-- CTA -->
-<div class="mt-auto pt-md">
-<button class="w-full bg-primary-container text-on-primary py-sm rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center justify-center gap-sm">
-<span class="material-symbols-outlined text-[18px]">add</span>
-                Nuevo Pedido
-            </button>
-</div>
-</aside>
-<!-- Main Content Wrapper -->
-<div class="flex-1 ml-64 flex flex-col min-h-screen">
-<!-- TopAppBar (Shared Component) -->
-<header class="bg-surface-container-lowest border-b border-outline-variant docked full-width top-0 sticky z-40 flex justify-between items-center h-16 px-lg">
-<div class="flex items-center gap-lg">
-<span class="font-headline-md text-headline-md font-extrabold text-on-surface hidden">RestoPro</span> <!-- Hidden as requested by visual hierarchy, relying on sidebar -->
-<!-- Navigation Links (Branches) -->
-<nav class="hidden md:flex gap-md">
-<!-- Active Link -->
-<a class="text-primary font-bold border-b-2 border-primary py-sm font-label-md text-label-md Active: opacity-80 transition-opacity" href="#">Sucursal Principal</a>
-<a class="text-on-surface-variant hover:text-on-surface py-sm font-label-md text-label-md hover:bg-surface-container-high rounded-lg px-sm" href="#">Sucursal Norte</a>
-<a class="text-on-surface-variant hover:text-on-surface py-sm font-label-md text-label-md hover:bg-surface-container-high rounded-lg px-sm" href="#">Sucursal Sur</a>
-</nav>
-</div>
-<!-- Trailing Actions -->
-<div class="flex items-center gap-md">
-<button class="text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-full p-sm transition-colors">
-<span class="material-symbols-outlined">notifications</span>
-</button>
-<button class="text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-full p-sm transition-colors">
-<span class="material-symbols-outlined">help</span>
-</button>
-<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-sm shrink-0">
-<img alt="Avatar de Usuario" class="w-full h-full object-cover" data-alt="A professional headshot of a restaurant manager, smiling subtly, wearing a neat uniform. Shot in a bright, modern office space with soft lighting. Corporate professional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDblYWPHNVAKYo1VZll58RI_6ghDBi8wXaBH_HA7miAP4RS98Gb5j5H0QWsmNGwgNl06K46VM31h8HPx7dQuqlnTo_P9aVnZ3V--hO6eNqB_63eSMmi0bcoygNlwAmj2IJcXuj9cNEaJPzKGEHl7aSATwnEhESa3hnCFKn7sTWLO10wHVKd2lGJvIq3GuLT6Hk13QXCt3RaDy2OvR86WkloZ9bZa-9pNbSEduJNtyimSzOOSznz4d92Rd-cyNEpwG2suqehILZlpKNd"/>
-</div>
-</div>
-</header>
-<!-- Dashboard Canvas -->
-<main class="p-lg gap-lg flex flex-col">
-<div class="flex justify-between items-end mb-sm">
-<div>
-<h2 class="font-headline-lg text-headline-lg text-on-surface">Rendimiento Operativo</h2>
-<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Resumen analítico de la jornada actual vs proyección.</p>
-</div>
-<div class="flex gap-sm">
-<button class="border border-outline text-on-surface px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs hover:bg-surface-container transition-colors">
-<span class="material-symbols-outlined text-[18px]">calendar_today</span>
-                        Hoy
-                    </button>
-<button class="border border-outline text-on-surface px-md py-sm rounded-lg font-label-md text-label-md flex items-center gap-xs hover:bg-surface-container transition-colors">
-<span class="material-symbols-outlined text-[18px]">download</span>
-                        Exportar
-                    </button>
-</div>
-</div>
-<!-- 1. Metrics Overview (Bento Row 1) -->
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-md">
-<!-- Metric 1: Ventas Hoy -->
-<div class="bg-surface-container-lowest border border-surface-container rounded-lg p-md flex flex-col justify-between hover:-translate-y-[2px] transition-transform duration-200">
-<div class="flex justify-between items-start mb-md">
-<span class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wide">Ventas Hoy</span>
-<div class="bg-[rgba(39,195,138,0.1)] text-on-tertiary-container px-sm py-xs rounded flex items-center gap-xs font-label-md text-label-md">
-<span class="material-symbols-outlined text-[14px]">trending_up</span>
-                            +12.5%
-                        </div>
-</div>
-<div>
-<span class="font-headline-lg text-headline-lg text-on-surface">$14,520.00</span>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">vs $12,900.00 ayer</p>
-</div>
-</div>
-<!-- Metric 2: Ticket Promedio -->
-<div class="bg-surface-container-lowest border border-surface-container rounded-lg p-md flex flex-col justify-between hover:-translate-y-[2px] transition-transform duration-200">
-<div class="flex justify-between items-start mb-md">
-<span class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wide">Ticket Promedio</span>
-<span class="material-symbols-outlined text-outline-variant">receipt_long</span>
-</div>
-<div>
-<span class="font-headline-lg text-headline-lg text-on-surface">$42.50</span>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Objetivo: $45.00</p>
-</div>
-</div>
-<!-- Metric 3: Ocupación Actual -->
-<div class="bg-surface-container-lowest border border-surface-container rounded-lg p-md flex flex-col justify-between hover:-translate-y-[2px] transition-transform duration-200">
-<div class="flex justify-between items-start mb-md">
-<span class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wide">Ocupación Actual</span>
-<div class="bg-[rgba(30,58,138,0.1)] text-primary-container px-sm py-xs rounded flex items-center gap-xs font-label-md text-label-md">
-<span class="material-symbols-outlined text-[14px]">table_restaurant</span>
-                            En Proceso
-                        </div>
-</div>
-<div>
-<div class="flex items-baseline gap-xs">
-<span class="font-headline-lg text-headline-lg text-on-surface">82</span>
-<span class="font-body-lg text-body-lg text-on-surface-variant">%</span>
-</div>
-<div class="w-full bg-surface-container-high rounded-full h-1.5 mt-sm overflow-hidden">
-<div class="bg-primary-container h-1.5 rounded-full" style="width: 82%"></div>
-</div>
-</div>
-</div>
-<!-- Metric 4: Margen Beneficio -->
-<div class="bg-surface-container-lowest border border-surface-container rounded-lg p-md flex flex-col justify-between hover:-translate-y-[2px] transition-transform duration-200">
-<div class="flex justify-between items-start mb-md">
-<span class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wide">Margen Neto (Mes)</span>
-<div class="bg-[rgba(186,26,26,0.1)] text-error px-sm py-xs rounded flex items-center gap-xs font-label-md text-label-md">
-<span class="material-symbols-outlined text-[14px]">trending_down</span>
-                            -1.2%
-                        </div>
-</div>
-<div>
-<div class="flex items-baseline gap-xs">
-<span class="font-headline-lg text-headline-lg text-on-surface">24.5</span>
-<span class="font-body-lg text-body-lg text-on-surface-variant">%</span>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Afectado por costo proteína</p>
-</div>
-</div>
-</div>
-<!-- Middle Row (Bento) -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-md mt-md">
-<!-- 2. Matriz BCG (Col-span 2) -->
-<div class="lg:col-span-2 bg-surface-container-lowest border border-surface-container rounded-lg flex flex-col overflow-hidden">
-<div class="bg-surface-container-low px-md py-sm border-b border-surface-container flex justify-between items-center">
-<h3 class="font-headline-md text-headline-md text-on-surface text-[18px]">Matriz BCG de Menú</h3>
-<span class="material-symbols-outlined text-outline-variant text-[20px]">info</span>
-</div>
-<div class="p-md flex-1 flex flex-col relative">
-<!-- Y-axis Label -->
-<div class="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 origin-center text-on-surface-variant font-label-md text-label-md tracking-wider">CRECIMIENTO DEMANDA</div>
-<div class="pl-lg pb-lg h-full flex flex-col gap-xs relative">
-<!-- Matrix Grid -->
-<div class="grid grid-cols-2 grid-rows-2 h-full gap-xs relative">
-<!-- Quadrant: Estrella -->
-<div class="bg-[#f0f9ff] border border-[#bae6fd] rounded-lg p-sm relative flex flex-col">
-<div class="flex justify-between items-start mb-sm">
-<span class="font-label-md text-label-md text-[#0369a1] uppercase">Estrella</span>
-<span class="material-symbols-outlined text-[#38bdf8]">star</span>
-</div>
-<ul class="text-body-sm font-body-sm text-[#0c4a6e] space-y-xs">
-<li>• Salmón Glaseado</li>
-<li>• Risotto de Hongos</li>
-</ul>
-</div>
-<!-- Quadrant: Interrogante -->
-<div class="bg-[#fefce8] border border-[#fef08a] rounded-lg p-sm relative flex flex-col">
-<div class="flex justify-between items-start mb-sm">
-<span class="font-label-md text-label-md text-[#a16207] uppercase">Interrogante</span>
-<span class="material-symbols-outlined text-[#facc15]">help_outline</span>
-</div>
-<ul class="text-body-sm font-body-sm text-[#713f12] space-y-xs">
-<li>• Ceviche Vegano</li>
-<li>• Tarta de Higo</li>
-</ul>
-</div>
-<!-- Quadrant: Vaca -->
-<div class="bg-[#f0fdf4] border border-[#bbf7d0] rounded-lg p-sm relative flex flex-col">
-<div class="flex justify-between items-start mb-sm">
-<span class="font-label-md text-label-md text-[#15803d] uppercase">Vaca Lechera</span>
-<span class="material-symbols-outlined text-[#4ade80]">pets</span> <!-- closest to cow conceptually in default icons -->
-</div>
-<ul class="text-body-sm font-body-sm text-[#14532d] space-y-xs">
-<li>• Hamburguesa Clásica</li>
-<li>• Ensalada César</li>
-<li>• Gaseosas</li>
-</ul>
-</div>
-<!-- Quadrant: Perro -->
-<div class="bg-[#fef2f2] border border-[#fecaca] rounded-lg p-sm relative flex flex-col">
-<div class="flex justify-between items-start mb-sm">
-<span class="font-label-md text-label-md text-[#b91c1c] uppercase">Perro</span>
-<span class="material-symbols-outlined text-[#f87171]">close</span>
-</div>
-<ul class="text-body-sm font-body-sm text-[#7f1d1d] space-y-xs">
-<li>• Sopa de Cebolla</li>
-<li>• Carpaccio Zucchini</li>
-</ul>
-</div>
-</div>
-<!-- X-axis Label -->
-<div class="absolute bottom-0 left-1/2 -translate-x-1/2 text-on-surface-variant font-label-md text-label-md tracking-wider">PARTICIPACIÓN RENTABILIDAD</div>
-</div>
-</div>
-</div>
-<!-- 4. Reporte de horas pico -->
-<div class="bg-surface-container-lowest border border-surface-container rounded-lg flex flex-col overflow-hidden">
-<div class="bg-surface-container-low px-md py-sm border-b border-surface-container flex justify-between items-center">
-<h3 class="font-headline-md text-headline-md text-on-surface text-[18px]">Horas Pico (Hoy)</h3>
-<span class="material-symbols-outlined text-outline-variant text-[20px]">schedule</span>
-</div>
-<div class="p-md flex-1 flex flex-col justify-center gap-md">
-<!-- Bar Item -->
-<div>
-<div class="flex justify-between text-body-sm font-body-sm mb-xs">
-<span class="text-on-surface font-semibold">13:00 - 15:00</span>
-<span class="text-on-surface-variant">Alta (85%)</span>
-</div>
-<div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
-<div class="bg-primary-container h-2 rounded-full" style="width: 85%"></div>
-</div>
-</div>
-<!-- Bar Item -->
-<div>
-<div class="flex justify-between text-body-sm font-body-sm mb-xs">
-<span class="text-on-surface font-semibold">16:00 - 18:00</span>
-<span class="text-on-surface-variant">Baja (20%)</span>
-</div>
-<div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
-<div class="bg-secondary-fixed-dim h-2 rounded-full" style="width: 20%"></div>
-</div>
-</div>
-<!-- Bar Item -->
-<div>
-<div class="flex justify-between text-body-sm font-body-sm mb-xs">
-<span class="text-on-surface font-semibold">19:00 - 21:00</span>
-<span class="text-on-surface-variant">Crítica (98%)</span>
-</div>
-<div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden relative">
-<!-- Pulsing effect for critical -->
-<div class="absolute inset-0 bg-error opacity-20 animate-pulse"></div>
-<div class="bg-error h-2 rounded-full relative z-10" style="width: 98%"></div>
-</div>
-</div>
-<!-- Bar Item -->
-<div>
-<div class="flex justify-between text-body-sm font-body-sm mb-xs">
-<span class="text-on-surface font-semibold">22:00 - 23:30</span>
-<span class="text-on-surface-variant">Media (45%)</span>
-</div>
-<div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
-<div class="bg-primary-fixed-dim h-2 rounded-full" style="width: 45%"></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Bottom Row: 3. Top 5 Platos Rentables (Table) -->
-<div class="bg-surface-container-lowest border border-surface-container rounded-lg flex flex-col overflow-hidden mt-md mb-lg">
-<div class="bg-surface-container-low px-md py-sm border-b border-surface-container flex justify-between items-center">
-<h3 class="font-headline-md text-headline-md text-on-surface text-[18px]">Top 5 Platos más Rentables</h3>
-<button class="text-primary text-body-sm font-label-md hover:underline">Ver Menú Completo</button>
-</div>
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="border-b border-surface-container">
-<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant uppercase bg-surface-container-lowest">Plato</th>
-<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant uppercase bg-surface-container-lowest">Categoría</th>
-<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant uppercase bg-surface-container-lowest text-right">Costo Prod.</th>
-<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant uppercase bg-surface-container-lowest text-right">Precio Venta</th>
-<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant uppercase bg-surface-container-lowest text-right">Margen Neto</th>
-</tr>
-</thead>
-<tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-surface-container">
-<tr class="hover:bg-surface-container-low transition-colors group">
-<td class="py-sm px-md font-medium">Salmón Glaseado</td>
-<td class="py-sm px-md text-on-surface-variant">Plato Fuerte</td>
-<td class="py-sm px-md text-right font-data-mono text-data-mono">$8.50</td>
-<td class="py-sm px-md text-right font-data-mono text-data-mono">$28.00</td>
-<td class="py-sm px-md text-right text-on-tertiary-container font-semibold font-data-mono text-data-mono">
-                                    70% ($19.50)
-                                </td>
-</tr>
-<tr class="hover:bg-surface-container-low transition-colors group bg-surface-container-lowest">
-<td class="py-sm px-md font-medium">Risotto de Hongos</td>
-<td class="py-sm px-md text-on-surface-variant">Plato Fuerte</td>
-<td class="py-sm px-md text-right font-data-mono text-data-mono">$4.20</td>
-<td class="py-sm px-md text-right font-data-mono text-data-mono">$22.00</td>
-<td class="py-sm px-md text-right text-on-tertiary-container font-semibold font-data-mono text-data-mono">
-                                    81% ($17.80)
-                                </td>
-</tr>
-<tr class="hover:bg-surface-container-low transition-colors group">
-<td class="py-sm px-md font-medium">Copa de Malbec (Casa)</td>
-<td class="py-sm px-md text-on-surface-variant">Bebidas</td>
-<td class="py-sm px-md text-right font-data-mono text-data-mono">$1.50</td>
-<td class="py-sm px-md text-right font-data-mono text-data-mono">$9.00</td>
-<td class="py-sm px-md text-right text-on-tertiary-container font-semibold font-data-mono text-data-mono">
-                                    83% ($7.50)
-                                </td>
-</tr>
-<tr class="hover:bg-surface-container-low transition-colors group bg-surface-container-lowest">
-<td class="py-sm px-md font-medium">Volcán de Chocolate</td>
-<td class="py-sm px-md text-on-surface-variant">Postres</td>
-<td class="py-sm px-md text-right font-data-mono text-data-mono">$2.10</td>
-<td class="py-sm px-md text-right font-data-mono text-data-mono">$11.00</td>
-<td class="py-sm px-md text-right text-on-tertiary-container font-semibold font-data-mono text-data-mono">
-                                    81% ($8.90)
-                                </td>
-</tr>
-<tr class="hover:bg-surface-container-low transition-colors group">
-<td class="py-sm px-md font-medium">Limonada Menta Jengibre</td>
-<td class="py-sm px-md text-on-surface-variant">Bebidas</td>
-<td class="py-sm px-md text-right font-data-mono text-data-mono">$0.80</td>
-<td class="py-sm px-md text-right font-data-mono text-data-mono">$5.50</td>
-<td class="py-sm px-md text-right text-on-tertiary-container font-semibold font-data-mono text-data-mono">
-                                    85% ($4.70)
-                                </td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</main>
-</div>
-<script>
-(function(){
-  var cardGrid = document.querySelector('.md\\:grid-cols-2.xl\\:grid-cols-4');
-  if (cardGrid) {
-    var kids = cardGrid.children;
-    // Card 0: Ventas Hoy
-    kids[0].querySelector('.font-headline-lg').textContent = metricCards[0].value;
-    var b0 = kids[0].querySelector('.flex.justify-between .flex.items-center');
-    if (b0) {
-      b0.querySelector('.material-symbols-outlined').textContent = metricCards[0].trend;
-      for (var j=0;j<b0.childNodes.length;j++) if (b0.childNodes[j].nodeType===3) { b0.childNodes[j].textContent=' '+metricCards[0].change; break; }
+  const MENU_ITEMS_FIXED = [
+    { name: 'Salmón Glaseado', category: 'Plato Fuerte', cost: 8.50, price: 28.00, margin: 70 },
+    { name: 'Risotto de Hongos', category: 'Plato Fuerte', cost: 4.20, price: 22.00, margin: 81 },
+    { name: 'Hamburguesa Clásica', category: 'Plato Fuerte', cost: 5.00, price: 16.00, margin: 69 },
+    { name: 'Ensalada César', category: 'Entradas', cost: 3.00, price: 12.00, margin: 75 },
+    { name: 'Gaseosas', category: 'Bebidas', cost: 0.80, price: 3.50, margin: 77 },
+    { name: 'Ceviche Vegano', category: 'Entradas', cost: 4.50, price: 14.00, margin: 68 },
+    { name: 'Tarta de Higo', category: 'Postres', cost: 3.20, price: 11.00, margin: 71 },
+    { name: 'Sopa de Cebolla', category: 'Entradas', cost: 2.50, price: 9.00, margin: 72 },
+    { name: 'Carpaccio Zucchini', category: 'Entradas', cost: 3.80, price: 12.00, margin: 68 },
+    { name: 'Copa de Malbec', category: 'Bebidas', cost: 1.50, price: 9.00, margin: 83 },
+    { name: 'Volcán de Chocolate', category: 'Postres', cost: 2.10, price: 11.00, margin: 81 },
+    { name: 'Limonada Menta', category: 'Bebidas', cost: 0.80, price: 5.50, margin: 85 }
+  ];
+
+  const PEAK_HOURS_FIXED = [
+    { time: '13:00 - 15:00', label: 'Alta (85%)', width: 85 },
+    { time: '16:00 - 18:00', label: 'Baja (20%)', width: 20 },
+    { time: '19:00 - 21:00', label: 'Crítica (98%)', width: 98 },
+    { time: '22:00 - 23:30', label: 'Media (45%)', width: 45 }
+  ];
+
+  function loadData() {
+    let bcgData = Utils.storage.get(BCG_STORAGE_KEY);
+    if (!bcgData || !bcgData.menuItems || !bcgData.peakHours) {
+      bcgData = { menuItems: JSON.parse(JSON.stringify(MENU_ITEMS_FIXED)), peakHours: JSON.parse(JSON.stringify(PEAK_HOURS_FIXED)) };
+      Utils.storage.set(BCG_STORAGE_KEY, bcgData);
     }
-    var subs = kids[0].querySelectorAll('.font-body-sm.text-on-surface-variant');
-    if (subs.length) subs[subs.length-1].textContent = metricCards[0].subtitle;
-    // Card 1: Ticket Promedio
-    kids[1].querySelector('.font-headline-lg').textContent = metricCards[1].value;
-    var subs1 = kids[1].querySelectorAll('.font-body-sm.text-on-surface-variant');
-    if (subs1.length) subs1[subs1.length-1].textContent = metricCards[1].subtitle;
-    // Card 2: Ocupaci&oacute;n Actual
-    kids[2].querySelector('.font-headline-lg').textContent = metricCards[2].value;
-    var pb = kids[2].querySelector('.bg-primary-container.h-1\\.5');
-    if (pb) pb.style.width = metricCards[2].change;
-    // Card 3: Margen Neto
-    kids[3].querySelector('.font-headline-lg').textContent = metricCards[3].value;
-    var b3 = kids[3].querySelector('.flex.justify-between .flex.items-center');
-    if (b3) {
-      b3.querySelector('.material-symbols-outlined').textContent = metricCards[3].trend;
-      for (var j=0;j<b3.childNodes.length;j++) if (b3.childNodes[j].nodeType===3) { b3.childNodes[j].textContent=' '+metricCards[3].change; break; }
-    }
-    var subs3 = kids[3].querySelectorAll('.font-body-sm.text-on-surface-variant');
-    if (subs3.length) subs3[subs3.length-1].textContent = metricCards[3].subtitle;
+    return bcgData;
   }
-  // BCG Quadrants
-  var quadUl = document.querySelector('.grid.grid-cols-2.grid-rows-2.h-full');
-  if (quadUl) {
-    var uls = quadUl.querySelectorAll('ul');
-    var quadItems = [bcgQuadrants.estrella.items, bcgQuadrants.interrogante.items, bcgQuadrants.vaca.items, bcgQuadrants.perro.items];
-    for (var i=0; i<uls.length; i++) {
-      var lis = uls[i].querySelectorAll('li');
-      for (var j=0; j<lis.length; j++) {
-        lis[j].textContent = '\u2022 ' + quadItems[i][j];
-      }
-    }
+
+  function saveData(data) {
+    Utils.storage.set(BCG_STORAGE_KEY, data);
   }
-  // Peak Hours
-  var phSection = document.querySelector('.lg\\:grid-cols-3 > .bg-surface-container-lowest:last-child');
-  if (phSection) {
-    var phBars = phSection.querySelectorAll('.p-md > div');
-    for (var i=0; i<peakHours.length; i++) {
-      var jd = phBars[i].querySelector('.flex.justify-between');
-      if (jd) {
-        var sp = jd.querySelectorAll('span');
-        if (sp[0]) sp[0].textContent = peakHours[i].time;
-        if (sp[1]) sp[1].textContent = peakHours[i].label;
-      }
-      var bc = phBars[i].querySelector('.bg-surface-container-high');
-      if (bc) {
-        var bar = bc.lastElementChild;
-        if (bar) {
-          bar.style.width = peakHours[i].width + '%';
-          var cls = 'h-2 rounded-full ' + peakHours[i].cls;
-          if (bar.className.indexOf('absolute') > -1) cls = 'absolute inset-0 bg-error opacity-20 animate-pulse';
-          else bar.className = cls;
+
+  function getSalesData() {
+    const ad = Utils.storage.get(STORAGE_KEY);
+    if (!ad || !ad.orders) return {};
+    const sales = {};
+    ad.orders.forEach(o => {
+      o.items.forEach(it => {
+        if (!sales[it.name]) sales[it.name] = { qty: 0, revenue: 0 };
+        sales[it.name].qty += it.qty;
+        sales[it.name].revenue += it.price * it.qty;
+      });
+    });
+    return sales;
+  }
+
+  function classifyBCG(menuItems) {
+    const sales = getSalesData();
+    const totalQty = Object.values(sales).reduce((s, v) => s + v.qty, 0);
+    const avgQty = Object.keys(sales).length > 0 ? totalQty / Object.keys(sales).length : 5;
+    const itemsWithSales = menuItems.map(mi => {
+      const s = sales[mi.name] || { qty: Math.floor(Math.random() * 30) + 1, revenue: mi.price * (Math.floor(Math.random() * 30) + 1) };
+      const growth = mi.margin > 75 ? (Math.random() * 30 + 10) : (Math.random() * 20 - 5);
+      return { ...mi, salesQty: s.qty, salesRevenue: s.revenue, growth };
+    });
+    const maxQty = Math.max(...itemsWithSales.map(i => i.salesQty), 1);
+    itemsWithSales.forEach(i => { i.volumeShare = i.salesQty / maxQty; });
+    return {
+      stars: itemsWithSales.filter(i => i.salesQty >= avgQty && i.growth >= 10).sort((a, b) => b.salesQty - a.salesQty),
+      questionMarks: itemsWithSales.filter(i => i.salesQty < avgQty && i.growth >= 10).sort((a, b) => b.growth - a.growth),
+      cashCows: itemsWithSales.filter(i => i.salesQty >= avgQty && i.growth < 10).sort((a, b) => b.salesQty - a.salesQty),
+      dogs: itemsWithSales.filter(i => i.salesQty < avgQty && i.growth < 10).sort((a, b) => b.growth - a.growth)
+    };
+  }
+
+  function render() {
+    const bcgData = loadData();
+    const mi = bcgData.menuItems;
+    const ph = bcgData.peakHours;
+    const bcg = classifyBCG(mi);
+    const orders = (Utils.storage.get(STORAGE_KEY) || { orders: [] }).orders;
+    const totalRev = orders.reduce((s, o) => s + o.total, 0);
+    const totalOrders = orders.length;
+    const avgOrder = totalOrders > 0 ? totalRev / totalOrders : 0;
+    const topDishes = [...mi].sort((a, b) => (b.price - b.cost) - (a.price - a.cost)).slice(0, 5);
+
+    const body = document.body;
+    body.className = 'bg-surface text-on-surface font-body-md text-body-md m-0 p-0 flex min-h-screen';
+    body.innerHTML = `
+      <aside class="bg-surface-container border-r border-outline-variant h-screen w-64 fixed left-0 top-0 flex flex-col py-md px-sm z-50">
+        <div class="flex items-center gap-sm mb-lg px-sm">
+          <div class="w-10 h-10 rounded-lg bg-surface-container-lowest border border-outline-variant flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-primary" style="font-size:24px">restaurant</span>
+          </div>
+          <div>
+            <h1 class="font-headline-md font-bold text-primary" style="font-size:20px">RestoPro</h1>
+            <p class="font-label-md text-label-md text-on-surface-variant">Administrador</p>
+          </div>
+        </div>
+        <nav class="flex-1 overflow-y-auto">
+          <ul class="flex flex-col gap-xs">
+            <li><a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#"><span class="material-symbols-outlined">point_of_sale</span><span>POS</span></a></li>
+            <li><a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#"><span class="material-symbols-outlined">inventory_2</span><span>Inventario</span></a></li>
+            <li><a class="flex items-center gap-sm px-md py-sm rounded-lg bg-secondary-container text-on-secondary-container font-bold transition-transform" href="#"><span class="material-symbols-outlined filled">analytics</span><span>Analítica</span></a></li>
+            <li><a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#"><span class="material-symbols-outlined">badge</span><span>Personal</span></a></li>
+            <li><a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#"><span class="material-symbols-outlined">settings</span><span>Configuración</span></a></li>
+          </ul>
+        </nav>
+        <div class="mt-auto pt-md">
+          <button id="bcg-new-item" class="w-full bg-primary-container text-on-primary py-sm rounded-lg font-label-md hover:opacity-90 transition-opacity flex items-center justify-center gap-sm">
+            <span class="material-symbols-outlined" style="font-size:18px">add</span> Nuevo Plato
+          </button>
+        </div>
+      </aside>
+      <div class="flex-1 ml-64 flex flex-col min-h-screen">
+        <header class="bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-40 flex justify-between items-center h-16 px-lg">
+          <div class="flex items-center gap-lg">
+            <nav class="flex gap-md">
+              <a class="text-primary font-bold border-b-2 border-primary py-sm font-label-md" href="#">Matriz BCG</a>
+              <a class="text-on-surface-variant hover:text-on-surface py-sm font-label-md hover:bg-surface-container-high rounded-lg px-sm" href="#">Análisis de Menú</a>
+              <a class="text-on-surface-variant hover:text-on-surface py-sm font-label-md hover:bg-surface-container-high rounded-lg px-sm" href="#">Rendimiento</a>
+            </nav>
+          </div>
+          <div class="flex items-center gap-md">
+            <button id="bcg-refresh" class="text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-full p-sm transition-colors"><span class="material-symbols-outlined">refresh</span></button>
+            <button class="text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-full p-sm transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+            <div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-sm" style="background:#d5e3fd;display:flex;align-items:center;justify-content:center">
+              <span class="material-symbols-outlined text-primary" style="font-size:18px">person</span>
+            </div>
+          </div>
+        </header>
+        <main class="p-lg gap-lg flex flex-col">
+          <div class="flex justify-between items-end mb-sm">
+            <div>
+              <h2 class="font-headline-lg text-headline-lg text-on-surface">Matriz BCG de Menú</h2>
+              <p class="font-body-md text-body-md text-on-surface-variant mt-xs">Clasificación de platos por volumen de ventas y crecimiento</p>
+            </div>
+            <div class="flex gap-sm">
+              <button id="bcg-edit-hours" class="border border-outline text-on-surface px-md py-sm rounded-lg font-label-md flex items-center gap-xs hover:bg-surface-container transition-colors">
+                <span class="material-symbols-outlined" style="font-size:18px">schedule</span> Editar Horas
+              </button>
+              <button class="border border-outline text-on-surface px-md py-sm rounded-lg font-label-md flex items-center gap-xs hover:bg-surface-container transition-colors">
+                <span class="material-symbols-outlined" style="font-size:18px">download</span> Exportar
+              </button>
+            </div>
+          </div>
+
+          <div id="bcg-metrics" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-md"></div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-md mt-md">
+            <div class="lg:col-span-2 bg-surface-container-lowest border border-surface-container rounded-lg flex flex-col overflow-hidden">
+              <div class="bg-surface-container-low px-md py-sm border-b border-surface-container flex justify-between items-center">
+                <h3 class="font-headline-md text-on-surface" style="font-size:18px">Matriz BCG</h3>
+                <span class="material-symbols-outlined text-outline-variant">info</span>
+              </div>
+              <div class="p-md flex-1 flex flex-col relative" style="min-height:400px">
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 origin-center text-on-surface-variant font-label-md tracking-wider" style="font-size:12px">CRECIMIENTO</div>
+                <div class="pl-lg pb-lg h-full flex flex-col gap-xs relative">
+                  <div class="grid grid-cols-2 grid-rows-2 h-full gap-xs relative">
+                    <div class="rounded-lg p-sm relative flex flex-col" style="background:#f0f9ff;border:1px solid #bae6fd">
+                      <div class="flex justify-between items-start mb-sm"><span class="font-label-md" style="color:#0369a1;font-size:12px">ESTRELLA</span><span class="material-symbols-outlined" style="color:#38bdf8">star</span></div>
+                      <ul class="text-body-sm font-body-sm" style="color:#0c4a6e" id="bcg-star-list">
+                        ${bcg.stars.length ? bcg.stars.map(s => `<li style="list-style:disc;margin-left:16px">${s.name}</li>`).join('') : '<li style="color:#999">Sin elementos</li>'}
+                      </ul>
+                    </div>
+                    <div class="rounded-lg p-sm relative flex flex-col" style="background:#fefce8;border:1px solid #fef08a">
+                      <div class="flex justify-between items-start mb-sm"><span class="font-label-md" style="color:#a16207;font-size:12px">INTERROGANTE</span><span class="material-symbols-outlined" style="color:#facc15">help_outline</span></div>
+                      <ul class="text-body-sm font-body-sm" style="color:#713f12" id="bcg-question-list">
+                        ${bcg.questionMarks.length ? bcg.questionMarks.map(s => `<li style="list-style:disc;margin-left:16px">${s.name}</li>`).join('') : '<li style="color:#999">Sin elementos</li>'}
+                      </ul>
+                    </div>
+                    <div class="rounded-lg p-sm relative flex flex-col" style="background:#f0fdf4;border:1px solid #bbf7d0">
+                      <div class="flex justify-between items-start mb-sm"><span class="font-label-md" style="color:#15803d;font-size:12px">VACA LECHERA</span><span class="material-symbols-outlined" style="color:#4ade80">pets</span></div>
+                      <ul class="text-body-sm font-body-sm" style="color:#14532d" id="bcg-cash-list">
+                        ${bcg.cashCows.length ? bcg.cashCows.map(s => `<li style="list-style:disc;margin-left:16px">${s.name}</li>`).join('') : '<li style="color:#999">Sin elementos</li>'}
+                      </ul>
+                    </div>
+                    <div class="rounded-lg p-sm relative flex flex-col" style="background:#fef2f2;border:1px solid #fecaca">
+                      <div class="flex justify-between items-start mb-sm"><span class="font-label-md" style="color:#b91c1c;font-size:12px">PERRO</span><span class="material-symbols-outlined" style="color:#f87171">close</span></div>
+                      <ul class="text-body-sm font-body-sm" style="color:#7f1d1d" id="bcg-dog-list">
+                        ${bcg.dogs.length ? bcg.dogs.map(s => `<li style="list-style:disc;margin-left:16px">${s.name}</li>`).join('') : '<li style="color:#999">Sin elementos</li>'}
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="text-center text-on-surface-variant font-label-md tracking-wider" style="font-size:12px">PARTICIPACIÓN (VOLUMEN)</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-surface-container-lowest border border-surface-container rounded-lg flex flex-col overflow-hidden">
+              <div class="bg-surface-container-low px-md py-sm border-b border-surface-container flex justify-between items-center">
+                <h3 class="font-headline-md text-on-surface" style="font-size:18px">Horas Pico (Hoy)</h3>
+                <span class="material-symbols-outlined text-outline-variant">schedule</span>
+              </div>
+              <div class="p-md flex-1 flex flex-col justify-center gap-md">
+                ${ph.map(h => {
+                  const isCritical = h.width >= 95;
+                  const bgClass = isCritical ? 'bg-error' : (h.width >= 60 ? 'bg-primary-container' : (h.width >= 30 ? 'bg-secondary-fixed-dim' : 'bg-primary-fixed-dim'));
+                  return `
+                    <div>
+                      <div class="flex justify-between text-body-sm font-body-sm mb-xs">
+                        <span class="text-on-surface font-semibold">${h.time}</span>
+                        <span class="text-on-surface-variant">${h.label}</span>
+                      </div>
+                      <div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden relative">
+                        ${isCritical ? '<div class="absolute inset-0 bg-error opacity-20 animate-pulse"></div>' : ''}
+                        <div class="${bgClass} h-2 rounded-full relative z-10 transition-all" style="width:${h.width}%"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-lowest border border-surface-container rounded-lg flex flex-col overflow-hidden mt-md mb-lg">
+            <div class="bg-surface-container-low px-md py-sm border-b border-surface-container flex justify-between items-center">
+              <h3 class="font-headline-md text-on-surface" style="font-size:18px">Top 5 Platos más Rentables</h3>
+              <button class="text-primary text-body-sm font-label-md hover:underline">Ver Menú Completo</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-surface-container">
+                    <th class="py-sm px-md font-label-md text-label-md text-on-surface-variant uppercase bg-surface-container-lowest">Plato</th>
+                    <th class="py-sm px-md font-label-md text-label-md text-on-surface-variant uppercase bg-surface-container-lowest">Categoría</th>
+                    <th class="py-sm px-md font-label-md text-label-md text-on-surface-variant uppercase bg-surface-container-lowest text-right">Costo</th>
+                    <th class="py-sm px-md font-label-md text-label-md text-on-surface-variant uppercase bg-surface-container-lowest text-right">Precio</th>
+                    <th class="py-sm px-md font-label-md text-label-md text-on-surface-variant uppercase bg-surface-container-lowest text-right">Margen Neto</th>
+                    <th class="py-sm px-md font-label-md text-label-md text-on-surface-variant uppercase bg-surface-container-lowest text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-surface-container">
+                  ${topDishes.map((d, idx) => {
+                    const marginVal = d.price > 0 ? ((d.price - d.cost) / d.price * 100) : 0;
+                    const marginDol = d.price - d.cost;
+                    return `
+                      <tr class="hover:bg-surface-container-low transition-colors ${idx % 2 === 0 ? '' : 'bg-surface-container-lowest'}">
+                        <td class="py-sm px-md font-medium">${d.name}</td>
+                        <td class="py-sm px-md text-on-surface-variant">${d.category}</td>
+                        <td class="py-sm px-md text-right font-data-mono">${Utils.formatCurrency(d.cost)}</td>
+                        <td class="py-sm px-md text-right font-data-mono">${Utils.formatCurrency(d.price)}</td>
+                        <td class="py-sm px-md text-right text-on-tertiary-container font-semibold font-data-mono">${marginVal.toFixed(0)}% (${Utils.formatCurrency(marginDol)})</td>
+                        <td class="py-sm px-md text-center">
+                          <button class="bcg-edit-dish text-secondary hover:text-primary transition-colors material-symbols-outlined" style="font-size:16px;cursor:pointer" data-idx="${idx}">edit</button>
+                          <button class="bcg-del-dish text-secondary hover:text-error transition-colors material-symbols-outlined" style="font-size:16px;cursor:pointer;margin-left:4px" data-idx="${idx}">delete</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    `;
+
+    const totalProfit = mi.reduce((s, d) => s + (d.price - d.cost) * (Math.floor(Math.random() * 20) + 5), 0);
+    document.getElementById('bcg-metrics').innerHTML = `
+      <div class="bg-surface-container-lowest border border-surface-container rounded-lg p-md flex flex-col justify-between hover:-translate-y-px transition-transform">
+        <div class="flex justify-between items-start mb-md"><span class="font-body-sm text-body-sm text-on-surface-variant uppercase">Rentabilidad Total</span><span class="material-symbols-outlined text-primary">payments</span></div>
+        <div><span class="font-headline-lg text-on-surface">${Utils.formatCurrency(totalProfit)}</span></div>
+      </div>
+      <div class="bg-surface-container-lowest border border-surface-container rounded-lg p-md flex flex-col justify-between hover:-translate-y-px transition-transform">
+        <div class="flex justify-between items-start mb-md"><span class="font-body-sm text-body-sm text-on-surface-variant uppercase">Ticket Promedio</span><span class="material-symbols-outlined text-secondary">receipt_long</span></div>
+        <div><span class="font-headline-lg text-on-surface">${Utils.formatCurrency(avgOrder || 42.50)}</span><p class="font-body-sm text-on-surface-variant mt-xs">Objetivo: $45.00</p></div>
+      </div>
+      <div class="bg-surface-container-lowest border border-surface-container rounded-lg p-md flex flex-col justify-between hover:-translate-y-px transition-transform">
+        <div class="flex justify-between items-start mb-md"><span class="font-body-sm text-body-sm text-on-surface-variant uppercase">Platos en Menú</span><span class="material-symbols-outlined text-secondary">menu_book</span></div>
+        <div><span class="font-headline-lg text-on-surface">${mi.length}</span></div>
+      </div>
+      <div class="bg-surface-container-lowest border border-surface-container rounded-lg p-md flex flex-col justify-between hover:-translate-y-px transition-transform">
+        <div class="flex justify-between items-start mb-md"><span class="font-body-sm text-body-sm text-on-surface-variant uppercase">Órdenes Totales</span><span class="material-symbols-outlined text-primary">receipt</span></div>
+        <div><span class="font-headline-lg text-on-surface">${totalOrders || 82}</span><p class="font-body-sm text-on-surface-variant mt-xs">En el período</p></div>
+      </div>
+    `;
+
+    document.getElementById('bcg-new-item').addEventListener('click', function () {
+      const cats = [...new Set(MENU_ITEMS_FIXED.map(m => m.category))];
+      Utils.prompt({
+        title: 'Agregar Nuevo Plato',
+        fields: [
+          { name: 'name', label: 'Nombre del Plato', type: 'text' },
+          { name: 'category', label: 'Categoría', type: 'select', options: cats.map(c => ({ label: c, value: c })) },
+          { name: 'cost', label: 'Costo de Producción ($)', type: 'number' },
+          { name: 'price', label: 'Precio de Venta ($)', type: 'number' }
+        ],
+        onSave: function (vals) {
+          const d = Utils.storage.get(BCG_STORAGE_KEY);
+          d.menuItems.push({ name: vals.name, category: vals.category, cost: parseFloat(vals.cost) || 0, price: parseFloat(vals.price) || 0, margin: 0 });
+          saveData(d);
+          Utils.notify('Plato agregado exitosamente', 'success');
+          render();
         }
+      });
+    });
+
+    document.getElementById('bcg-refresh').addEventListener('click', function () {
+      Utils.notify('Datos actualizados', 'info');
+      render();
+    });
+
+    document.getElementById('bcg-edit-hours').addEventListener('click', function () {
+      const d = Utils.storage.get(BCG_STORAGE_KEY);
+      const phData = d.peakHours;
+      Utils.prompt({
+        title: 'Editar Horas Pico',
+        fields: phData.map((h, i) => ({ name: 'ph_' + i, label: h.time + ' (%)', type: 'number' })),
+        data: phData.reduce((o, h, i) => { o['ph_' + i] = String(h.width); return o; }, {}),
+        onSave: function (vals) {
+          const dt = Utils.storage.get(BCG_STORAGE_KEY);
+          dt.peakHours = dt.peakHours.map((h, i) => {
+            const w = parseInt(vals['ph_' + i]);
+            const num = isNaN(w) ? h.width : Math.min(100, Math.max(0, w));
+            return { time: h.time, width: num, label: num >= 95 ? 'Crítica (' + num + '%)' : (num >= 60 ? 'Alta (' + num + '%)' : (num >= 30 ? 'Media (' + num + '%)' : 'Baja (' + num + '%)')) };
+          });
+          saveData(dt);
+          Utils.notify('Horas pico actualizadas', 'success');
+          render();
+        }
+      });
+    });
+
+    topDishes.forEach((d, idx) => {
+      const editBtn = document.querySelectorAll('.bcg-edit-dish')[idx];
+      const delBtn = document.querySelectorAll('.bcg-del-dish')[idx];
+      if (editBtn) {
+        editBtn.addEventListener('click', function () {
+          const bd = Utils.storage.get(BCG_STORAGE_KEY);
+          const item = bd.menuItems[idx];
+          if (!item) return;
+          Utils.prompt({
+            title: 'Editar Plato',
+            fields: [
+              { name: 'name', label: 'Nombre', type: 'text' },
+              { name: 'category', label: 'Categoría', type: 'select', options: [...new Set(MENU_ITEMS_FIXED.map(m => m.category))].map(c => ({ label: c, value: c })) },
+              { name: 'cost', label: 'Costo ($)', type: 'number' },
+              { name: 'price', label: 'Precio ($)', type: 'number' }
+            ],
+            data: { name: item.name, category: item.category, cost: String(item.cost), price: String(item.price) },
+            onSave: function (vals) {
+              const bd2 = Utils.storage.get(BCG_STORAGE_KEY);
+              bd2.menuItems[idx] = { name: vals.name, category: vals.category, cost: parseFloat(vals.cost) || 0, price: parseFloat(vals.price) || 0, margin: 0 };
+              saveData(bd2);
+              Utils.notify('Plato actualizado', 'success');
+              render();
+            }
+          });
+        });
       }
-    }
+      if (delBtn) {
+        delBtn.addEventListener('click', function () {
+          Utils.confirm('¿Eliminar "' + d.name + '" del menú?', function () {
+            const bd = Utils.storage.get(BCG_STORAGE_KEY);
+            bd.menuItems.splice(idx, 1);
+            saveData(bd);
+            Utils.notify('Plato eliminado', 'success');
+            render();
+          });
+        });
+      }
+    });
   }
-  // Top 5 Dishes
-  var dRows = document.querySelectorAll('table tbody tr');
-  for (var i=0; i<topDishes.length; i++) {
-    var c = dRows[i].querySelectorAll('td');
-    if (c.length >= 5) {
-      c[0].textContent = topDishes[i].name;
-      c[1].textContent = topDishes[i].cat;
-      c[2].textContent = topDishes[i].cost;
-      c[3].textContent = topDishes[i].price;
-      c[4].textContent = topDishes[i].margin;
-    }
-  }
-})();
+
+  render();
+});

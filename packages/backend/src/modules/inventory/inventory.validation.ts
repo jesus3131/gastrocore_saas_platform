@@ -2,8 +2,9 @@ import { z } from 'zod'
 
 export const createIngredientSchema = z.object({
   name: z.string().min(1).max(255),
-  sku: z.string().optional(),
+  sku: z.string().min(1).max(100),
   unit: z.string().min(1).max(50),
+  category: z.string().min(1).max(100),
   unitCost: z.number().positive(),
   currentStock: z.number().min(0).default(0),
   minimumStock: z.number().min(0).default(0),
@@ -12,8 +13,9 @@ export const createIngredientSchema = z.object({
 
 export const updateIngredientSchema = z.object({
   name: z.string().min(1).max(255).optional(),
-  sku: z.string().optional(),
+  sku: z.string().min(1).max(100).optional(),
   unit: z.string().min(1).max(50).optional(),
+  category: z.string().min(1).max(100).optional(),
   unitCost: z.number().positive().optional(),
   currentStock: z.number().min(0).optional(),
   minimumStock: z.number().min(0).optional(),
@@ -32,4 +34,13 @@ export const createRecipeSchema = z.object({
   wastePercentage: z.number().min(0).max(100).default(0),
   instructions: z.string().optional(),
   ingredients: z.array(recipeIngredientSchema).min(1),
+})
+
+export const updateRecipeSchema = z.object({
+  menuItemId: z.string().uuid().optional(),
+  name: z.string().min(1).max(255).optional(),
+  servings: z.number().int().positive().optional(),
+  wastePercentage: z.number().min(0).max(100).optional(),
+  instructions: z.string().optional(),
+  ingredients: z.array(recipeIngredientSchema).optional(),
 })

@@ -7,8 +7,19 @@ export const loginSchema = z.object({
 
 export const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6).max(100),
+  password: z.string().min(6).max(100).optional(),
   name: z.string().min(1).max(255),
   tenantName: z.string().min(1).max(255),
   businessType: z.enum(['fine_dining', 'fast_food', 'cafe', 'food_truck', 'bar', 'franchise', 'bakery', 'ghost_kitchen']),
+  planId: z.enum(['basic', 'pro', 'enterprise']).optional().default('basic'),
+})
+
+export const updateProfileSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  email: z.string().email().optional(),
+})
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(6).max(100),
 })

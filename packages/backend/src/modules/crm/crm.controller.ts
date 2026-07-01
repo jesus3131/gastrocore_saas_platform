@@ -13,7 +13,7 @@ export class CrmController {
 
   async getCustomer(req: Request, res: Response, next: NextFunction) {
     try {
-      const customer = await this.service.getCustomer(req.params.id as string)
+      const customer = await this.service.getCustomer(req.tenantId!, req.params.id as string)
       res.json({ success: true, data: customer })
     } catch (err) { next(err) }
   }
@@ -27,7 +27,7 @@ export class CrmController {
 
   async updateCustomer(req: Request, res: Response, next: NextFunction) {
     try {
-      const customer = await this.service.updateCustomer(req.params.id as string, req.body)
+      const customer = await this.service.updateCustomer(req.tenantId!, req.params.id as string, req.body)
       res.json({ success: true, data: customer })
     } catch (err) { next(err) }
   }

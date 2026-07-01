@@ -48,14 +48,14 @@ export class PosController {
 
   async getOrder(req: Request, res: Response, next: NextFunction) {
     try {
-      const order = await this.service.getOrder(req.params.id as string)
+      const order = await this.service.getOrder(req.tenantId!, req.params.id as string)
       res.json({ success: true, data: order })
     } catch (err) { next(err) }
   }
 
   async updateOrderStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const order = await this.service.updateOrderStatus(req.params.id as string, req.body.status)
+      const order = await this.service.updateOrderStatus(req.tenantId!, req.params.id as string, req.body.status)
       res.json({ success: true, data: order })
     } catch (err) { next(err) }
   }
