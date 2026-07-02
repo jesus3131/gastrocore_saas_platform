@@ -39,8 +39,8 @@ export class InventoryService {
     return this.inventoryRepo.updateRecipe(id, data)
   }
 
-  async getRecipeByItem(menuItemId: string) {
-    const recipe = await this.inventoryRepo.findRecipeByItem(menuItemId)
+  async getRecipeByItem(menuItemId: string, tenantId?: string) {
+    const recipe = await this.inventoryRepo.findRecipeByItem(menuItemId, tenantId)
     if (!recipe) return null
 
     const totalCost = (recipe.ingredients ?? []).reduce(

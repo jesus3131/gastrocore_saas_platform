@@ -17,6 +17,29 @@ export function useLogin() {
       navigate('/dashboard')
     },
     onError: (err: any) => {
+      const message = err.response?.data?.error?.message || 'Error al iniciar sesión'
+      if (message === 'Use super admin login endpoint') {
+        toast.error('Usa el botón "Super Admin" debajo del formulario')
+      } else {
+        toast.error(message)
+      }
+    },
+  })
+}
+
+export function useSuperAdminLogin() {
+  const setAuth = useAuthStore((s) => s.setAuth)
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: (data: { email: string; password: string }) =>
+      api.post('/auth/super-admin/login', data).then((r) => r.data.data),
+    onSuccess: (data) => {
+      setAuth(data.user, data.tokens)
+      toast.success('Bienvenido Super Admin')
+      navigate('/super-admin')
+    },
+    onError: (err: any) => {
       toast.error(err.response?.data?.error?.message || 'Error al iniciar sesión')
     },
   })

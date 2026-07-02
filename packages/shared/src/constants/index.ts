@@ -117,6 +117,37 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   accountant: ['analytics:read', 'accounting:read', 'accounting:write', 'crm:read', 'reports:read'],
 }
 
+// ─── Feature Labels (for UI display) ────────────────────────
+
+export const FEATURE_LABELS: Record<string, string> = {
+  kds: 'Pantalla de Cocina (KDS)',
+  online_ordering: 'Pedidos en Línea',
+  bcg_matrix: 'Matriz BCG de Menú',
+  loyalty_program: 'Programa de Lealtad',
+  multi_branch: 'Múltiples Sucursales',
+  inventory_auto: 'Inventario Automático',
+  hr_scheduling: 'Gestión de Turnos',
+  crm_full: 'CRM Completo',
+  delivery_integration: 'Integración Delivery',
+  table_management: 'Mapa de Mesas',
+  split_bills: 'División de Cuentas',
+  electronic_invoice: 'Facturación Electrónica',
+  pos: 'Punto de Venta (POS)',
+  analytics: 'Analíticas e Informes',
+  accounting: 'Módulo de Contabilidad',
+}
+
+export const BUSINESS_TYPE_LABELS: Record<string, string> = {
+  fine_dining: 'Alta Cocina',
+  fast_food: 'Fast Food',
+  cafe: 'Cafetería',
+  food_truck: 'Food Truck',
+  bar: 'Bar',
+  franchise: 'Franquicia',
+  bakery: 'Panadería',
+  ghost_kitchen: 'Cocina Oculta',
+}
+
 // ─── Locales ─────────────────────────────────────────────────
 
 export const SUPPORTED_LOCALES = ['es-MX', 'en-US', 'pt-BR'] as const

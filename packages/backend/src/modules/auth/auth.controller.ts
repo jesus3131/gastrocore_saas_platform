@@ -2,13 +2,28 @@ import type { Request, Response, NextFunction } from 'express'
 import { container } from 'tsyringe'
 import { AuthService } from './auth.service.js'
 import { AppError } from '../../common/filters/error-handler.js'
+import { registerDependencies } from '../../infrastructure/di/container.js'
+
 
 export class AuthController {
+  // Ensure DI registrations happen before resolving dependencies
+  // (Some controllers are instantiated at import time via routes wiring.)
+  private static _ensureDi = (() => {
+    // registerDependencies() is expected to be idempotent, but we still guard it.
+    registerDependencies()
+    return true
+  })()
+
+
   private service = container.resolve(AuthService)
+
+
+
 
   async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await this.service.login(req.body.email, req.body.password)
+      const tenantId = req.headers['x-tenant-id'] as string | undefined
+      const result = await this.service.login(req.body.email, req.body.password, tenantId)
       res.json({ success: true, data: result })
     } catch (err) { next(err) }
   }

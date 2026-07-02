@@ -51,7 +51,7 @@ export class InventoryController {
 
   async getRecipeByItem(req: Request, res: Response, next: NextFunction) {
     try {
-      const recipe = await this.service.getRecipeByItem(req.params.menuItemId as string)
+      const recipe = await this.service.getRecipeByItem(req.params.menuItemId as string, req.tenantId!)
       res.json({ success: true, data: recipe })
     } catch (err) { next(err) }
   }

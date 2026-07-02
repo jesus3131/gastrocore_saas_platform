@@ -47,18 +47,18 @@ export class AuthService {
       authMethod: 'password',
     })
 
-    await this.storeRefreshToken(user.id, tokens.refreshToken)
+    await this.storeRefreshToken(user.id, tokens.refreshToken, null)
     await this.userRepo.update(user.id, { lastLoginAt: new Date() })
 
     const { passwordHash, refreshToken, ...safeUser } = user
-    return { user: safeUser, tokens }
+    return { user: { ...safeUser, isSuperAdmin: true, onboardingCompleted: true }, tokens }
   }
 
   /**
    * Nivel 2+3 - Login estándar para Admin de Empresa y empleados.
    */
-  async login(email: string, password: string) {
-    const user = await this.userRepo.findByEmail(email)
+  async login(email: string, password: string, tenantId?: string) {
+    const user = await this.userRepo.findByEmail(email, tenantId)
     if (!user || !user.isActive) {
       throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password')
     }
@@ -80,7 +80,7 @@ export class AuthService {
       authMethod: 'password',
     })
 
-    await this.storeRefreshToken(user.id, tokens.refreshToken)
+    await this.storeRefreshToken(user.id, tokens.refreshToken, user.tenantId ?? null)
 
     let tenant: any = null
     let flags: any[] = []
@@ -120,7 +120,7 @@ export class AuthService {
         authMethod: 'password',
       })
 
-      await this.storeRefreshToken(result.user.id, tokens.refreshToken)
+      await this.storeRefreshToken(result.user.id, tokens.refreshToken, result.tenant.id)
 
       sendWelcomeEmail(data.email, data.name, data.email, result.credentials.password)
         .then((sent) => {
@@ -203,7 +203,7 @@ export class AuthService {
       authMethod: 'password',
     })
 
-    await this.storeRefreshToken(user.id, tokens.refreshToken)
+    await this.storeRefreshToken(user.id, tokens.refreshToken, user.tenantId ?? null)
 
     sendWelcomeEmail(data.email, data.name, data.email, rawPassword)
       .then((sent) => {
@@ -229,12 +229,12 @@ export class AuthService {
     return crypto.createHash('sha256').update(token).digest('hex')
   }
 
-  private async storeRefreshToken(userId: string, refreshToken: string): Promise<void> {
+  private async storeRefreshToken(userId: string, refreshToken: string, tenantId: string | null = null): Promise<void> {
     const tokenHash = this.hashToken(refreshToken)
     const family = crypto.randomUUID()
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
-    await this.refreshTokenRepo.create(userId, tokenHash, family, expiresAt)
+    await this.refreshTokenRepo.create(userId, tenantId, tokenHash, family, expiresAt)
   }
 
   async refresh(token: string): Promise<AuthTokens> {
@@ -256,7 +256,7 @@ export class AuthService {
       authMethod: 'password',
     })
 
-    await this.storeRefreshToken(user.id, tokens.refreshToken)
+    await this.storeRefreshToken(user.id, tokens.refreshToken, user.tenantId ?? null)
 
     return tokens
   }
@@ -273,7 +273,7 @@ export class AuthService {
 
     // Super Admin profile — no tenant context
     if (user.globalRole === 'super_admin') {
-      return { ...user, tenantName: null, tenantPlan: null, tenantCurrency: null, onboardingCompleted: false, featureFlags: [] }
+      return { ...user, isSuperAdmin: true, tenantName: null, tenantPlan: null, tenantCurrency: null, onboardingCompleted: true, featureFlags: [] }
     }
 
     const tenant = user.tenantId ? await this.tenantRepo.findById(user.tenantId, {

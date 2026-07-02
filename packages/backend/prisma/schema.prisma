@@ -126,9 +126,15 @@ model Tenant {
   journalEntries    JournalEntry[]
   accountingPeriods AccountingPeriod[]
   payments          Payment[]
+  stockMovements    StockMovement[]
+  shifts            Shift[]
+  commissions       Commission[]
+  refreshTokens     RefreshToken[]
   auditLogs         AuditLog[]
   rolePermissions   RolePermission[]
   userPermissions   UserPermission[]
+  invoices          Invoice[]
+  calendarEvents    CalendarEvent[]
 
   @@index([slug])
   @@map("tenants")
@@ -156,18 +162,12 @@ model User {
   employee     Employee?        @relation(fields: [employeeId], references: [id])
   orders       Order[]          @relation("UserOrders")
   permissions  UserPermission[]
+  systemLogs   SystemLog[]
 
-  @@unique([email])
+  @@unique([tenantId, email])
   @@index([tenantId])
   @@index([globalRole])
   @@map("users")
-}
-
-model Role {
-  name        EmployeeRole @id
-  description String?      @db.Text
-
-  @@map("roles")
 }
 
 model Permission {
@@ -493,6 +493,7 @@ model RecipeIngredient {
 
 model StockMovement {
   id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @db.Uuid
   ingredientId String   @db.Uuid
   type         String   @db.VarChar(20) // in, out, adjustment, waste
   quantity     Decimal  @db.Decimal(10, 3)
@@ -500,8 +501,10 @@ model StockMovement {
   notes        String?  @db.Text
   createdAt    DateTime @default(now())
 
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, createdAt])
   @@index([ingredientId, createdAt])
   @@index([type, createdAt])
   @@map("stock_movements")
@@ -537,6 +540,7 @@ model Employee {
 
 model Shift {
   id         String      @id @default(uuid()) @db.Uuid
+  tenantId   String      @db.Uuid
   employeeId String      @db.Uuid
   date       DateTime    @db.Date
   startTime  DateTime
@@ -546,8 +550,10 @@ model Shift {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, date])
   @@index([employeeId, date])
   @@index([date, status])
   @@map("shifts")
@@ -555,6 +561,7 @@ model Shift {
 
 model Commission {
   id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @db.Uuid
   employeeId String   @db.Uuid
   orderId    String?  @db.Uuid
   amount     Decimal  @db.Decimal(10, 2)
@@ -562,8 +569,10 @@ model Commission {
   status     String   @default("pending") @db.VarChar(20)
   createdAt  DateTime @default(now())
 
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   employee Employee @relation(fields: [employeeId], references: [id])
 
+  @@index([tenantId, employeeId])
   @@index([employeeId])
   @@map("commissions")
 }
@@ -861,14 +870,109 @@ model OutboxMessage {
 model RefreshToken {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @db.Uuid
+  tenantId  String?  @db.Uuid
   tokenHash String   @db.VarChar(255)
   family    String   @db.VarChar(100) // token rotation family
   expiresAt DateTime
   revokedAt DateTime?
   createdAt DateTime @default(now())
 
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tokenHash])
   @@index([userId])
+  @@index([tenantId])
   @@index([family])
   @@map("refresh_tokens")
+}
+
+// ─── B2B INVOICES (Super Admin Billing) ────────────────────────────────────
+
+enum InvoiceStatus {
+  pending
+  paid
+  failed
+  cancelled
+}
+
+model Invoice {
+  id            String        @id @default(uuid()) @db.Uuid
+  tenantId      String        @db.Uuid
+  description   String        @db.VarChar(500)
+  amount        Decimal       @db.Decimal(12, 2)
+  currency      String        @default("MXN") @db.VarChar(3)
+  status        InvoiceStatus @default(pending)
+  paymentMethod String?       @db.VarChar(50)
+  dueDate       DateTime
+  paidAt        DateTime?
+  metadata      Json          @default("{}")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([tenantId, dueDate])
+  @@index([status, dueDate])
+  @@map("invoices")
+}
+
+// ─── SYSTEM AUDIT LOG (Immutable Super Admin Trail) ────────────────────────
+
+enum LogSeverity {
+  info
+  success
+  warning
+  critical
+}
+
+model SystemLog {
+  id         String       @id @default(uuid()) @db.Uuid
+  adminId    String       @db.Uuid
+  action     String       @db.VarChar(100)
+  severity   LogSeverity  @default(info)
+  message    String       @db.Text
+  metadata   Json         @default("{}")
+  ipAddress  String?      @db.VarChar(45)
+  createdAt  DateTime     @default(now())
+
+  admin User @relation(fields: [adminId], references: [id])
+
+  @@index([adminId, createdAt])
+  @@index([severity, createdAt])
+  @@index([action])
+  @@map("system_logs")
+}
+
+// ─── CALENDAR EVENTS (Operational Calendar) ────────────────────────────────
+
+enum EventCategory {
+  maintenance
+  billing
+  security
+  meeting
+  other
+}
+
+model CalendarEvent {
+  id          String        @id @default(uuid()) @db.Uuid
+  tenantId    String?       @db.Uuid
+  title       String        @db.VarChar(255)
+  description String?       @db.Text
+  category    EventCategory @default(other)
+  eventDate   DateTime
+  startTime   String?       @db.VarChar(5)
+  endTime     String?       @db.VarChar(5)
+  color       String?       @default("#f59e0b") @db.VarChar(7)
+  allDay      Boolean       @default(false)
+  createdBy   String        @db.Uuid
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, eventDate])
+  @@index([eventDate])
+  @@index([category])
+  @@map("calendar_events")
 }

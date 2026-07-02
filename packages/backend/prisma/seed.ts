@@ -269,7 +269,7 @@ async function main() {
   const shiftEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 0)
   for (const emp of employees) {
     await prisma.shift.create({
-      data: { employeeId: emp.id, date: today, startTime: shiftStart, endTime: shiftEnd, status: 'checked_in' },
+      data: { employeeId: emp.id, tenantId: tenant.id, date: today, startTime: shiftStart, endTime: shiftEnd, status: 'checked_in' },
     })
   }
 
@@ -511,14 +511,14 @@ async function main() {
   // ─── Stock movements for some ingredients ─────────────────
   await prisma.stockMovement.createMany({
     data: [
-      { ingredientId: ings.wagyu.id, type: 'in', quantity: 20, reference: 'ORD-001', notes: 'Compra semanal' },
-      { ingredientId: ings.wagyu.id, type: 'out', quantity: 3, reference: 'COGS-001', notes: 'Usado en pedidos' },
-      { ingredientId: ings.salmon.id, type: 'in', quantity: 15, reference: 'ORD-002', notes: 'Compra semanal' },
-      { ingredientId: ings.tomate.id, type: 'in', quantity: 10, reference: 'ORD-003', notes: 'Verdura fresca' },
-      { ingredientId: ings.tomate.id, type: 'out', quantity: 2.5, reference: 'COGS-002', notes: 'Consumo cocina' },
-      { ingredientId: ings.limon.id, type: 'in', quantity: 10, reference: 'ORD-004', notes: 'Cítricos' },
-      { ingredientId: ings.huevo.id, type: 'in', quantity: 60, reference: 'ORD-005', notes: 'Huevo fresco' },
-      { ingredientId: ings.huevo.id, type: 'out', quantity: 12, reference: 'COGS-003', notes: 'Usado en Carbonara' },
+      { ingredientId: ings.wagyu.id, tenantId: tenant.id, type: 'in', quantity: 20, reference: 'ORD-001', notes: 'Compra semanal' },
+      { ingredientId: ings.wagyu.id, tenantId: tenant.id, type: 'out', quantity: 3, reference: 'COGS-001', notes: 'Usado en pedidos' },
+      { ingredientId: ings.salmon.id, tenantId: tenant.id, type: 'in', quantity: 15, reference: 'ORD-002', notes: 'Compra semanal' },
+      { ingredientId: ings.tomate.id, tenantId: tenant.id, type: 'in', quantity: 10, reference: 'ORD-003', notes: 'Verdura fresca' },
+      { ingredientId: ings.tomate.id, tenantId: tenant.id, type: 'out', quantity: 2.5, reference: 'COGS-002', notes: 'Consumo cocina' },
+      { ingredientId: ings.limon.id, tenantId: tenant.id, type: 'in', quantity: 10, reference: 'ORD-004', notes: 'Cítricos' },
+      { ingredientId: ings.huevo.id, tenantId: tenant.id, type: 'in', quantity: 60, reference: 'ORD-005', notes: 'Huevo fresco' },
+      { ingredientId: ings.huevo.id, tenantId: tenant.id, type: 'out', quantity: 12, reference: 'COGS-003', notes: 'Usado en Carbonara' },
     ],
   })
 

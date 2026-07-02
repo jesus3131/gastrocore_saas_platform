@@ -74,7 +74,7 @@ describe('CreateOrderUseCase', () => {
     expect(mockTableRepo.updateStatus).toHaveBeenCalledWith('table-1', 'occupied')
     expect(mockMenuRepo.findRecipeByMenuItem).toHaveBeenCalledWith('item-1')
     expect(mockInventoryRepo.deductStock).toHaveBeenCalledWith('ing-1', 'tenant-1', 0.4)
-    expect(mockInventoryRepo.createMovement).toHaveBeenCalledWith('ing-1', 'out', 0.4, 'order-item-1')
+    expect(mockInventoryRepo.createMovement).toHaveBeenCalledWith('ing-1', 'tenant-1', 'out', 0.4, 'order-item-1')
     expect(mockEventBus.publish).toHaveBeenCalledOnce()
     expect(mockEventBus.publish.mock.calls[0][0].eventName).toBe('order.created')
     expect(result).toEqual(mockOrder)

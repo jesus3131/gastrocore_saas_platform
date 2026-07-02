@@ -7,8 +7,10 @@ function getClient(): any {
 }
 
 export class PrismaUserRepository implements UserRepository {
-  async findByEmail(email: string) {
-    return getClient().user.findFirst({ where: { email } })
+  async findByEmail(email: string, tenantId?: string) {
+    const where: any = { email }
+    if (tenantId) where.tenantId = tenantId
+    return getClient().user.findFirst({ where })
   }
 
   async findById(id: string, select?: any) {

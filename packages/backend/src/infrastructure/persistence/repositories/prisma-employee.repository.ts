@@ -52,6 +52,7 @@ export class PrismaEmployeeRepository implements EmployeeRepository {
     const client = getClient()
     return client.shift.create({
       data: {
+        tenantId: data.tenantId,
         employeeId: data.employeeId,
         date: new Date(data.date),
         startTime: new Date(data.startTime),

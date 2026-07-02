@@ -101,6 +101,7 @@ export class CreateOrderUseCase {
         await this.inventoryRepo.deductStock(ingredient.ingredientId, tenantId, qtyToDeduct)
         await this.inventoryRepo.createMovement(
           ingredient.ingredientId,
+          tenantId,
           'out',
           qtyToDeduct,
           `order-${item.menuItemId}`,

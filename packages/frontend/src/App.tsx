@@ -39,11 +39,15 @@ const PageLoader = () => (
 )
 
 function SessionGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, tokens, logout, setAuth } = useAuthStore()
+  const { isAuthenticated, tokens, user, logout, setAuth } = useAuthStore()
   const [checking, setChecking] = useState(isAuthenticated)
 
   useEffect(() => {
     if (!isAuthenticated || !tokens?.accessToken) {
+      setChecking(false)
+      return
+    }
+    if ((user as any)?.isSuperAdmin || user?.globalRole === 'super_admin') {
       setChecking(false)
       return
     }
@@ -70,8 +74,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
-  const needsOnboarding = user && !(user as any).onboardingCompleted
-  if (needsOnboarding) return <Navigate to="/onboarding" replace />
+  if ((user as any)?.isSuperAdmin || user?.globalRole === 'super_admin') return <>{children}</>
+  if (user && (user as any).onboardingCompleted === false) return <Navigate to="/onboarding" replace />
+  return <>{children}</>
+}
+
+function SuperAdminBlock({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthStore()
+  if ((user as any)?.isSuperAdmin || user?.globalRole === 'super_admin') return <Navigate to="/super-admin" replace />
   return <>{children}</>
 }
 
@@ -95,7 +105,9 @@ export function App() {
       <Route path="/onboarding" element={
         <SessionGuard>
           <ProtectedRoute>
-            <Suspense fallback={<PageLoader />}><OnboardingPage /></Suspense>
+            <SuperAdminBlock>
+              <Suspense fallback={<PageLoader />}><OnboardingPage /></Suspense>
+            </SuperAdminBlock>
           </ProtectedRoute>
         </SessionGuard>
       } />

@@ -168,6 +168,7 @@ export interface RecipeIngredient {
 
 export interface StockMovement {
   id: string
+  tenantId: string
   ingredientId: string
   type: string
   quantity: number
@@ -194,6 +195,7 @@ export interface HrEmployee {
 
 export interface Shift {
   id: string
+  tenantId: string
   employeeId: string
   date: Date
   startTime: Date
@@ -205,6 +207,7 @@ export interface Shift {
 
 export interface Commission {
   id: string
+  tenantId: string
   employeeId: string
   orderId?: string | null
   amount: number
@@ -281,6 +284,7 @@ export interface Tenant {
 export interface RefreshTokenEntity {
   id: string
   userId: string
+  tenantId?: string | null
   tokenHash: string
   family: string
   expiresAt: Date

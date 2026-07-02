@@ -10,7 +10,7 @@ export interface IngredientStock {
 
 export interface InventoryRepository {
   deductStock(ingredientId: string, tenantId: string, quantity: number): Promise<void>
-  createMovement(ingredientId: string, type: string, quantity: number, reference: string): Promise<void>
+  createMovement(ingredientId: string, tenantId: string, type: string, quantity: number, reference: string): Promise<void>
   findById(ingredientId: string): Promise<IngredientStock | null>
 
   findManyIngredients(tenantId: string, opts?: PaginationOpts): Promise<InventoryIngredient[]>
@@ -22,7 +22,7 @@ export interface InventoryRepository {
   findManyRecipes(tenantId: string, opts?: PaginationOpts): Promise<InventoryRecipe[]>
   createRecipe(data: any): Promise<InventoryRecipe>
   updateRecipe(id: string, data: any): Promise<InventoryRecipe>
-  findRecipeByItem(menuItemId: string): Promise<InventoryRecipe | null>
+  findRecipeByItem(menuItemId: string, tenantId?: string): Promise<InventoryRecipe | null>
 
   findManyStockMovements(tenantId: string, opts?: PaginationOpts): Promise<StockMovement[]>
 }

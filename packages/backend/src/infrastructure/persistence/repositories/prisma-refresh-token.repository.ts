@@ -7,9 +7,9 @@ function getClient(): any {
 }
 
 export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
-  async create(userId: string, tokenHash: string, family: string, expiresAt: Date): Promise<void> {
+  async create(userId: string, tenantId: string | null, tokenHash: string, family: string, expiresAt: Date): Promise<void> {
     await getClient().refreshToken.create({
-      data: { userId, tokenHash, family, expiresAt },
+      data: { userId, tenantId, tokenHash, family, expiresAt },
     })
   }
 

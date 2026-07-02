@@ -66,6 +66,7 @@ services:
     ports:
       - "5173:5173"
     environment:
+      VITE_API_PROXY_TARGET: http://gastrocore-api:4000
       VITE_API_URL: http://localhost:4000
     volumes:
       - ../../packages/frontend/src:/app/packages/frontend/src

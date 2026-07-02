@@ -15,10 +15,10 @@ export class PrismaInventoryRepository implements InventoryRepository {
     })
   }
 
-  async createMovement(ingredientId: string, type: string, quantity: number, reference: string): Promise<void> {
+  async createMovement(ingredientId: string, tenantId: string, type: string, quantity: number, reference: string): Promise<void> {
     const client = getClient()
     await client.stockMovement.create({
-      data: { ingredientId, type, quantity, reference },
+      data: { ingredientId, tenantId, type, quantity, reference },
     })
   }
 
@@ -117,10 +117,12 @@ export class PrismaInventoryRepository implements InventoryRepository {
     })
   }
 
-  async findRecipeByItem(menuItemId: string): Promise<any | null> {
+  async findRecipeByItem(menuItemId: string, tenantId?: string): Promise<any | null> {
     const client = getClient()
+    const where: any = { menuItemId }
+    if (tenantId) where.menuItem = { tenantId }
     return client.recipe.findFirst({
-      where: { menuItemId },
+      where,
       include: { ingredients: { include: { ingredient: true } } },
     })
   }
