@@ -1,0 +1,148 @@
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import { injectable, inject } from 'tsyringe'
+import type { UserRepository } from '../../core/ports/repositories/user.repository.js'
+import type { EmployeeRepository } from '../../core/ports/repositories/employee.repository.js'
+import type { OrderRepository } from '../../core/ports/repositories/order.repository.js'
+import type { MenuRepository } from '../../core/ports/repositories/menu.repository.js'
+import type { TableRepository } from '../../core/ports/repositories/table.repository.js'
+import type { PaymentRepository } from '../../core/ports/repositories/payment.repository.js'
+import type { CreateOrderInput } from '../../core/use-cases/pos/create-order.use-case.js'
+import { CreateOrderUseCase } from '../../core/use-cases/pos/create-order.use-case.js'
+import { AppError } from '../../common/filters/error-handler.js'
+import { env } from '../../config/env.js'
+
+@injectable()
+export class WaiterService {
+  constructor(
+    @inject(CreateOrderUseCase) private readonly createOrderUseCase: CreateOrderUseCase,
+    @inject('UserRepository') private readonly userRepo: UserRepository,
+    @inject('EmployeeRepository') private readonly employeeRepo: EmployeeRepository,
+    @inject('OrderRepository') private readonly orderRepo: OrderRepository,
+    @inject('MenuRepository') private readonly menuRepo: MenuRepository,
+    @inject('TableRepository') private readonly tableRepo: TableRepository,
+    @inject('PaymentRepository') private readonly paymentRepo: PaymentRepository,
+  ) {}
+
+  async login(email: string, password: string, tenantId?: string) {
+    const user = await this.userRepo.findByEmail(email, tenantId)
+    if (!user || !user.isActive) {
+      throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password')
+    }
+    if (!user.tenantId) {
+      throw new AppError(401, 'INVALID_CREDENTIALS', 'Use super admin login endpoint')
+    }
+    if (user.tenantRole !== 'waiter') {
+      throw new AppError(403, 'FORBIDDEN', 'Access restricted to waiters only')
+    }
+
+    const valid = await bcrypt.compare(password, user.passwordHash)
+    if (!valid) {
+      throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password')
+    }
+
+    let branchId: string | undefined
+    if (user.employeeId) {
+      const employee = await this.employeeRepo.findById(user.tenantId, user.employeeId)
+      if (employee) {
+        branchId = employee.branchId || undefined
+      }
+    }
+
+    const token = jwt.sign(
+      {
+        sub: user.id,
+        tenantId: user.tenantId,
+        branchId,
+        globalRole: user.globalRole,
+        tenantRole: 'waiter',
+        email: user.email,
+        authMethod: 'password',
+      },
+      env.JWT_SECRET,
+      { expiresIn: env.JWT_EXPIRATION } as jwt.SignOptions,
+    )
+
+    const { passwordHash, refreshToken, ...safeUser } = user
+    return {
+      user: { ...safeUser, branchId },
+      token,
+    }
+  }
+
+  async getMenu(tenantId: string) {
+    return this.menuRepo.getMenu(tenantId)
+  }
+
+  async getTables(tenantId: string, branchId?: string) {
+    const branches = await this.tableRepo.findAllWithBranches(tenantId)
+    const filtered = branchId ? branches.filter((b: any) => b.id === branchId) : branches
+    const tableIds = filtered.flatMap((b: any) => (b.areas ?? []).flatMap((a: any) => (a.tables ?? []).map((t: any) => t.id)))
+    const activeOrders = tableIds.length > 0 ? await this.orderRepo.findActiveByTables(tableIds) : []
+    const orderMap = new Map(activeOrders.map((o: any) => [o.tableId, { id: o.id, total: o.total, status: o.status }]))
+    for (const branch of filtered) {
+      for (const area of branch.areas ?? []) {
+        for (const table of area.tables ?? []) {
+          ;(table as any).activeOrder = orderMap.get(table.id) || null
+        }
+      }
+    }
+    return filtered
+  }
+
+  async createOrder(tenantId: string, data: any, userId: string) {
+    const input: CreateOrderInput = {
+      tenantId,
+      branchId: data.branchId,
+      tableId: data.tableId,
+      userId,
+      type: data.type || 'dine_in',
+      subtotal: data.subtotal,
+      tax: data.tax || 0,
+      discount: data.discount || 0,
+      total: data.total,
+      notes: data.notes,
+      items: data.items,
+    }
+    return this.createOrderUseCase.execute(input)
+  }
+
+  async requestBill(tenantId: string, tableId: string) {
+    const table = await this.tableRepo.findById(tenantId, tableId)
+    if (!table) throw new AppError(404, 'TABLE_NOT_FOUND', 'Table not found')
+    const active = await this.orderRepo.findActiveByTable(tenantId, tableId)
+    if (!active) throw new AppError(404, 'NO_ACTIVE_ORDER', 'No active order for this table')
+    await this.tableRepo.updateStatus(tenantId, tableId, 'bill_requested')
+    return active
+  }
+
+  async processPayment(tenantId: string, tableId: string, data: { method: string; tip: number; paidAmount: number }) {
+    const table = await this.tableRepo.findById(tenantId, tableId)
+    if (!table) throw new AppError(404, 'TABLE_NOT_FOUND', 'Table not found')
+    const active = await this.orderRepo.findActiveByTable(tenantId, tableId)
+    if (!active) throw new AppError(404, 'NO_ACTIVE_ORDER', 'No active order for this table')
+    const order = await this.orderRepo.findById(tenantId, active.id)
+    if (!order) throw new AppError(404, 'ORDER_NOT_FOUND', 'Order not found')
+
+    const payment = await this.paymentRepo.create({
+      tenantId,
+      orderId: order.id,
+      method: data.method,
+      amount: data.paidAmount,
+      status: 'completed',
+      metadata: { tip: data.tip },
+    })
+
+    await this.orderRepo.updatePaymentMethod(order.id, data.method)
+    await this.orderRepo.updateStatus(order.id, 'paid')
+    await this.tableRepo.updateStatus(tenantId, tableId, 'available')
+
+    return {
+      payment,
+      table: table.label,
+      total: order.total,
+      tip: data.tip,
+      paid: data.paidAmount,
+    }
+  }
+}

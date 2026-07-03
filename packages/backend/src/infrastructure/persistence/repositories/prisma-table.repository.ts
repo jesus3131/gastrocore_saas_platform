@@ -7,14 +7,14 @@ function getClient(): any {
 }
 
 export class PrismaTableRepository implements TableRepository {
-  async updateStatus(id: string, status: string): Promise<any> {
+  async updateStatus(tenantId: string, id: string, status: string): Promise<any> {
     const client = getClient()
-    return client.table.update({ where: { id }, data: { status } })
+    return client.table.update({ where: { id, branch: { tenantId } }, data: { status } })
   }
 
-  async findById(id: string): Promise<any> {
+  async findById(tenantId: string, id: string): Promise<any> {
     const client = getClient()
-    return client.table.findUnique({ where: { id } })
+    return client.table.findFirst({ where: { id, branch: { tenantId } } })
   }
 
   async findBranchByTable(tableId: string): Promise<any> {

@@ -566,6 +566,31 @@ export class SuperAdminService {
       _count: true,
     })
 
+    // MRR trend (monthly revenue from invoices)
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5)
+    sixMonthsAgo.setDate(1)
+
+    const invoices = await prisma.invoice.findMany({
+      where: { status: 'paid', paidAt: { gte: sixMonthsAgo } },
+      select: { amount: true, paidAt: true },
+    })
+
+    const mrrTrend: { month: string; mrr: number; transactions: number }[] = []
+    for (let i = 0; i < 6; i++) {
+      const d = new Date()
+      d.setMonth(d.getMonth() - (5 - i))
+      const month = d.toLocaleString('es-MX', { month: 'short', year: 'numeric' })
+      const monthStart = new Date(d.getFullYear(), d.getMonth(), 1)
+      const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1)
+      const monthInvoices = invoices.filter((inv) => {
+        const paid = new Date(inv.paidAt!)
+        return paid >= monthStart && paid < monthEnd
+      })
+      const mrr = monthInvoices.reduce((s, inv) => s + Number(inv.amount), 0)
+      mrrTrend.push({ month, mrr, transactions: monthInvoices.length })
+    }
+
     return {
       totalTenants,
       activeTenants,
@@ -577,6 +602,7 @@ export class SuperAdminService {
         plan: p.subscriptionPlan,
         count: p._count,
       })),
+      mrrTrend,
       recentActivity: recentActivity.map((a: any) => ({
         id: a.id,
         adminName: a.admin?.name || 'System',
@@ -655,6 +681,41 @@ export class SuperAdminService {
       audience: data.audience || 'all',
       createdAt: new Date().toISOString(),
     }
+  }
+
+  // ─── FEATURE FLAGS ──────────────────────────────────────────────
+
+  async getFeatureFlags() {
+    const { prisma } = await import('../../config/database/prisma.js')
+    const flags = await prisma.systemFeatureFlag.findMany({
+      orderBy: { feature: 'asc' },
+    })
+    return flags.map((f: any) => ({
+      id: f.id,
+      feature: f.feature,
+      enabled: f.enabled,
+      description: f.description,
+      updatedAt: f.updatedAt,
+    }))
+  }
+
+  async updateFeatureFlag(data: { feature: string; enabled: boolean; description?: string }) {
+    const { prisma } = await import('../../config/database/prisma.js')
+    const flag = await prisma.systemFeatureFlag.upsert({
+      where: { feature: data.feature },
+      update: { enabled: data.enabled, description: data.description ?? undefined },
+      create: { feature: data.feature, enabled: data.enabled, description: data.description ?? null },
+    })
+    return { id: flag.id, feature: flag.feature, enabled: flag.enabled }
+  }
+
+  async toggleAllFeatureFlags(enabled: boolean) {
+    const { prisma } = await import('../../config/database/prisma.js')
+    const result = await prisma.systemFeatureFlag.updateMany({
+      where: {},
+      data: { enabled },
+    })
+    return { enabled, count: result.count }
   }
 
   // ─── SYSTEM LOGGING ────────────────────────────────────────────

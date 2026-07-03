@@ -1,7 +1,15 @@
 import 'reflect-metadata'
-import { describe, it, expect, vi } from 'vitest'
-import { requirePermission, requireRole, requireFullAuth } from './permission.guard.js'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { requirePermission, requireRole, requireFullAuth, clearPermissionCache } from './permission.guard.js'
 import { superAdminGuard } from '../../modules/super-admin/super-admin.guard.js'
+
+vi.mock('../../config/database/prisma.js', () => ({
+  prisma: {
+    rolePermission: {
+      findMany: vi.fn().mockRejectedValue(new Error('DB not available in unit test')),
+    },
+  },
+}))
 
 function mockReq(user?: any) {
   return { user } as any
@@ -12,49 +20,62 @@ function mockRes() {
 }
 
 describe('requirePermission', () => {
-  it('passes when user has required permissions', () => {
+  beforeEach(() => {
+    clearPermissionCache()
+  })
+
+  it('passes when user has required permissions (fallback to static)', async () => {
     const req = mockReq({ tenantRole: 'manager' })
     const next = vi.fn()
 
-    requirePermission('pos:read', 'pos:write')(req, mockRes(), next)
+    await requirePermission('pos:read', 'pos:write')(req, mockRes(), next)
 
     expect(next).toHaveBeenCalledWith()
   })
 
-  it('fails with 403 when user lacks required permissions', () => {
+  it('fails with 403 when user lacks required permissions', async () => {
     const req = mockReq({ tenantRole: 'waiter' })
     const next = vi.fn()
 
-    requirePermission('inventory:write')(req, mockRes(), next)
+    await requirePermission('inventory:write')(req, mockRes(), next)
 
     expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403, code: 'FORBIDDEN' }))
   })
 
-  it('fails with 401 when no user', () => {
+  it('fails with 401 when no user', async () => {
     const req = mockReq(null)
     const next = vi.fn()
 
-    requirePermission('pos:read')(req, mockRes(), next)
+    await requirePermission('pos:read')(req, mockRes(), next)
 
     expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401, code: 'UNAUTHORIZED' }))
   })
 
-  it('allows any permission for admin role', () => {
+  it('allows any permission for admin role', async () => {
     const req = mockReq({ tenantRole: 'admin' })
     const next = vi.fn()
 
-    requirePermission('pos:read')(req, mockRes(), next)
+    await requirePermission('pos:read')(req, mockRes(), next)
 
     expect(next).toHaveBeenCalledWith()
   })
 
-  it('allows any permission for super_admin role', () => {
+  it('allows super permission for super_admin role', async () => {
     const req = mockReq({ globalRole: 'super_admin' })
     const next = vi.fn()
 
-    requirePermission('super:manage')(req, mockRes(), next)
+    await requirePermission('super:manage')(req, mockRes(), next)
 
     expect(next).toHaveBeenCalledWith()
+  })
+
+  it('rejects non-super permission for super_admin role', async () => {
+    const req = mockReq({ globalRole: 'super_admin' })
+    const next = vi.fn()
+
+    await requirePermission('pos:read')(req, mockRes(), next)
+
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403, code: 'FORBIDDEN' }))
   })
 })
 
@@ -121,25 +142,34 @@ describe('superAdminGuard', () => {
 
     superAdminGuard(req, mockRes(), next)
 
-    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }))
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403, code: 'FORBIDDEN' }))
   })
 })
 
 describe('requireRole', () => {
   it('passes when user has required role', () => {
-    const req = mockReq({ tenantRole: 'admin' })
+    const req = mockReq({ tenantRole: 'waiter' })
     const next = vi.fn()
 
-    requireRole('admin', 'manager')(req, mockRes(), next)
+    requireRole('waiter')(req, mockRes(), next)
 
     expect(next).toHaveBeenCalledWith()
   })
 
-  it('fails with 403 when user role not in allowed list', () => {
-    const req = mockReq({ tenantRole: 'waiter' })
+  it('passes with globalRole when tenantRole absent', () => {
+    const req = mockReq({ globalRole: 'super_admin' })
     const next = vi.fn()
 
-    requireRole('admin', 'manager')(req, mockRes(), next)
+    requireRole('super_admin')(req, mockRes(), next)
+
+    expect(next).toHaveBeenCalledWith()
+  })
+
+  it('fails with 403 when role does not match', () => {
+    const req = mockReq({ tenantRole: 'cashier' })
+    const next = vi.fn()
+
+    requireRole('waiter', 'admin')(req, mockRes(), next)
 
     expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403, code: 'FORBIDDEN' }))
   })

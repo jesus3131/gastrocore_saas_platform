@@ -8,15 +8,18 @@ function getClient(): any {
 
 export class PrismaEmployeeRepository implements EmployeeRepository {
   async create(tenantId: string, data: any): Promise<any> {
-    return prisma.employee.create({ data: { ...data, tenantId } })
+    const client = getClient()
+    return client.employee.create({ data: { ...data, tenantId } })
   }
 
   async findById(tenantId: string, id: string): Promise<any> {
-    return prisma.employee.findFirst({ where: { tenantId, id } })
+    const client = getClient()
+    return client.employee.findFirst({ where: { tenantId, id } })
   }
 
   async findMany(tenantId: string, opts?: { limit?: number; offset?: number }): Promise<any[]> {
-    return prisma.employee.findMany({
+    const client = getClient()
+    return client.employee.findMany({
       where: { tenantId },
       include: { shifts: { orderBy: { date: 'desc' }, take: 5 } },
       orderBy: { name: 'asc' },
@@ -26,15 +29,17 @@ export class PrismaEmployeeRepository implements EmployeeRepository {
   }
 
   async update(tenantId: string, id: string, data: any): Promise<any> {
-    const employee = await prisma.employee.findFirst({ where: { id, tenantId } })
+    const client = getClient()
+    const employee = await client.employee.findFirst({ where: { id, tenantId } })
     if (!employee) {
       throw new Error('Employee not found or tenant mismatch')
     }
-    return prisma.employee.update({ where: { id }, data })
+    return client.employee.update({ where: { id }, data })
   }
 
   async countActive(tenantId: string): Promise<number> {
-    return prisma.employee.count({ where: { tenantId, isActive: true } })
+    const client = getClient()
+    return client.employee.count({ where: { tenantId, isActive: true } })
   }
 
   async findManyShifts(tenantId: string, opts?: { limit?: number; offset?: number }): Promise<any[]> {

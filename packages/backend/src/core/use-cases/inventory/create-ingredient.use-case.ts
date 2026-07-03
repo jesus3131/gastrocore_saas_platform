@@ -8,7 +8,6 @@ export class CreateIngredientUseCase {
   ) {}
 
   async execute(tenantId: string, data: any) {
-    const { prisma } = await import('../../../config/database/prisma.js')
-    return prisma.ingredient.create({ data: { ...data, tenantId } })
+    return this.inventoryRepo.createIngredient(tenantId, data)
   }
 }

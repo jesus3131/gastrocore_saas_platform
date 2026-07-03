@@ -57,3 +57,9 @@ export const createCalendarEventSchema = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   allDay: z.boolean().optional(),
 })
+
+export const updateFeatureFlagSchema = z.object({
+  feature: z.string().min(1).max(100),
+  enabled: z.boolean(),
+  description: z.string().optional(),
+})

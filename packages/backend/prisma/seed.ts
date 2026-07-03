@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, EmployeeRole } from '@prisma/client'
 import bcrypt from 'bcrypt'
 
 const prisma = new PrismaClient()
@@ -8,6 +8,11 @@ async function main() {
 
   // Clean existing data
   await prisma.$transaction([
+    prisma.systemFeatureFlag.deleteMany(),
+    prisma.userPermission.deleteMany(),
+    prisma.rolePermission.deleteMany(),
+    prisma.permission.deleteMany(),
+    prisma.invoice.deleteMany(),
     prisma.journalLine.deleteMany(),
     prisma.journalEntry.deleteMany(),
     prisma.accountingPeriod.deleteMany(),
@@ -111,6 +116,93 @@ async function main() {
     })
   }
 
+  // Enterprise plan features for RestoPro Platform
+  const enterpriseFeatures = ['kds', 'table_management', 'split_bills', 'online_ordering', 'inventory_auto', 'hr_scheduling', 'electronic_invoice', 'delivery_integration', 'crm_full', 'bcg_matrix', 'loyalty_program', 'multi_branch', 'pos', 'analytics', 'accounting']
+  for (const feature of enterpriseFeatures) {
+    await prisma.tenantFeatureFlag.create({
+      data: { tenantId: superTenant.id, feature, enabled: true },
+    })
+  }
+
+  // ─── Invoices for MRR ─────────────────────────────────────
+  const todayForInvoices = new Date()
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(todayForInvoices.getFullYear(), todayForInvoices.getMonth() - i, 15 + (i % 2 === 0 ? 0 : 1))
+    const paidAt = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 14, 30)
+
+    await prisma.invoice.create({
+      data: {
+        tenantId: tenant.id,
+        description: `Factura mensual ${d.toLocaleString('es-MX', { month: 'long', year: 'numeric' })}`,
+        amount: [6150.00, 5890.00, 7200.00, 6680.00, 7010.00, 5940.00][i],
+        currency: 'MXN',
+        status: 'paid',
+        paymentMethod: 'card',
+        dueDate: new Date(d.getFullYear(), d.getMonth(), 10),
+        paidAt,
+      },
+    })
+
+    // Also create an invoice for the super tenant (enterprise)
+    await prisma.invoice.create({
+      data: {
+        tenantId: superTenant.id,
+        description: `Factura enterprise ${d.toLocaleString('es-MX', { month: 'long', year: 'numeric' })}`,
+        amount: [349.00, 349.00, 349.00, 349.00, 349.00, 349.00][i],
+        currency: 'COP',
+        status: 'paid',
+        paymentMethod: 'transfer',
+        dueDate: new Date(d.getFullYear(), d.getMonth(), 5),
+        paidAt,
+      },
+    })
+  }
+
+  // ─── Permissions & Role Permissions ────────────────────────
+  const allPermissions = [
+    'super:manage', 'super:companies', 'super:subscriptions', 'super:metrics',
+    'pos:read', 'pos:write', 'pos:delete',
+    'menu:read', 'menu:write', 'menu:delete',
+    'inventory:read', 'inventory:write', 'inventory:delete',
+    'hr:read', 'hr:write', 'hr:delete',
+    'analytics:read',
+    'crm:read', 'crm:write',
+    'accounting:read', 'accounting:write',
+    'tenants:read', 'tenants:write',
+    'reports:read', 'delivery:read', 'kds:read',
+  ]
+
+  const permissionMap: Record<string, string> = {}
+  for (const name of allPermissions) {
+    const p = await prisma.permission.create({
+      data: { name, description: `Permission: ${name}` },
+    })
+    permissionMap[name] = p.id
+  }
+
+  const rolePermissionMap: Record<EmployeeRole, string[]> = {
+    admin: ['pos:read', 'pos:write', 'pos:delete', 'menu:read', 'menu:write', 'menu:delete', 'inventory:read', 'inventory:write', 'inventory:delete', 'hr:read', 'hr:write', 'hr:delete', 'analytics:read', 'crm:read', 'crm:write', 'accounting:read', 'accounting:write', 'tenants:read', 'tenants:write', 'reports:read', 'delivery:read', 'kds:read'],
+    manager: ['pos:read', 'pos:write', 'inventory:read', 'inventory:write', 'hr:read', 'hr:write', 'analytics:read', 'crm:read', 'crm:write'],
+    chef: ['pos:read', 'inventory:read', 'inventory:write', 'kds:read'],
+    waiter: ['pos:read', 'pos:write', 'menu:read', 'crm:read'],
+    cashier: ['pos:read', 'pos:write'],
+    host: ['pos:read', 'crm:read'],
+    delivery: ['pos:read', 'delivery:read'],
+    accountant: ['analytics:read', 'accounting:read', 'accounting:write', 'crm:read', 'reports:read'],
+  }
+
+  for (const [role, perms] of Object.entries(rolePermissionMap)) {
+    for (const perm of perms) {
+      await prisma.rolePermission.create({
+        data: {
+          role: role as EmployeeRole,
+          permissionId: permissionMap[perm],
+          grantedBy: null,
+        },
+      })
+    }
+  }
+
   // ─── Integrations ─────────────────────────────────────────
   await prisma.integration.createMany({
     data: [
@@ -120,9 +212,12 @@ async function main() {
     ],
   })
 
-  // ─── Branch & Areas & Tables ──────────────────────────────
+  // ─── Branches & Areas & Tables ──────────────────────────────
   const branch = await prisma.branch.create({
     data: { tenantId: tenant.id, name: 'Sucursal Centro', address: 'Av. Reforma 123, CDMX' },
+  })
+  const branchNorte = await prisma.branch.create({
+    data: { tenantId: tenant.id, name: 'Sucursal Norte', address: 'Calle Olivo 456, CDMX' },
   })
 
   const area1 = await prisma.serviceArea.create({
@@ -154,6 +249,21 @@ async function main() {
   for (const t of tableDefs) {
     const table = await prisma.table.create({ data: { ...t, branchId: branch.id } })
     area1Tables.push(table)
+  }
+
+  // Tables for Sucursal Norte
+  const areaNorte1 = await prisma.serviceArea.create({
+    data: { branchId: branchNorte.id, name: 'Comedor Principal', type: 'dining', sortOrder: 1 },
+  })
+  const norteTableDefs = [
+    { areaId: areaNorte1.id, label: 'N1', capacity: 4 },
+    { areaId: areaNorte1.id, label: 'N2', capacity: 2 },
+    { areaId: areaNorte1.id, label: 'N3', capacity: 6 },
+    { areaId: areaNorte1.id, label: 'N4', capacity: 4 },
+    { areaId: areaNorte1.id, label: 'N5', capacity: 8 },
+  ]
+  for (const t of norteTableDefs) {
+    await prisma.table.create({ data: { ...t, branchId: branchNorte.id } })
   }
 
   // ─── Menu Categories ───────────────────────────────────────
@@ -234,18 +344,33 @@ async function main() {
   // ─── Employees ────────────────────────────────────────────
   const empDefs = [
     { name: 'Carlos Hernández', email: 'carlos@lacocina.com', role: 'chef' as const, pin: '1234', rate: 120 },
-    { name: 'María García', email: 'maria@lacocina.com', role: 'waiter' as const, pin: '2345', rate: 45, comm: 5 },
-    { name: 'José López', email: 'jose@lacocina.com', role: 'waiter' as const, pin: '3456', rate: 45, comm: 5 },
+    { name: 'María García', email: 'maria@lacocina.com', role: 'waiter' as const, pin: '2345', rate: 45, comm: 5, branchId: branch.id },
+    { name: 'José López', email: 'jose@lacocina.com', role: 'waiter' as const, pin: '3456', rate: 45, comm: 5, branchId: branch.id },
     { name: 'Ana Martínez', email: 'ana@lacocina.com', role: 'cashier' as const, pin: '4567', rate: 50 },
     { name: 'Sofía Torres', email: 'sofia@lacocina.com', role: 'manager' as const, rate: 80 },
-    { name: 'Luis Mendoza', email: 'luis@lacocina.com', role: 'waiter' as const, rate: 45, comm: 5 },
+    { name: 'Luis Mendoza', email: 'luis@lacocina.com', role: 'waiter' as const, rate: 45, comm: 5, branchId: branchNorte.id },
     { name: 'Diego Ramírez', email: 'diego@lacocina.com', role: 'host' as const, rate: 42 },
     { name: 'Valentina Ruiz', email: 'valentina@lacocina.com', role: 'delivery' as const, rate: 38 },
   ]
+  // Additional waiter for branchNorte with dedicated login
+  const waiterNorte = await prisma.employee.create({
+    data: { tenantId: tenant.id, name: 'Pedro Sánchez', email: 'mesero@lacocina.com', role: 'waiter', pinCode: '5678', hourlyRate: 45, commissionPct: 5, branchId: branchNorte.id },
+  })
+  const waiterNortePasswordHash = await bcrypt.hash('mesero123', 12)
+  await prisma.user.create({
+    data: {
+      tenantId: tenant.id,
+      employeeId: waiterNorte.id,
+      email: 'mesero@lacocina.com',
+      passwordHash: waiterNortePasswordHash,
+      name: 'Pedro Sánchez',
+      tenantRole: 'waiter',
+    },
+  })
   const employees: any[] = []
   for (const e of empDefs) {
     const emp = await prisma.employee.create({
-      data: { tenantId: tenant.id, name: e.name, email: e.email, role: e.role, pinCode: (e as any).pin || null, hourlyRate: e.rate, commissionPct: (e as any).comm || null },
+      data: { tenantId: tenant.id, name: e.name, email: e.email, role: e.role, pinCode: (e as any).pin || null, hourlyRate: e.rate, commissionPct: (e as any).comm || null, branchId: (e as any).branchId || null },
     })
     employees.push(emp)
 

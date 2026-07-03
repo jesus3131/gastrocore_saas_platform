@@ -181,6 +181,7 @@ export interface StockMovement {
 export interface HrEmployee {
   id: string
   tenantId: string
+  branchId?: string | null
   name: string
   email: string
   phone?: string | null

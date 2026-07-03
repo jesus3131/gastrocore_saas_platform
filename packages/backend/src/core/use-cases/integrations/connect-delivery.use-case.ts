@@ -1,5 +1,6 @@
 import { injectable, inject } from 'tsyringe'
 import type { IntegrationRepository } from '../../ports/repositories/integration.repository.js'
+import { encrypt } from '../../../common/utils/encryption.js'
 
 @injectable()
 export class ConnectDeliveryUseCase {
@@ -15,11 +16,13 @@ export class ConnectDeliveryUseCase {
     })
     if (existing) throw new AppError(409, 'INTEGRATION_EXISTS', `Already connected to ${data.provider}`)
 
+    const encryptedApiKey = encrypt(data.apiKey)
+
     return this.integrationRepo.create({
       tenantId,
       provider: data.provider,
       type: 'delivery',
-      config: { apiKey: data.apiKey, storeId: data.storeId, ...data.config },
+      config: { apiKey: encryptedApiKey, storeId: data.storeId, ...data.config },
     })
   }
 }

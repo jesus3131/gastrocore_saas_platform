@@ -15,9 +15,9 @@ export class UpdateFeaturesUseCase {
       throw new AppError(404, 'TENANT_NOT_FOUND', 'Tenant not found')
     }
 
-    for (const { feature, enabled } of features) {
-      await this.tenantRepo.upsertFeatureFlag(tenantId, feature, enabled)
-    }
+    await Promise.all(features.map(({ feature, enabled }) =>
+      this.tenantRepo.upsertFeatureFlag(tenantId, feature, enabled),
+    ))
 
     return this.getFeatures(tenantId)
   }

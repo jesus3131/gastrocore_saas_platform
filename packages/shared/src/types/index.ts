@@ -89,6 +89,7 @@ export interface PaginationParams {
 export interface JwtPayload {
   sub: string          // user id
   tenantId?: string
+  branchId?: string
   globalRole?: GlobalRole
   tenantRole?: EmployeeRole
   role?: string

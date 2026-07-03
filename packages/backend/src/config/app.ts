@@ -9,6 +9,7 @@ import { connectRedis } from './redis/redis.js'
 import { errorHandler } from '../common/filters/error-handler.js'
 import { requestLogger } from '../common/interceptors/request-logger.js'
 import { correlationId } from '../common/interceptors/correlation-id.js'
+import { tenantIsolationMiddleware } from '../common/middleware/tenant-isolation.middleware.js'
 import { registerRoutes } from './routes.js'
 import { registerDependencies } from '../infrastructure/di/container.js'
 
@@ -28,9 +29,18 @@ export async function createApp() {
   app.use(rateLimit({ windowMs: 60_000, max: 100, standardHeaders: true, legacyHeaders: false }))
   app.use(correlationId)
   app.use(requestLogger)
+  app.use(tenantIsolationMiddleware)
 
   // ─── Routes ─────────────────────────────────────────────
   registerRoutes(app)
+
+  // ─── 404 catch-all ──────────────────────────────────────
+  app.use((_req, res) => {
+    res.status(404).json({
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Route not found' },
+    })
+  })
 
   // ─── Error Handler ──────────────────────────────────────
   app.use(errorHandler)

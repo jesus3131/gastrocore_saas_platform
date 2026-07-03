@@ -31,6 +31,7 @@ const FinancialStatementsPage = lazy(() => import('./features/accounting/pages/f
 const AccountingSettingsPage = lazy(() => import('./features/accounting/pages/accounting-settings.page').then(m => ({ default: m.AccountingSettingsPage })))
 const SuperAdminPage = lazy(() => import('./features/super-admin/pages/super-admin.page').then(m => ({ default: m.SuperAdminPage })))
 const CompanyDetailPage = lazy(() => import('./features/super-admin/pages/company-detail.page').then(m => ({ default: m.CompanyDetailPage })))
+const WaiterApp = lazy(() => import('./features/waiter/pages/waiter-app').then(m => ({ default: m.WaiterApp })))
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-full min-h-[200px]">
@@ -100,6 +101,9 @@ export function App() {
         <Route path="/login" element={<Suspense fallback={<PageLoader />}><LoginPage /></Suspense>} />
         <Route path="/register" element={<Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>} />
       </Route>
+
+      {/* Waiter App — standalone mobile POS */}
+      <Route path="/waiter" element={<Suspense fallback={<PageLoader />}><WaiterApp /></Suspense>} />
 
       {/* Onboarding */}
       <Route path="/onboarding" element={

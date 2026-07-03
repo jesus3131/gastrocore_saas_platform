@@ -110,7 +110,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   ],
   manager: ['pos:read', 'pos:write', 'inventory:read', 'inventory:write', 'hr:read', 'hr:write', 'analytics:read', 'crm:read', 'crm:write'],
   chef: ['pos:read', 'inventory:read', 'inventory:write', 'kds:read'],
-  waiter: ['pos:read', 'pos:write', 'crm:read'],
+  waiter: ['pos:read', 'pos:write', 'menu:read', 'crm:read'],
   cashier: ['pos:read', 'pos:write'],
   host: ['pos:read', 'crm:read'],
   delivery: ['pos:read', 'delivery:read'],

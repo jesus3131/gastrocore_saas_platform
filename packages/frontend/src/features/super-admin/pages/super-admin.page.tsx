@@ -11,8 +11,9 @@ import {
   Search, X, Check, AlertTriangle, Filter,
   ChevronLeft, ChevronRight, Trash2, ToggleLeft,
   ToggleRight, Ban, CheckCircle, Clock,
-  DollarSign, ShoppingCart, Layers, HeartPulse, Megaphone,
+  DollarSign, ShoppingCart, Layers, HeartPulse, Megaphone, Flag, Copy,
 } from 'lucide-react'
+import { SvgAreaChart, SvgBarChart, ArchitectureDiagram } from '../../../shared/components/charts/svg-charts'
 
 // ─── CONSTANTS ────────────────────────────────────────────────
 
@@ -54,6 +55,7 @@ const tabs = [
   { id: 'health', label: 'Sistema', icon: HeartPulse },
   { id: 'announcements', label: 'Anuncios', icon: Megaphone },
   { id: 'audit', label: 'Auditoría', icon: Shield },
+  { id: 'features', label: 'Feature Flags', icon: Flag },
 ]
 
 const eventCategories = [
@@ -115,6 +117,7 @@ export function SuperAdminPage() {
       {activeTab === 'health' && <HealthTab />}
       {activeTab === 'announcements' && <AnnouncementsTab />}
       {activeTab === 'audit' && <AuditTab />}
+      {activeTab === 'features' && <FeatureFlagsTab />}
     </div>
   )
 }
@@ -145,33 +148,43 @@ function DashboardTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Plan Distribution */}
-        <div className="card">
-          <div className="card-header"><h3 className="card-title">Distribución de Planes</h3></div>
-          <div className="card-body space-y-3">
-            {data.planDistribution?.length > 0 ? data.planDistribution.map((p: any) => (
-              <div key={p.plan} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium capitalize text-on-surface">{p.plan}</span>
-                  <span className="text-on-surface-muted">{p.count} empresas</span>
-                </div>
-                <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${planColors[p.plan] || 'bg-primary'}`}
-                    style={{ width: `${(p.count / (data.totalTenants || 1)) * 100}%` }}
-                  />
-                </div>
-              </div>
-            )) : <p className="text-xs text-on-surface-muted">Sin datos</p>}
+        {/* MRR Trend */}
+        <div className="card lg:col-span-2">
+          <div className="card-header"><h3 className="card-title">Tendencia MRR</h3></div>
+          <div className="card-body">
+            {data.mrrTrend?.length > 0 ? (
+              <SvgAreaChart
+                data={data.mrrTrend.map((m: any) => ({ label: m.month, value: m.mrr, secondary: m.transactions }))}
+                color="#f59e0b"
+                formatValue={(v) => `$${v.toLocaleString()}`}
+              />
+            ) : <p className="text-xs text-on-surface-muted">Sin datos de MRR</p>}
           </div>
         </div>
 
+        {/* Plan Distribution */}
+        <div className="card">
+          <div className="card-header"><h3 className="card-title">Distribución de Planes</h3></div>
+          <div className="card-body">
+            {data.planDistribution?.length > 0 ? (
+              <SvgBarChart
+                data={data.planDistribution.map((p: any) => ({ label: p.plan, value: p.count }))}
+                color="#f59e0b"
+                formatValue={(v) => `${v} empresas`}
+                height={180}
+              />
+            ) : <p className="text-xs text-on-surface-muted">Sin datos</p>}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
-        <div className="card lg:col-span-2">
+        <div className="card lg:col-span-3">
           <div className="card-header"><h3 className="card-title">Actividad Reciente</h3></div>
           <div className="card-body">
             {data.recentActivity?.length > 0 ? (
-              <div className="space-y-2 max-h-64 overflow-y-auto">
+              <div className="space-y-2 max-h-48 overflow-y-auto">
                 {data.recentActivity.map((a: any) => (
                   <div key={a.id} className="flex items-start gap-3 p-2 rounded-lg bg-surface-container/50">
                     <span className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${a.action?.includes('delete') || a.action?.includes('critical') ? 'bg-error' : a.action?.includes('create') ? 'bg-success' : 'bg-info'}`} />
@@ -186,6 +199,9 @@ function DashboardTab() {
           </div>
         </div>
       </div>
+
+      {/* Architecture Diagram */}
+      <ArchitectureDiagram />
     </div>
   )
 }
@@ -200,6 +216,9 @@ function CompaniesTab() {
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [showCredentials, setShowCredentials] = useState<string | null>(null)
   const [lastCreated, setLastCreated] = useState<any>(null)
+  const [migrateTarget, setMigrateTarget] = useState<any>(null)
+  const [migratePlanId, setMigratePlanId] = useState('')
+  const [credentialsModal, setCredentialsModal] = useState<any>(null)
   const queryClient = useQueryClient()
 
   const { data: companies, isLoading, error, refetch } = useQuery({
@@ -215,7 +234,7 @@ function CompaniesTab() {
   const createCompany = useMutation({
     mutationFn: (data: typeof form) => api.post('/super/companies', data).then((r) => r.data.data),
     onSuccess: (data) => {
-      setLastCreated(data); setShowCredentials(data.credentials?.password || '')
+      setCredentialsModal(data)
       toast.success('Empresa creada — credenciales enviadas por email')
       queryClient.invalidateQueries({ queryKey: ['super'] })
       setForm({ companyName: '', adminName: '', adminEmail: '', businessType: 'fine_dining', planId: 'basic', taxId: '', address: '', phone: '' })
@@ -247,6 +266,17 @@ function CompaniesTab() {
       queryClient.invalidateQueries({ queryKey: ['super'] })
     },
     onError: (err: any) => toast.error(err.response?.data?.message || 'Error'),
+  })
+
+  const migratePlan = useMutation({
+    mutationFn: ({ id, plan }: { id: string; plan: string }) => api.post(`/super/companies/${id}/migrate-plan`, { planId: plan }).then((r) => r.data.data),
+    onSuccess: () => {
+      toast.success('Plan migrado exitosamente')
+      queryClient.invalidateQueries({ queryKey: ['super'] })
+      setMigrateTarget(null)
+      setMigratePlanId('')
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Error al migrar plan'),
   })
 
   const filtered = useMemo(() => {
@@ -333,6 +363,7 @@ function CompaniesTab() {
                         <button onClick={() => toggleStatus.mutate(c.id)} disabled={toggleStatus.isPending} className="btn-ghost btn-sm p-1" title={c.subscriptionStatus === 'active' ? 'Suspender' : 'Activar'}>
                           {c.subscriptionStatus === 'active' ? <ToggleRight className="w-3.5 h-3.5 text-success" /> : <ToggleLeft className="w-3.5 h-3.5 text-on-surface-muted" />}
                         </button>
+                        <button onClick={() => { setMigrateTarget(c); setMigratePlanId(c.subscriptionPlan) }} className="btn-ghost btn-sm p-1" title="Migrar Plan"><Layers className="w-3.5 h-3.5" /></button>
                         <button onClick={() => resendCredentials.mutate(c.id)} disabled={resendCredentials.isPending} className="btn-ghost btn-sm p-1" title="Re-enviar credenciales"><Mail className="w-3.5 h-3.5" /></button>
                         <button onClick={() => { setDeleteTarget(c); setDeleteConfirm('') }} className="btn-ghost btn-sm p-1 text-error" title="Eliminar"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
@@ -414,6 +445,60 @@ function CompaniesTab() {
         </div>
       </Modal>
 
+      {/* Migrate Plan Modal */}
+      <Modal open={!!migrateTarget} onClose={() => { setMigrateTarget(null); setMigratePlanId('') }} title={`Migrar Plan: ${migrateTarget?.name || ''}`} size="lg">
+        <div className="space-y-4">
+          <p className="text-xs text-on-surface-muted">
+            Plan actual: <strong className="capitalize text-on-surface">{migrateTarget?.subscriptionPlan}</strong>
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {plans.map((plan) => {
+              const selected = migratePlanId === plan.id
+              const isCurrent = migrateTarget?.subscriptionPlan === plan.id
+              return (
+                <div
+                  key={plan.id}
+                  onClick={() => !isCurrent && setMigratePlanId(plan.id)}
+                  className={`p-3 rounded-lg border cursor-pointer transition-all ${isCurrent ? 'border-on-surface-muted/20 bg-surface-container/30 opacity-60 cursor-not-allowed' : selected ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-on-surface-muted/10 hover:border-on-surface-muted/30'}`}
+                >
+                  <p className="text-sm font-bold text-on-surface">{plan.name}</p>
+                  <p className="text-lg font-bold text-primary">${plan.price}<span className="text-xs text-on-surface-muted font-normal">/mes</span></p>
+                  <div className="mt-2 space-y-1 text-2xs text-on-surface-muted">
+                    <p className="flex justify-between"><span>Usuarios</span><span className="font-medium text-on-surface">{plan.users}</span></p>
+                    <p className="flex justify-between"><span>Sucursales</span><span className="font-medium text-on-surface">{plan.branches === 999 ? '∞' : plan.branches}</span></p>
+                    <p className="flex justify-between"><span>Transacciones</span><span className="font-medium text-on-surface">{plan.transactions.toLocaleString()}/mes</span></p>
+                    <p className="flex justify-between"><span>Almacenamiento</span><span className="font-medium text-on-surface">{plan.storage} GB</span></p>
+                  </div>
+                  {isCurrent && <p className="text-2xs text-primary mt-2 font-medium">Plan actual</p>}
+                  {selected && !isCurrent && (
+                    <div className="mt-2 pt-2 border-t border-primary/20">
+                      <div className="space-y-0.5">
+                        {plan.features.map((f) => (
+                          <p key={f} className="text-2xs text-on-surface flex items-center gap-1">
+                            <Check className="w-2.5 h-2.5 text-success shrink-0" />
+                            {featureLabels[f] || f}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex gap-2 pt-2">
+            <button onClick={() => { setMigrateTarget(null); setMigratePlanId('') }} className="btn-secondary flex-1">Cancelar</button>
+            <button
+              onClick={() => migratePlan.mutate({ id: migrateTarget.id, plan: migratePlanId })}
+              disabled={!migratePlanId || migratePlanId === migrateTarget?.subscriptionPlan || migratePlan.isPending}
+              className="btn-primary flex-1"
+            >
+              {migratePlan.isPending ? 'Migrando...' : `Migrar a ${plans.find((p) => p.id === migratePlanId)?.name || ''}`}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Delete Confirmation */}
       <Modal open={!!deleteTarget} onClose={() => { setDeleteTarget(null); setDeleteConfirm('') }} title={`Eliminar ${deleteTarget?.name || ''}`} size="sm">
         <div className="space-y-4">
@@ -437,21 +522,50 @@ function CompaniesTab() {
         </div>
       </Modal>
 
-      {/* Credentials banner */}
-      {lastCreated && showCredentials && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-sm rounded-lg border border-success/30 bg-surface shadow-2xl p-4 space-y-2 animate-slide-in">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-on-surface">Creada: {lastCreated.company?.name}</h3>
-            <button onClick={() => { setShowCredentials(null); setLastCreated(null) }} className="btn-ghost btn-xs"><X className="w-3 h-3" /></button>
+      {/* Credentials Modal */}
+      <Modal open={!!credentialsModal} onClose={() => setCredentialsModal(null)} title={`Empresa Creada: ${credentialsModal?.company?.name || ''}`} size="sm">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-success/5 border border-success/20">
+            <CheckCircle className="w-5 h-5 text-success shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-on-surface">Credenciales enviadas por email</p>
+              <p className="text-xs text-on-surface-muted mt-1">Las credenciales se enviaron a <strong>{credentialsModal?.admin?.email}</strong></p>
+            </div>
           </div>
-          <p className="text-xs text-on-surface-muted">Enviadas a <strong>{lastCreated.admin?.email}</strong></p>
-          <div className="p-2 rounded bg-surface-container text-xs space-y-1">
-            <p><strong>Email:</strong> {lastCreated.credentials?.email}</p>
-            <p><strong>Pass:</strong> <code className="bg-surface-container-high px-1 rounded text-xs font-mono">{showCredentials}</code></p>
+          <div className="p-3 rounded-lg bg-surface-container space-y-2">
+            <div>
+              <p className="text-2xs text-on-surface-muted mb-1">Email</p>
+              <div className="flex items-center justify-between bg-surface-container-high rounded px-2 py-1.5">
+                <code className="text-xs font-mono text-on-surface">{credentialsModal?.credentials?.email}</code>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(credentialsModal?.credentials?.email || ''); toast.success('Email copiado') }}
+                  className="btn-ghost btn-xs p-0.5 text-on-surface-muted hover:text-primary"
+                >
+                  <Copy className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+            <div>
+              <p className="text-2xs text-on-surface-muted mb-1">Contraseña</p>
+              <div className="flex items-center justify-between bg-surface-container-high rounded px-2 py-1.5">
+                <code className="text-xs font-mono text-on-surface">{credentialsModal?.credentials?.password}</code>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(credentialsModal?.credentials?.password || ''); toast.success('Contraseña copiada') }}
+                  className="btn-ghost btn-xs p-0.5 text-on-surface-muted hover:text-primary"
+                >
+                  <Copy className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
           </div>
-          <button onClick={() => { navigator.clipboard.writeText(`${lastCreated.credentials?.email}\n${showCredentials}`); toast.success('Copiado') }} className="btn-primary btn-sm w-full text-xs">Copiar Credenciales</button>
+          <button
+            onClick={() => { navigator.clipboard.writeText(`${credentialsModal?.credentials?.email}\n${credentialsModal?.credentials?.password}`); toast.success('Credenciales copiadas') }}
+            className="btn-primary w-full text-xs"
+          >
+            <Copy className="w-3.5 h-3.5" /> Copiar Todo
+          </button>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }
@@ -1028,6 +1142,123 @@ function AnnouncementsTab() {
           ) : (
             <EmptyState title="Sin anuncios" message="Crea el primer anuncio global para todos los tenants." />
           )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── AUDIT ────────────────────────────────────────────────────
+
+// ─── FEATURE FLAGS ─────────────────────────────────────────────
+
+function FeatureFlagsTab() {
+  const queryClient = useQueryClient()
+
+  const featureDescriptions: Record<string, string> = {
+    kds: 'Pantalla de Cocina — Comandas en tiempo real',
+    online_ordering: 'Pedidos en Línea — Recepción web/app',
+    bcg_matrix: 'Matriz BCG — Análisis estratégico de menú',
+    loyalty_program: 'Programa de Lealtad — Puntos y recompensas',
+    multi_branch: 'Multi-sucursal — Gestión de múltiples locales',
+    inventory_auto: 'Inventario Automático — Deducción por comanda',
+    hr_scheduling: 'Gestión de Turnos — Programación de personal',
+    crm_full: 'CRM Completo — Segmentación y campañas',
+    delivery_integration: 'Integración Delivery — Rappi, Uber, DiDi',
+    table_management: 'Mapa de Mesas — Disposición interactiva',
+    split_bills: 'División de Cuentas — Pago por comensal',
+    electronic_invoice: 'Facturación Electrónica — CFDI/XML',
+    pos: 'Punto de Venta (POS) — Cashier interface',
+    analytics: 'Analíticas — Reportes y métricas avanzadas',
+    accounting: 'Contabilidad — Libro diario y balance',
+  }
+
+  const { data: flags, isLoading, error, refetch } = useQuery({
+    queryKey: ['super', 'features'],
+    queryFn: () => api.get('/super/features').then((r) => r.data.data),
+  })
+
+  const updateFlag = useMutation({
+    mutationFn: (data: { feature: string; enabled: boolean }) =>
+      api.put('/super/features', data).then((r) => r.data.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['super', 'features'] }),
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Error al actualizar'),
+  })
+
+  const toggleAll = useMutation({
+    mutationFn: (enabled: boolean) =>
+      api.put('/super/features/toggle-all', { enabled }).then((r) => r.data.data),
+    onSuccess: (data) => {
+      toast.success(data.enabled ? 'Todos los features activados' : 'Todos los features desactivados')
+      queryClient.invalidateQueries({ queryKey: ['super', 'features'] })
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Error'),
+  })
+
+  if (isLoading) return <LoadingSkeleton rows={6} />
+  if (error) return <ErrorState message="Error al cargar feature flags" onRetry={refetch} />
+
+  const activeCount = flags?.filter((f: any) => f.enabled).length || 0
+  const totalCount = flags?.length || 0
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-on-surface">Control Global de Features</h3>
+        <div className="flex items-center gap-2">
+          <button onClick={() => toggleAll.mutate(true)} disabled={toggleAll.isPending} className="btn-primary btn-xs text-2xs">
+            <Check className="w-3 h-3" /> {toggleAll.isPending ? '...' : 'Activar Todos'}
+          </button>
+          <button onClick={() => toggleAll.mutate(false)} disabled={toggleAll.isPending} className="btn-secondary btn-xs text-2xs">
+            <X className="w-3 h-3" /> {toggleAll.isPending ? '...' : 'Desactivar Todos'}
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {flags?.map((flag: any) => (
+          <div
+            key={flag.feature}
+            className={`card cursor-pointer transition-all hover:shadow-md ${flag.enabled ? 'ring-1 ring-success/30' : 'opacity-60'}`}
+            onClick={() => updateFlag.mutate({ feature: flag.feature, enabled: !flag.enabled })}
+          >
+            <div className="card-body flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${flag.enabled ? 'bg-success/10' : 'bg-surface-container'}`}>
+                {flag.enabled ? <Check className="w-5 h-5 text-success" /> : <X className="w-5 h-5 text-on-surface-muted" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-on-surface">{featureLabels[flag.feature] || flag.feature}</p>
+                <p className="text-2xs text-on-surface-muted truncate">{featureDescriptions[flag.feature] || ''}</p>
+              </div>
+              <div className={`relative w-10 h-5 rounded-full transition-colors ${flag.enabled ? 'bg-success' : 'bg-on-surface-muted/30'}`}>
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${flag.enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card">
+        <div className="card-header"><h3 className="card-title">Resumen de Features</h3></div>
+        <div className="card-body">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3 rounded-lg bg-surface-container/50 text-center">
+              <p className="text-2xl font-bold text-on-surface">{activeCount}</p>
+              <p className="text-2xs text-on-surface-muted">Activos</p>
+            </div>
+            <div className="p-3 rounded-lg bg-surface-container/50 text-center">
+              <p className="text-2xl font-bold text-on-surface">{totalCount - activeCount}</p>
+              <p className="text-2xs text-on-surface-muted">Inactivos</p>
+            </div>
+            <div className="p-3 rounded-lg bg-surface-container/50 text-center">
+              <p className="text-2xl font-bold text-on-surface">{totalCount}</p>
+              <p className="text-2xs text-on-surface-muted">Totales</p>
+            </div>
+            <div className="p-3 rounded-lg bg-surface-container/50 text-center">
+              <p className="text-2xl font-bold text-on-surface">{totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0}%</p>
+              <p className="text-2xs text-on-surface-muted">Cobertura</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

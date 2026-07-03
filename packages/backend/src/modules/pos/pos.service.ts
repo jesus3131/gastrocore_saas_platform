@@ -47,15 +47,10 @@ export class PosService {
   }
 
   async updateTableStatus(tenantId: string, id: string, status: string) {
-    const table = await this.tableRepo.findById(id)
+    const table = await this.tableRepo.findById(tenantId, id)
     if (!table) throw new AppError(404, 'TABLE_NOT_FOUND', 'Table not found')
 
-    const branch = await this.tableRepo.findBranchByTable(id)
-    if (!branch || branch.tenantId !== tenantId) {
-      throw new AppError(403, 'FORBIDDEN', 'You do not have access to this table')
-    }
-
-    return this.tableRepo.updateStatus(id, status)
+    return this.tableRepo.updateStatus(tenantId, id, status)
   }
 
   async getOrders(tenantId: string, query?: { status?: string; limit?: number; offset?: number }) {
@@ -109,7 +104,7 @@ export class PosService {
     await this.orderRepo.updateStatus(data.orderId, 'paid')
 
     if (order.tableId) {
-      await this.tableRepo.updateStatus(order.tableId, 'available')
+      await this.tableRepo.updateStatus(tenantId, order.tableId, 'available')
     }
 
     return payment

@@ -1,12 +1,14 @@
 import { injectable, inject } from 'tsyringe'
 import type { TenantRepository } from '../../ports/repositories/tenant.repository.js'
 import type { SubscriptionRepository } from '../../ports/repositories/subscription.repository.js'
+import type { UnitOfWork } from '../../ports/unit-of-work.js'
 
 @injectable()
 export class ChangePlanUseCase {
   constructor(
     @inject('TenantRepository') private readonly tenantRepo: TenantRepository,
     @inject('SubscriptionRepository') private readonly subscriptionRepo: SubscriptionRepository,
+    @inject('UnitOfWork') private readonly uow: UnitOfWork,
   ) {}
 
   async execute(tenantId: string, newPlan: string) {
@@ -24,32 +26,34 @@ export class ChangePlanUseCase {
       throw new AppError(404, 'PLAN_NOT_FOUND', 'Plan not found')
     }
 
-    await this.tenantRepo.update(tenantId, { subscriptionPlan: newPlan })
+    return this.uow.execute(async () => {
+      await this.tenantRepo.update(tenantId, { subscriptionPlan: newPlan })
 
-    const subscription = await this.subscriptionRepo.create({
-      tenantId,
-      plan: newPlan,
-      status: 'active',
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      const subscription = await this.subscriptionRepo.create({
+        tenantId,
+        plan: newPlan,
+        status: 'active',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      })
+
+      await this.subscriptionRepo.createInvoice({
+        subscriptionId: subscription.id,
+        amount: plan.priceMonthly,
+        status: 'pending',
+        periodStart: subscription.currentPeriodStart,
+        periodEnd: subscription.currentPeriodEnd,
+      })
+
+      const flags = await this.tenantRepo.getFeatureFlags(tenantId)
+      await Promise.all(flags.map((flag) =>
+        this.tenantRepo.upsertFeatureFlag(tenantId, flag.feature, false),
+      ))
+      await Promise.all(plan.features.map((feature: string) =>
+        this.tenantRepo.upsertFeatureFlag(tenantId, feature, true),
+      ))
+
+      return { subscription, plan: { ...plan, id: newPlan } }
     })
-
-    await this.subscriptionRepo.createInvoice({
-      subscriptionId: subscription.id,
-      amount: plan.priceMonthly,
-      status: 'pending',
-      periodStart: subscription.currentPeriodStart,
-      periodEnd: subscription.currentPeriodEnd,
-    })
-
-    const flags = await this.tenantRepo.getFeatureFlags(tenantId)
-    for (const flag of flags) {
-      await this.tenantRepo.upsertFeatureFlag(tenantId, flag.feature, false)
-    }
-    for (const feature of plan.features) {
-      await this.tenantRepo.upsertFeatureFlag(tenantId, feature, true)
-    }
-
-    return { subscription, plan: { ...plan, id: newPlan } }
   }
 }
