@@ -1,6 +1,7 @@
 import { Router } from 'express'
-import { AccountingController } from './accounting.controller.js'
+import { accountingController } from './accounting.controller.js'
 import { authGuard } from '../../common/guards/auth.guard.js'
+import { requirePermission, requireFullAuth } from '../../common/guards/permission.guard.js'
 import { validate } from '../../common/decorators/validate.js'
 import {
   createAccountSchema, updateAccountSchema,
@@ -9,37 +10,31 @@ import {
 } from './accounting.validation.js'
 
 const router = Router()
-const controller = new AccountingController()
 
 router.use(authGuard)
 
-// Chart of Accounts
-router.get('/accounts', controller.getAccounts.bind(controller))
-router.get('/accounts/:id', controller.getAccount.bind(controller))
-router.post('/accounts', validate(createAccountSchema), controller.createAccount.bind(controller))
-router.put('/accounts/:id', validate(updateAccountSchema), controller.updateAccount.bind(controller))
-router.delete('/accounts/:id', controller.deleteAccount.bind(controller))
-router.post('/accounts/import', validate(importAccountsSchema), controller.importAccounts.bind(controller))
+router.get('/accounts', requirePermission('accounting:read'), accountingController.getAccounts)
+router.get('/accounts/:id', requirePermission('accounting:read'), accountingController.getAccount)
+router.post('/accounts', requirePermission('accounting:write'), requireFullAuth, validate(createAccountSchema), accountingController.createAccount)
+router.put('/accounts/:id', requirePermission('accounting:write'), requireFullAuth, validate(updateAccountSchema), accountingController.updateAccount)
+router.delete('/accounts/:id', requirePermission('accounting:write'), requireFullAuth, accountingController.deleteAccount)
+router.post('/accounts/import', requirePermission('accounting:write'), requireFullAuth, validate(importAccountsSchema), accountingController.importAccounts)
 
-// Journal Entries
-router.get('/journal-entries', controller.getJournalEntries.bind(controller))
-router.get('/journal-entries/:id', controller.getJournalEntry.bind(controller))
-router.post('/journal-entries', validate(createJournalEntrySchema), controller.createJournalEntry.bind(controller))
-router.post('/journal-entries/:id/post', controller.postJournalEntry.bind(controller))
-router.delete('/journal-entries/:id', controller.deleteJournalEntry.bind(controller))
+router.get('/journal-entries', requirePermission('accounting:read'), accountingController.getJournalEntries)
+router.get('/journal-entries/:id', requirePermission('accounting:read'), accountingController.getJournalEntry)
+router.post('/journal-entries', requirePermission('accounting:write'), requireFullAuth, validate(createJournalEntrySchema), accountingController.createJournalEntry)
+router.post('/journal-entries/:id/post', requirePermission('accounting:write'), requireFullAuth, accountingController.postJournalEntry)
+router.delete('/journal-entries/:id', requirePermission('accounting:write'), requireFullAuth, accountingController.deleteJournalEntry)
 
-// Financial Statements
-router.get('/trial-balance', controller.getTrialBalance.bind(controller))
-router.get('/balance-sheet', controller.getBalanceSheet.bind(controller))
-router.get('/income-statement', controller.getIncomeStatement.bind(controller))
-router.get('/general-ledger', controller.getGeneralLedger.bind(controller))
+router.get('/trial-balance', requirePermission('accounting:read'), accountingController.getTrialBalance)
+router.get('/balance-sheet', requirePermission('accounting:read'), accountingController.getBalanceSheet)
+router.get('/income-statement', requirePermission('accounting:read'), accountingController.getIncomeStatement)
+router.get('/general-ledger', requirePermission('accounting:read'), accountingController.getGeneralLedger)
 
-// Accounting Periods
-router.get('/periods', controller.getPeriods.bind(controller))
-router.post('/periods', validate(createPeriodSchema), controller.createPeriod.bind(controller))
-router.post('/periods/close', validate(closePeriodSchema), controller.closePeriod.bind(controller))
+router.get('/periods', requirePermission('accounting:read'), accountingController.getPeriods)
+router.post('/periods', requirePermission('accounting:write'), requireFullAuth, validate(createPeriodSchema), accountingController.createPeriod)
+router.post('/periods/close', requirePermission('accounting:write'), requireFullAuth, validate(closePeriodSchema), accountingController.closePeriod)
 
-// OData Feed for Power BI
-router.get('/odata/:entity', controller.getODataFeed.bind(controller))
+router.get('/odata/:entity', requirePermission('accounting:read'), accountingController.getODataFeed)
 
 export { router as accountingRouter }

@@ -1,21 +1,21 @@
 import { Router } from 'express'
-import { CrmController } from './crm.controller.js'
+import { crmController } from './crm.controller.js'
 import { authGuard } from '../../common/guards/auth.guard.js'
+import { requirePermission, requireFullAuth } from '../../common/guards/permission.guard.js'
 import { validate } from '../../common/decorators/validate.js'
 import { createCustomerSchema, updateCustomerSchema, redeemPointsSchema } from './crm.validation.js'
 
 const router = Router()
-const controller = new CrmController()
 
 router.use(authGuard)
 
-router.get('/customers', controller.getCustomers.bind(controller))
-router.get('/customers/:id', controller.getCustomer.bind(controller))
-router.post('/customers', validate(createCustomerSchema), controller.createCustomer.bind(controller))
-router.put('/customers/:id', validate(updateCustomerSchema), controller.updateCustomer.bind(controller))
-router.get('/segments', controller.getSegments.bind(controller))
-router.get('/loyalty', controller.getLoyaltyProgram.bind(controller))
-router.post('/loyalty/redeem', validate(redeemPointsSchema), controller.redeemPoints.bind(controller))
-router.get('/rewards', controller.getRewards.bind(controller))
+router.get('/customers', requirePermission('crm:read'), crmController.getCustomers)
+router.get('/customers/:id', requirePermission('crm:read'), crmController.getCustomer)
+router.post('/customers', requirePermission('crm:write'), requireFullAuth, validate(createCustomerSchema), crmController.createCustomer)
+router.put('/customers/:id', requirePermission('crm:write'), requireFullAuth, validate(updateCustomerSchema), crmController.updateCustomer)
+router.get('/segments', requirePermission('crm:read'), crmController.getSegments)
+router.get('/loyalty', requirePermission('crm:read'), crmController.getLoyaltyProgram)
+router.post('/loyalty/redeem', requirePermission('crm:write'), requireFullAuth, validate(redeemPointsSchema), crmController.redeemPoints)
+router.get('/rewards', requirePermission('crm:read'), crmController.getRewards)
 
 export { router as crmRouter }

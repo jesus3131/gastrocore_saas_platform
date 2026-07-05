@@ -53,7 +53,6 @@ enum PaymentMethod {
 }
 
 enum EmployeeRole {
-  super_admin
   admin
   manager
   chef
@@ -62,6 +61,10 @@ enum EmployeeRole {
   host
   delivery
   accountant
+}
+
+enum GlobalRole {
+  super_admin
 }
 
 enum ShiftStatus {
@@ -107,21 +110,31 @@ model Tenant {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
-  users           User[]
-  branches        Branch[]
-  menuCategories  MenuCategory[]
-  orders          Order[]
-  customers       Customer[]
-  employees       Employee[]
-  ingredients     Ingredient[]
-  menuItems       MenuItem[]
-  featureFlags    TenantFeatureFlag[]
-  subscriptions   Subscription[]
-  loyaltyPrograms LoyaltyProgram[]
-  integrations    Integration[]
-  accounts        Account[]
-  journalEntries  JournalEntry[]
+  users             User[]
+  branches          Branch[]
+  menuCategories    MenuCategory[]
+  orders            Order[]
+  customers         Customer[]
+  employees         Employee[]
+  ingredients       Ingredient[]
+  menuItems         MenuItem[]
+  featureFlags      TenantFeatureFlag[]
+  subscriptions     Subscription[]
+  loyaltyPrograms   LoyaltyProgram[]
+  integrations      Integration[]
+  accounts          Account[]
+  journalEntries    JournalEntry[]
   accountingPeriods AccountingPeriod[]
+  payments          Payment[]
+  stockMovements    StockMovement[]
+  shifts            Shift[]
+  commissions       Commission[]
+  refreshTokens     RefreshToken[]
+  auditLogs         AuditLog[]
+  rolePermissions   RolePermission[]
+  userPermissions   UserPermission[]
+  invoices          Invoice[]
+  calendarEvents    CalendarEvent[]
 
   @@index([slug])
   @@map("tenants")
@@ -130,23 +143,75 @@ model Tenant {
 // ─── USERS & AUTH ─────────────────────────────────────────────
 
 model User {
-  id             String       @id @default(uuid()) @db.Uuid
-  tenantId       String       @db.Uuid
-  email          String       @db.VarChar(255)
-  passwordHash   String       @db.VarChar(255)
-  name           String       @db.VarChar(255)
-  role           EmployeeRole @default(waiter)
-  isActive       Boolean      @default(true)
+  id             String        @id @default(uuid()) @db.Uuid
+  tenantId       String?       @db.Uuid
+  employeeId     String?       @unique @db.Uuid
+  email          String        @db.VarChar(255)
+  passwordHash   String        @db.VarChar(255)
+  name           String        @db.VarChar(255)
+  globalRole     GlobalRole?
+  tenantRole     EmployeeRole?
+  pinCode        String?       @db.VarChar(6)
+  isActive       Boolean       @default(true)
   lastLoginAt    DateTime?
   refreshToken   String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  orders Order[] @relation("UserOrders")
+  tenant       Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee     Employee?        @relation(fields: [employeeId], references: [id])
+  orders       Order[]          @relation("UserOrders")
+  permissions  UserPermission[]
+  systemLogs   SystemLog[]
 
   @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([globalRole])
   @@map("users")
+}
+
+model Permission {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String           @unique @db.VarChar(100)
+  description String?          @db.Text
+  createdAt   DateTime         @default(now())
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String        @id @default(uuid()) @db.Uuid
+  tenantId     String?       @db.Uuid
+  role         EmployeeRole
+  permission   Permission    @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String        @db.Uuid
+  grantedBy    String?       @db.Uuid
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, role, permissionId])
+  @@index([tenantId, role])
+  @@map("role_permissions")
+}
+
+model UserPermission {
+  id           String     @id @default(uuid()) @db.Uuid
+  userId       String     @db.Uuid
+  tenantId     String     @db.Uuid
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String     @db.Uuid
+  grantedBy    String?    @db.Uuid
+  expiresAt    DateTime?
+  createdAt    DateTime   @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@index([userId, tenantId])
+  @@map("user_permissions")
 }
 
 // ─── BRANCHES (Multi-sucursal) ────────────────────────────────
@@ -163,9 +228,10 @@ model Branch {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  tables  Table[]
-  areas   ServiceArea[]
+  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tables    Table[]
+  areas     ServiceArea[]
+  employees Employee[]
 
   @@index([tenantId])
   @@map("branches")
@@ -205,6 +271,7 @@ model Table {
   orders Order[]
 
   @@index([branchId, areaId])
+  @@index([status])
   @@map("tables")
 }
 
@@ -306,6 +373,8 @@ model Order {
   payments Payment[]
 
   @@index([tenantId, createdAt])
+  @@index([tenantId, status])
+  @@index([tenantId, type])
   @@index([branchId])
   @@index([tableId])
   @@index([customerId])
@@ -350,6 +419,7 @@ model OrderItemModifier {
 
 model Payment {
   id          String        @id @default(uuid()) @db.Uuid
+  tenantId    String        @db.Uuid
   orderId     String        @db.Uuid
   method      PaymentMethod
   amount      Decimal       @db.Decimal(10, 2)
@@ -358,8 +428,10 @@ model Payment {
   metadata    Json          @default("{}")
   createdAt   DateTime      @default(now())
 
-  order Order @relation(fields: [orderId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  order  Order  @relation(fields: [orderId], references: [id])
 
+  @@index([tenantId, createdAt])
   @@index([orderId])
   @@map("payments")
 }
@@ -422,6 +494,7 @@ model RecipeIngredient {
 
 model StockMovement {
   id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @db.Uuid
   ingredientId String   @db.Uuid
   type         String   @db.VarChar(20) // in, out, adjustment, waste
   quantity     Decimal  @db.Decimal(10, 3)
@@ -429,9 +502,12 @@ model StockMovement {
   notes        String?  @db.Text
   createdAt    DateTime @default(now())
 
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, createdAt])
   @@index([ingredientId, createdAt])
+  @@index([type, createdAt])
   @@map("stock_movements")
 }
 
@@ -440,6 +516,7 @@ model StockMovement {
 model Employee {
   id           String       @id @default(uuid()) @db.Uuid
   tenantId     String       @db.Uuid
+  branchId     String?      @db.Uuid
   name         String       @db.VarChar(255)
   email        String       @db.VarChar(255)
   phone        String?      @db.VarChar(20)
@@ -452,17 +529,22 @@ model Employee {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  shifts Shift[]
+  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch   Branch?      @relation(fields: [branchId], references: [id])
+  user     User?
+  shifts   Shift[]
   commissions Commission[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
+  @@index([role])
+  @@index([branchId])
   @@map("employees")
 }
 
 model Shift {
   id         String      @id @default(uuid()) @db.Uuid
+  tenantId   String      @db.Uuid
   employeeId String      @db.Uuid
   date       DateTime    @db.Date
   startTime  DateTime
@@ -472,14 +554,18 @@ model Shift {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, date])
   @@index([employeeId, date])
+  @@index([date, status])
   @@map("shifts")
 }
 
 model Commission {
   id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @db.Uuid
   employeeId String   @db.Uuid
   orderId    String?  @db.Uuid
   amount     Decimal  @db.Decimal(10, 2)
@@ -487,8 +573,10 @@ model Commission {
   status     String   @default("pending") @db.VarChar(20)
   createdAt  DateTime @default(now())
 
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   employee Employee @relation(fields: [employeeId], references: [id])
 
+  @@index([tenantId, employeeId])
   @@index([employeeId])
   @@map("commissions")
 }
@@ -519,6 +607,8 @@ model Customer {
 
   @@index([tenantId, email])
   @@index([tenantId, phone])
+  @@index([tenantId, lastVisitAt])
+  @@index([tenantId, loyaltyTier])
   @@map("customers")
 }
 
@@ -558,6 +648,17 @@ model LoyaltyRedemption {
 }
 
 // ─── FEATURE FLAGS ────────────────────────────────────────────
+
+model SystemFeatureFlag {
+  id          String   @id @default(uuid()) @db.Uuid
+  feature     String   @unique @db.VarChar(100)
+  enabled     Boolean  @default(true)
+  description String?  @db.Text
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@map("system_feature_flags")
+}
 
 model TenantFeatureFlag {
   id        String  @id @default(uuid()) @db.Uuid
@@ -653,6 +754,7 @@ model Account {
 
   @@unique([tenantId, code])
   @@index([tenantId, type])
+  @@index([parentId])
   @@map("accounts")
 }
 
@@ -676,6 +778,8 @@ model JournalEntry {
 
   @@index([tenantId, entryDate])
   @@index([tenantId, status])
+  @@index([periodId])
+  @@index([reference])
   @@map("journal_entries")
 }
 
@@ -692,6 +796,7 @@ model JournalLine {
 
   @@index([journalEntryId])
   @@index([accountId])
+  @@index([accountId, journalEntryId])
   @@map("journal_lines")
 }
 
@@ -717,7 +822,7 @@ model AccountingPeriod {
 
 model AuditLog {
   id        String   @id @default(uuid()) @db.Uuid
-  tenantId  String   @db.Uuid
+  tenantId  String?  @db.Uuid
   userId    String?  @db.Uuid
   action    String   @db.VarChar(100)
   entity    String   @db.VarChar(100)
@@ -727,7 +832,10 @@ model AuditLog {
   ipAddress String?  @db.VarChar(45)
   createdAt DateTime @default(now())
 
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
   @@index([tenantId, createdAt])
+  @@index([entity, entityId])
   @@map("audit_logs")
 }
 
@@ -745,5 +853,141 @@ model Event {
 
   @@index([tenantId, occurredOn])
   @@index([eventName, occurredOn])
+  @@index([aggregateType, aggregateId])
   @@map("events")
+}
+
+// ─── OUTBOX (Transactional Outbox for Reliable Events) ───────
+
+model OutboxMessage {
+  id            String   @id @default(uuid()) @db.Uuid
+  eventName     String   @db.VarChar(100)
+  aggregateId   String   @db.VarChar(100)
+  aggregateType String   @db.VarChar(50)
+  payload       Json     @default("{}")
+  tenantId      String?  @db.Uuid
+  status        String   @default("pending") @db.VarChar(20) // pending, processing, sent, failed
+  retryCount    Int      @default(0)
+  maxRetries    Int      @default(3)
+  lastError     String?  @db.Text
+  scheduledAt   DateTime @default(now())
+  processedAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([status, scheduledAt])
+  @@index([tenantId])
+  @@index([aggregateType])
+  @@map("outbox_messages")
+}
+
+// ─── REFRESH TOKENS (Hashed, Rotated) ────────────────────────
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tenantId  String?  @db.Uuid
+  tokenHash String   @db.VarChar(255)
+  family    String   @db.VarChar(100) // token rotation family
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@index([userId])
+  @@index([tenantId])
+  @@index([family])
+  @@map("refresh_tokens")
+}
+
+// ─── B2B INVOICES (Super Admin Billing) ────────────────────────────────────
+
+enum InvoiceStatus {
+  pending
+  paid
+  failed
+  cancelled
+}
+
+model Invoice {
+  id            String        @id @default(uuid()) @db.Uuid
+  tenantId      String        @db.Uuid
+  description   String        @db.VarChar(500)
+  amount        Decimal       @db.Decimal(12, 2)
+  currency      String        @default("MXN") @db.VarChar(3)
+  status        InvoiceStatus @default(pending)
+  paymentMethod String?       @db.VarChar(50)
+  dueDate       DateTime
+  paidAt        DateTime?
+  metadata      Json          @default("{}")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([tenantId, dueDate])
+  @@index([status, dueDate])
+  @@map("invoices")
+}
+
+// ─── SYSTEM AUDIT LOG (Immutable Super Admin Trail) ────────────────────────
+
+enum LogSeverity {
+  info
+  success
+  warning
+  critical
+}
+
+model SystemLog {
+  id         String       @id @default(uuid()) @db.Uuid
+  adminId    String       @db.Uuid
+  action     String       @db.VarChar(100)
+  severity   LogSeverity  @default(info)
+  message    String       @db.Text
+  metadata   Json         @default("{}")
+  ipAddress  String?      @db.VarChar(45)
+  createdAt  DateTime     @default(now())
+
+  admin User @relation(fields: [adminId], references: [id])
+
+  @@index([adminId, createdAt])
+  @@index([severity, createdAt])
+  @@index([action])
+  @@map("system_logs")
+}
+
+// ─── CALENDAR EVENTS (Operational Calendar) ────────────────────────────────
+
+enum EventCategory {
+  maintenance
+  billing
+  security
+  meeting
+  other
+}
+
+model CalendarEvent {
+  id          String        @id @default(uuid()) @db.Uuid
+  tenantId    String?       @db.Uuid
+  title       String        @db.VarChar(255)
+  description String?       @db.Text
+  category    EventCategory @default(other)
+  eventDate   DateTime
+  startTime   String?       @db.VarChar(5)
+  endTime     String?       @db.VarChar(5)
+  color       String?       @default("#f59e0b") @db.VarChar(7)
+  allDay      Boolean       @default(false)
+  createdBy   String        @db.Uuid
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, eventDate])
+  @@index([eventDate])
+  @@index([category])
+  @@map("calendar_events")
 }

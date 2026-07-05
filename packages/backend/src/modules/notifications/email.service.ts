@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import { env } from '../../config/env.js'
+import { logger } from '../../config/logger.js'
 
 let transporter: nodemailer.Transporter | null = null
 
@@ -57,10 +58,10 @@ export async function sendWelcomeEmail(to: string, name: string, email: string, 
       subject: 'Bienvenido a RestoPro Enterprise — Tus Credenciales de Acceso',
       html,
     })
-    console.log(`[Email] Welcome sent to ${to} (id: ${info.messageId})`)
+    logger.info({ to, messageId: info.messageId }, 'Welcome email sent')
     return true
   } catch (err) {
-    console.warn(`[Email] Failed to send welcome to ${to}:`, (err as Error).message)
+    logger.warn({ err, to }, 'Failed to send welcome email')
     return false
   }
 }
@@ -99,10 +100,10 @@ export async function sendCredentialsEmail(to: string, email: string, password: 
       subject: 'RestoPro Enterprise — Credenciales de Acceso',
       html,
     })
-    console.log(`[Email] Credentials sent to ${to} (id: ${info.messageId})`)
+    logger.info({ to, messageId: info.messageId }, 'Credentials email sent')
     return true
   } catch (err) {
-    console.warn(`[Email] Failed to send credentials to ${to}:`, (err as Error).message)
+    logger.warn({ err, to }, 'Failed to send credentials email')
     return false
   }
 }

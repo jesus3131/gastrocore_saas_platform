@@ -1,16 +1,16 @@
 import { Router } from 'express'
-import { TenantController } from './tenant.controller.js'
-import { authGuard } from '../../common/guards/auth.guard.js'
+import { tenantController } from './tenant.controller.js'
+import { authGuard, requireTenantAdmin } from '../../common/guards/auth.guard.js'
+import { requirePermission, requireFullAuth } from '../../common/guards/permission.guard.js'
 import { validate } from '../../common/decorators/validate.js'
 import { updateTenantConfigSchema, updateFeaturesSchema } from './tenant.validation.js'
 
 const router = Router()
-const controller = new TenantController()
 
 router.use(authGuard)
-router.get('/config', controller.getConfig.bind(controller))
-router.put('/config', validate(updateTenantConfigSchema), controller.updateConfig.bind(controller))
-router.get('/features', controller.getFeatures.bind(controller))
-router.put('/features', validate(updateFeaturesSchema), controller.updateFeatures.bind(controller))
+router.get('/config', requirePermission('tenants:read'), tenantController.getConfig)
+router.put('/config', requireTenantAdmin, requireFullAuth, validate(updateTenantConfigSchema), tenantController.updateConfig)
+router.get('/features', requirePermission('tenants:read'), tenantController.getFeatures)
+router.put('/features', requireTenantAdmin, requireFullAuth, validate(updateFeaturesSchema), tenantController.updateFeatures)
 
 export { router as tenantRouter }

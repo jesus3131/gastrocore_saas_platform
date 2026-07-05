@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
@@ -43,6 +43,12 @@ export function OnboardingPage() {
   const [step, setStep] = useState(0)
   const navigate = useNavigate()
   const { user, updateUser } = useAuthStore()
+
+  useEffect(() => {
+    if (user && ((user as any).isSuperAdmin || user.globalRole === 'super_admin')) {
+      navigate('/super-admin', { replace: true })
+    }
+  }, [user, navigate])
 
   const [profile, setProfile] = useState({ name: '', businessType: 'fine_dining', locale: 'es-MX', timezone: 'America/Mexico_City', currency: 'MXN' })
   const [areas, setAreas] = useState([{ name: 'Salón Principal', type: 'dining', tables: [{ label: 'M1', capacity: 2 }, { label: 'M2', capacity: 4 }] }])

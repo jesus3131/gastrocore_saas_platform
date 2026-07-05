@@ -1,0 +1,112 @@
+name: gastrocore-v3
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gastrocore-v3-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gastrocore
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gastrocore}
+      POSTGRES_DB: gastrocore
+    volumes:
+      - postgres_data_v3:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gastrocore"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: gastrocore-v3-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.backend
+      target: production
+    image: gastrocore-v3-backend:latest
+    container_name: gastrocore-v3-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://gastrocore:${POSTGRES_PASSWORD:-gastrocore}@postgres:5432/gastrocore?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-gastrocore-dev-secret-change-in-production}
+      JWT_EXPIRATION: 15m
+      JWT_REFRESH_EXPIRATION: 7d
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8081}
+      LOG_LEVEL: info
+      PRISMA_AUTO_MIGRATE: ${PRISMA_AUTO_MIGRATE:-true}
+      SEED_DATABASE: ${SEED_DATABASE:-true}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
+      RAPPI_API_URL: ${RAPPI_API_URL:-https://api.rappi.com/v1}
+      UBER_EATS_API_URL: ${UBER_EATS_API_URL:-https://api.uber.com/v1/eats}
+    ports:
+      - "4001:4000"
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.frontend
+      target: production
+      args:
+        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-}
+    image: gastrocore-v3-frontend:latest
+    container_name: gastrocore-v3-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8081:80"
+
+  analytics:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.analytics
+    image: gastrocore-v3-analytics:latest
+    container_name: gastrocore-v3-analytics
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ANALYTICS_API_PREFIX: /api/v1/analytics
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: gastrocore
+      DB_USER: gastrocore
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-gastrocore}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8081}
+    ports:
+      - "8010:8000"
+
+  adminer:
+    image: adminer:latest
+    container_name: gastrocore-v3-adminer
+    ports:
+      - "8082:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data_v3:

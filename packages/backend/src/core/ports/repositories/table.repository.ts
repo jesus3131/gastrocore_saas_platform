@@ -1,4 +1,8 @@
+import type { PosTable, Branch } from '../../../core/domain/entities/index.js'
+
 export interface TableRepository {
-  updateStatus(id: string, status: string): Promise<any>
-  findById(id: string): Promise<any>
+  updateStatus(tenantId: string, id: string, status: string): Promise<PosTable>
+  findById(tenantId: string, id: string): Promise<PosTable | null>
+  findBranchByTable(tableId: string): Promise<Branch | null>
+  findAllWithBranches(tenantId: string): Promise<Branch[]>
 }

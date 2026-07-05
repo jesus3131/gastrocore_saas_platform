@@ -3,6 +3,9 @@ import crypto from 'crypto'
 import { injectable, inject } from 'tsyringe'
 import type { UserRepository } from '../../ports/repositories/user.repository.js'
 import type { TenantRepository } from '../../ports/repositories/tenant.repository.js'
+import type { EmployeeRepository } from '../../ports/repositories/employee.repository.js'
+import type { SubscriptionRepository } from '../../ports/repositories/subscription.repository.js'
+import type { UnitOfWork } from '../../ports/unit-of-work.js'
 
 @injectable()
 export class CreateCompanyUseCase {
@@ -11,6 +14,9 @@ export class CreateCompanyUseCase {
   constructor(
     @inject('UserRepository') private readonly userRepo: UserRepository,
     @inject('TenantRepository') private readonly tenantRepo: TenantRepository,
+    @inject('EmployeeRepository') private readonly employeeRepo: EmployeeRepository,
+    @inject('SubscriptionRepository') private readonly subscriptionRepo: SubscriptionRepository,
+    @inject('UnitOfWork') private readonly uow: UnitOfWork,
   ) {}
 
   async execute(data: {
@@ -40,59 +46,59 @@ export class CreateCompanyUseCase {
     if (data.address) customFields.address = data.address
     if (data.phone) customFields.phone = data.phone
 
-    const { prisma } = await import('../../../config/database/prisma.js')
-    const tenant = await prisma.tenant.create({
-      data: {
+    return this.uow.execute(async () => {
+      const tenant = await this.tenantRepo.create({
         name: data.companyName,
         slug: data.companyName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
         businessType: data.businessType as never,
         subscriptionPlan: planId,
         subscriptionStatus: 'trial',
         customFields: customFields as any,
-      },
-    })
+      })
 
-    const user = await this.userRepo.create({
-      tenantId: tenant.id,
-      email: data.adminEmail,
-      passwordHash,
-      name: data.adminName,
-      role: 'admin',
-    })
+      const employee = await this.employeeRepo.create(tenant.id, {
+        name: data.adminName,
+        email: data.adminEmail,
+        role: 'admin',
+      })
 
-    if (plan) {
-      const subscription = await prisma.subscription.create({
-        data: {
+      const user = await this.userRepo.create({
+        tenantId: tenant.id,
+        employeeId: employee.id,
+        email: data.adminEmail,
+        passwordHash,
+        name: data.adminName,
+        tenantRole: 'admin',
+      })
+
+      if (plan) {
+        const subscription = await this.subscriptionRepo.create({
           tenantId: tenant.id,
           plan: planId as any,
           status: 'trial',
           currentPeriodStart: new Date(),
           currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        },
-      })
+        })
 
-      await prisma.subscriptionInvoice.create({
-        data: {
+        await this.subscriptionRepo.createInvoice({
           subscriptionId: subscription.id,
           amount: plan.priceMonthly,
           status: 'pending',
           periodStart: subscription.currentPeriodStart,
           periodEnd: subscription.currentPeriodEnd,
-        },
-      })
-
-      for (const feature of plan.features) {
-        await prisma.tenantFeatureFlag.create({
-          data: { tenantId: tenant.id, feature, enabled: true },
         })
-      }
-    }
 
-    return {
-      company: { id: tenant.id, name: tenant.name },
-      admin: { id: user.id, email: user.email, name: user.name },
-      credentials: { email: data.adminEmail, password: rawPassword },
-    }
+        for (const feature of plan.features) {
+          await this.tenantRepo.upsertFeatureFlag(tenant.id, feature, true)
+        }
+      }
+
+      return {
+        company: { id: tenant.id, name: tenant.name },
+        admin: { id: user.id, email: user.email, name: user.name, tenantRole: user.tenantRole ?? 'admin', globalRole: user.globalRole ?? null },
+        credentials: { email: data.adminEmail, password: rawPassword },
+      }
+    })
   }
 
   private generatePassword(length = 12): string {

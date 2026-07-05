@@ -94,15 +94,58 @@ export const BUSINESS_TYPE_FEATURES: Record<BusinessType, FeatureFlag[]> = {
 // ─── Employee Permission Matrix ──────────────────────────────
 
 export const ROLE_PERMISSIONS: Record<string, string[]> = {
-  super_admin: ['*', 'super:manage'],
-  admin: ['*'],
+  super_admin: ['super:manage', 'super:companies', 'super:subscriptions', 'super:metrics'],
+  admin: [
+    'pos:read', 'pos:write', 'pos:delete',
+    'menu:read', 'menu:write', 'menu:delete',
+    'inventory:read', 'inventory:write', 'inventory:delete',
+    'hr:read', 'hr:write', 'hr:delete',
+    'analytics:read',
+    'crm:read', 'crm:write',
+    'accounting:read', 'accounting:write',
+    'tenants:read', 'tenants:write',
+    'reports:read',
+    'delivery:read',
+    'kds:read',
+  ],
   manager: ['pos:read', 'pos:write', 'inventory:read', 'inventory:write', 'hr:read', 'hr:write', 'analytics:read', 'crm:read', 'crm:write'],
   chef: ['pos:read', 'inventory:read', 'inventory:write', 'kds:read'],
-  waiter: ['pos:read', 'pos:write', 'crm:read'],
+  waiter: ['pos:read', 'pos:write', 'menu:read', 'crm:read'],
   cashier: ['pos:read', 'pos:write'],
   host: ['pos:read', 'crm:read'],
   delivery: ['pos:read', 'delivery:read'],
   accountant: ['analytics:read', 'accounting:read', 'accounting:write', 'crm:read', 'reports:read'],
+}
+
+// ─── Feature Labels (for UI display) ────────────────────────
+
+export const FEATURE_LABELS: Record<string, string> = {
+  kds: 'Pantalla de Cocina (KDS)',
+  online_ordering: 'Pedidos en Línea',
+  bcg_matrix: 'Matriz BCG de Menú',
+  loyalty_program: 'Programa de Lealtad',
+  multi_branch: 'Múltiples Sucursales',
+  inventory_auto: 'Inventario Automático',
+  hr_scheduling: 'Gestión de Turnos',
+  crm_full: 'CRM Completo',
+  delivery_integration: 'Integración Delivery',
+  table_management: 'Mapa de Mesas',
+  split_bills: 'División de Cuentas',
+  electronic_invoice: 'Facturación Electrónica',
+  pos: 'Punto de Venta (POS)',
+  analytics: 'Analíticas e Informes',
+  accounting: 'Módulo de Contabilidad',
+}
+
+export const BUSINESS_TYPE_LABELS: Record<string, string> = {
+  fine_dining: 'Alta Cocina',
+  fast_food: 'Fast Food',
+  cafe: 'Cafetería',
+  food_truck: 'Food Truck',
+  bar: 'Bar',
+  franchise: 'Franquicia',
+  bakery: 'Panadería',
+  ghost_kitchen: 'Cocina Oculta',
 }
 
 // ─── Locales ─────────────────────────────────────────────────

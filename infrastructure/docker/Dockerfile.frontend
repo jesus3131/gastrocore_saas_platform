@@ -22,6 +22,8 @@ CMD ["pnpm", "--filter", "@gastrocore/frontend", "dev", "--host"]
 
 # ─── Builder ─────────────────────────────────────────────────
 FROM deps AS builder
+ARG VITE_STRIPE_PUBLISHABLE_KEY
+ENV VITE_STRIPE_PUBLISHABLE_KEY=$VITE_STRIPE_PUBLISHABLE_KEY
 COPY packages/shared/src ./packages/shared/src
 COPY packages/shared/tsconfig.json ./packages/shared/
 COPY packages/frontend/tsconfig.json packages/frontend/tsconfig.node.json packages/frontend/index.html packages/frontend/vite.config.ts packages/frontend/tailwind.config.ts packages/frontend/postcss.config.js packages/frontend/

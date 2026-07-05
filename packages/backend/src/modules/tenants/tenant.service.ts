@@ -1,12 +1,18 @@
-import { prisma } from '../../config/database/prisma.js'
+import { inject, injectable } from 'tsyringe'
 import { AppError } from '../../common/filters/error-handler.js'
 import { BUSINESS_TYPE_FEATURES } from '@gastrocore/shared'
 import { UpdateFeaturesUseCase } from '../../core/use-cases/tenants/update-features.use-case.js'
+import type { TenantRepository } from '../../core/ports/repositories/tenant.repository.js'
 
+@injectable()
 export class TenantService {
-  constructor(private readonly updateFeaturesUseCase?: UpdateFeaturesUseCase) {}
+  constructor(
+    @inject('TenantRepository') private readonly tenantRepo: TenantRepository,
+    private readonly updateFeaturesUseCase?: UpdateFeaturesUseCase,
+  ) {}
+
   async getConfig(tenantId: string) {
-    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
+    const tenant = await this.tenantRepo.findById(tenantId)
     if (!tenant) throw new AppError(404, 'TENANT_NOT_FOUND', 'Tenant not found')
     return tenant
   }
@@ -19,30 +25,24 @@ export class TenantService {
     settings: any
     customFields: any
   }>) {
-    const tenant = await prisma.tenant.update({
-      where: { id: tenantId },
-      data: data as any,
-    })
-    return tenant
+    return this.tenantRepo.update(tenantId, data as any)
   }
 
   async getFeatures(tenantId: string) {
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-      include: { featureFlags: true },
-    })
+    const tenant = await this.tenantRepo.findById(tenantId)
     if (!tenant) throw new AppError(404, 'TENANT_NOT_FOUND', 'Tenant not found')
 
-    // Merge default features for business type with overrides
-    const defaults = BUSINESS_TYPE_FEATURES[tenant.businessType] || []
-    const overrides = tenant.featureFlags.reduce((acc, f) => {
+    const featureFlags = await this.tenantRepo.getFeatureFlags(tenantId)
+
+    const defaults = BUSINESS_TYPE_FEATURES[tenant.businessType as keyof typeof BUSINESS_TYPE_FEATURES] || []
+    const overrides = (featureFlags || []).reduce((acc: Record<string, boolean>, f: any) => {
       acc[f.feature] = f.enabled
       return acc
     }, {} as Record<string, boolean>)
 
     return {
       businessType: tenant.businessType,
-      features: defaults.map((feature) => ({
+      features: defaults.map((feature: string) => ({
         feature,
         enabled: overrides[feature] ?? true,
       })),
@@ -54,15 +54,11 @@ export class TenantService {
       return this.updateFeaturesUseCase.execute(tenantId, features)
     }
 
-    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
+    const tenant = await this.tenantRepo.findById(tenantId)
     if (!tenant) throw new AppError(404, 'TENANT_NOT_FOUND', 'Tenant not found')
 
     for (const { feature, enabled } of features) {
-      await prisma.tenantFeatureFlag.upsert({
-        where: { tenantId_feature: { tenantId, feature } },
-        update: { enabled },
-        create: { tenantId, feature, enabled },
-      })
+      await this.tenantRepo.upsertFeatureFlag(tenantId, feature, enabled)
     }
 
     return this.getFeatures(tenantId)

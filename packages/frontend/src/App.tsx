@@ -31,6 +31,7 @@ const FinancialStatementsPage = lazy(() => import('./features/accounting/pages/f
 const AccountingSettingsPage = lazy(() => import('./features/accounting/pages/accounting-settings.page').then(m => ({ default: m.AccountingSettingsPage })))
 const SuperAdminPage = lazy(() => import('./features/super-admin/pages/super-admin.page').then(m => ({ default: m.SuperAdminPage })))
 const CompanyDetailPage = lazy(() => import('./features/super-admin/pages/company-detail.page').then(m => ({ default: m.CompanyDetailPage })))
+const WaiterApp = lazy(() => import('./features/waiter/pages/waiter-app').then(m => ({ default: m.WaiterApp })))
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-full min-h-[200px]">
@@ -39,11 +40,15 @@ const PageLoader = () => (
 )
 
 function SessionGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, tokens, logout, setAuth } = useAuthStore()
+  const { isAuthenticated, tokens, user, logout, setAuth } = useAuthStore()
   const [checking, setChecking] = useState(isAuthenticated)
 
   useEffect(() => {
     if (!isAuthenticated || !tokens?.accessToken) {
+      setChecking(false)
+      return
+    }
+    if ((user as any)?.isSuperAdmin || user?.globalRole === 'super_admin') {
       setChecking(false)
       return
     }
@@ -70,15 +75,22 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
-  const needsOnboarding = user && !(user as any).onboardingCompleted
-  if (needsOnboarding) return <Navigate to="/onboarding" replace />
+  if ((user as any)?.isSuperAdmin || user?.globalRole === 'super_admin') return <>{children}</>
+  if (user && (user as any).onboardingCompleted === false) return <Navigate to="/onboarding" replace />
+  return <>{children}</>
+}
+
+function SuperAdminBlock({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthStore()
+  if ((user as any)?.isSuperAdmin || user?.globalRole === 'super_admin') return <Navigate to="/super-admin" replace />
   return <>{children}</>
 }
 
 function WaiterBlock({ children }: { children: React.ReactNode }) {
-  const waiter = useAuthStore((s) => s.waiter)
+  const { waiter, user } = useAuthStore()
   const location = useLocation()
   if (waiter && location.pathname !== '/pos/service') return <Navigate to="/pos/service" replace />
+  if (user?.tenantRole === 'waiter') return <Navigate to="/waiter" replace />
   return <>{children}</>
 }
 
@@ -91,11 +103,16 @@ export function App() {
         <Route path="/register" element={<Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>} />
       </Route>
 
+      {/* Waiter App — standalone mobile POS */}
+      <Route path="/waiter" element={<Suspense fallback={<PageLoader />}><WaiterApp /></Suspense>} />
+
       {/* Onboarding */}
       <Route path="/onboarding" element={
         <SessionGuard>
           <ProtectedRoute>
-            <Suspense fallback={<PageLoader />}><OnboardingPage /></Suspense>
+            <SuperAdminBlock>
+              <Suspense fallback={<PageLoader />}><OnboardingPage /></Suspense>
+            </SuperAdminBlock>
           </ProtectedRoute>
         </SessionGuard>
       } />

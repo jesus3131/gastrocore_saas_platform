@@ -1,41 +1,36 @@
-import type { Request, Response, NextFunction } from 'express'
+import type { Request, Response } from 'express'
+import { container } from 'tsyringe'
 import { OnboardingService } from './onboarding.service.js'
+import { wrapAsync } from '../../common/utils/async-handler.js'
 
-export class OnboardingController {
-  private service = new OnboardingService()
+class OnboardingController {
+  private service = container.resolve(OnboardingService)
 
-  async saveProfile(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = await this.service.saveProfile(req.tenantId!, req.body)
-      res.json({ success: true, data: result })
-    } catch (err) { next(err) }
+  async saveProfile(req: Request, res: Response) {
+    const result = await this.service.saveProfile(req.tenantId!, req.body)
+    res.json({ success: true, data: result })
   }
 
-  async saveAreas(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = await this.service.saveAreas(req.tenantId!, req.body)
-      res.json({ success: true, data: result })
-    } catch (err) { next(err) }
+  async saveAreas(req: Request, res: Response) {
+    const result = await this.service.saveAreas(req.tenantId!, req.body)
+    res.json({ success: true, data: result })
   }
 
-  async saveModules(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = await this.service.saveModules(req.tenantId!, req.body.features)
-      res.json({ success: true, data: result })
-    } catch (err) { next(err) }
+  async saveModules(req: Request, res: Response) {
+    const result = await this.service.saveModules(req.tenantId!, req.body.features)
+    res.json({ success: true, data: result })
   }
 
-  async launch(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = await this.service.launch(req.tenantId!)
-      res.json({ success: true, data: result })
-    } catch (err) { next(err) }
+  async launch(req: Request, res: Response) {
+    const result = await this.service.launch(req.tenantId!)
+    res.json({ success: true, data: result })
   }
 
-  async getStatus(req: Request, res: Response, next: NextFunction) {
-    try {
-      const status = await this.service.getStatus(req.tenantId!)
-      res.json({ success: true, data: status })
-    } catch (err) { next(err) }
+  async getStatus(req: Request, res: Response) {
+    const status = await this.service.getStatus(req.tenantId!)
+    res.json({ success: true, data: status })
   }
 }
+
+export const onboardingController = wrapAsync(new OnboardingController())
+export { OnboardingController }

@@ -7,12 +7,12 @@ function getClient(): any {
 }
 
 export class PrismaAnalyticsRepository implements AnalyticsRepository {
-  async findOrders(tenantId: string, where?: any) {
-    return getClient().order.findMany({ where: { tenantId, ...where } })
+  async findOrders(tenantId: string, where?: any, options?: any) {
+    return getClient().order.findMany({ where: { tenantId, ...where }, ...options })
   }
 
-  async findMenuItems(tenantId: string) {
-    return getClient().menuItem.findMany({ where: { tenantId } })
+  async findMenuItems(tenantId: string, options?: any) {
+    return getClient().menuItem.findMany({ where: { tenantId }, ...options })
   }
 
   async findBranches(tenantId: string) {

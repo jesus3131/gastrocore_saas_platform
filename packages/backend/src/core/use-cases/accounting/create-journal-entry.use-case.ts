@@ -26,6 +26,12 @@ export class CreateJournalEntryUseCase {
       if (!account.isActive) throw new AppError(400, 'ACCOUNT_INACTIVE', `Account ${account.name} is inactive`)
     }
 
+    const totalDebits = data.lines.reduce((sum: number, l: any) => sum + Number(l.debit || 0), 0)
+    const totalCredits = data.lines.reduce((sum: number, l: any) => sum + Number(l.credit || 0), 0)
+    if (Math.abs(totalDebits - totalCredits) > 0.001) {
+      throw new AppError(400, 'UNBALANCED_ENTRY', `Total debits (${totalDebits}) must equal total credits (${totalCredits})`)
+    }
+
     return this.journalRepo.create({
       data: {
         tenantId,

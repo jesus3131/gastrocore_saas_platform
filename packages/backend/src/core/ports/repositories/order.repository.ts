@@ -25,9 +25,14 @@ export interface CreateOrderData {
   }>
 }
 
+import type { PosOrder, PaginationOpts } from '../../../core/domain/entities/index.js'
+
 export interface OrderRepository {
-  create(data: CreateOrderData): Promise<any>
-  findById(tenantId: string, id: string): Promise<any>
-  findActiveByTable(tenantId: string, tableId: string): Promise<any>
-  updateStatus(id: string, status: string): Promise<any>
+  create(data: CreateOrderData): Promise<PosOrder>
+  findById(tenantId: string, id: string): Promise<PosOrder | null>
+  findActiveByTable(tenantId: string, tableId: string): Promise<{ id: string; total: number; status: string } | null>
+  findMany(tenantId: string, query?: { status?: string } & PaginationOpts): Promise<PosOrder[]>
+  findActiveByTables(tableIds: string[]): Promise<{ tableId: string; id: string; total: number; status: string }[]>
+  updateStatus(id: string, status: string): Promise<PosOrder>
+  updatePaymentMethod(id: string, method: string): Promise<PosOrder>
 }

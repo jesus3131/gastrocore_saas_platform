@@ -1,34 +1,31 @@
-import type { Request, Response, NextFunction } from 'express'
+import type { Request, Response } from 'express'
+import { container } from 'tsyringe'
 import { SubscriptionService } from './subscription.service.js'
+import { wrapAsync } from '../../common/utils/async-handler.js'
 
-export class SubscriptionController {
-  private service = new SubscriptionService()
+class SubscriptionController {
+  private service = container.resolve(SubscriptionService)
 
-  async getPlans(_req: Request, res: Response, next: NextFunction) {
-    try {
-      const plans = await this.service.getPlans()
-      res.json({ success: true, data: plans })
-    } catch (err) { next(err) }
+  async getPlans(_req: Request, res: Response) {
+    const plans = await this.service.getPlans()
+    res.json({ success: true, data: plans })
   }
 
-  async getCurrentSubscription(req: Request, res: Response, next: NextFunction) {
-    try {
-      const subscription = await this.service.getCurrentSubscription(req.tenantId!)
-      res.json({ success: true, data: subscription })
-    } catch (err) { next(err) }
+  async getCurrentSubscription(req: Request, res: Response) {
+    const subscription = await this.service.getCurrentSubscription(req.tenantId!)
+    res.json({ success: true, data: subscription })
   }
 
-  async changePlan(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = await this.service.changePlan(req.tenantId!, req.body.plan)
-      res.json({ success: true, data: result })
-    } catch (err) { next(err) }
+  async changePlan(req: Request, res: Response) {
+    const result = await this.service.changePlan(req.tenantId!, req.body.plan)
+    res.json({ success: true, data: result })
   }
 
-  async getInvoices(req: Request, res: Response, next: NextFunction) {
-    try {
-      const invoices = await this.service.getInvoices(req.tenantId!)
-      res.json({ success: true, data: invoices })
-    } catch (err) { next(err) }
+  async getInvoices(req: Request, res: Response) {
+    const invoices = await this.service.getInvoices(req.tenantId!)
+    res.json({ success: true, data: invoices })
   }
 }
+
+export const subscriptionController = wrapAsync(new SubscriptionController())
+export { SubscriptionController }

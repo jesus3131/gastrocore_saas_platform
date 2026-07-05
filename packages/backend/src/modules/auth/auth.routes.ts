@@ -1,21 +1,22 @@
 import { Router } from 'express'
-import { AuthController } from './auth.controller.js'
+import rateLimit from 'express-rate-limit'
+import { authController } from './auth.controller.js'
 import { authGuard } from '../../common/guards/auth.guard.js'
+import { superAdminAuth } from '../super-admin/super-admin.guard.js'
 import { validate } from '../../common/decorators/validate.js'
-import { loginSchema, registerSchema, updateProfileSchema, changePasswordSchema } from './auth.validation.js'
+import { loginSchema, superAdminLoginSchema, registerSchema, updateProfileSchema, changePasswordSchema, refreshTokenSchema } from './auth.validation.js'
 
 const router = Router()
-const controller = new AuthController()
+const refreshLimiter = rateLimit({ windowMs: 60_000, max: 10, standardHeaders: true, legacyHeaders: false })
 
-router.post('/login', validate(loginSchema), controller.login.bind(controller))
-router.get('/ping', (_req, res) => {
-  res.json({ success: true, data: { message: 'pong' } })
-})
-router.post('/register', validate(registerSchema), controller.register.bind(controller))
-router.post('/refresh', controller.refresh.bind(controller))
-router.post('/logout', authGuard, controller.logout.bind(controller))
-router.get('/me', authGuard, controller.me.bind(controller))
-router.put('/profile', authGuard, validate(updateProfileSchema), controller.updateProfile.bind(controller))
-router.put('/change-password', authGuard, validate(changePasswordSchema), controller.changePassword.bind(controller))
+router.post('/super-admin/login', validate(superAdminLoginSchema), authController.superAdminLogin)
+router.post('/login', validate(loginSchema), authController.login)
+router.get('/ping', (_req, res) => { res.json({ success: true, data: { message: 'pong' } }) })
+router.post('/register', superAdminAuth, validate(registerSchema), authController.register)
+router.post('/refresh', refreshLimiter, validate(refreshTokenSchema), authController.refresh)
+router.post('/logout', authGuard, authController.logout)
+router.get('/me', authGuard, authController.me)
+router.put('/profile', authGuard, validate(updateProfileSchema), authController.updateProfile)
+router.put('/change-password', authGuard, validate(changePasswordSchema), authController.changePassword)
 
 export { router as authRouter }

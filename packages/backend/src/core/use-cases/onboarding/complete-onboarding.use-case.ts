@@ -15,11 +15,7 @@ export class CompleteOnboardingUseCase {
 
     const settings = { onboardingCompleted: true, launchedAt: new Date().toISOString() }
 
-    const { prisma } = await import('../../../config/database/prisma.js')
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: { settings: settings as any, subscriptionStatus: 'active' },
-    })
+    await this.tenantRepo.update(tenantId, { settings: settings as any, subscriptionStatus: 'active' })
 
     return { step: 'launch', completed: true, message: 'Sistema configurado y listo para usar!' }
   }

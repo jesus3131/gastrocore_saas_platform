@@ -132,6 +132,11 @@ export function KdsPage() {
                                 Mesa {order.table.label}
                               </span>
                             )}
+                            {order.user?.tenantRole === 'waiter' && (
+                              <span className="ml-2 text-2xs font-medium text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded dark:text-amber-400 dark:bg-amber-500/10">
+                                Mesero
+                              </span>
+                            )}
                           </div>
                           <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
                             (order.priority === 'high' || order.type === 'urgent')

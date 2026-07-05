@@ -1,8 +1,8 @@
 import { injectable, inject } from 'tsyringe'
 import { SUBSCRIPTION_PLANS } from '@gastrocore/shared'
 import type { EmployeeRepository } from '../../ports/repositories/employee.repository.js'
+import type { TenantRepository } from '../../ports/repositories/tenant.repository.js'
 import { AppError } from '../../../common/filters/error-handler.js'
-import { prisma } from '../../../config/database/prisma.js'
 import { TenantId } from '../../domain/value-objects/tenant-id.js'
 
 export interface CreateEmployeeInput {
@@ -20,15 +20,16 @@ export interface CreateEmployeeInput {
 export class CreateEmployeeUseCase {
   constructor(
     @inject('EmployeeRepository') private readonly employeeRepo: EmployeeRepository,
+    @inject('TenantRepository') private readonly tenantRepo: TenantRepository,
   ) {}
 
   async execute(input: CreateEmployeeInput) {
     TenantId.fromString(input.tenantId)
 
-    const tenant = await prisma.tenant.findUnique({ where: { id: input.tenantId } })
+    const tenant = await this.tenantRepo.findById(input.tenantId)
     if (!tenant) throw new AppError(404, 'TENANT_NOT_FOUND', 'Tenant not found')
 
-    const plan = SUBSCRIPTION_PLANS[tenant.subscriptionPlan]
+    const plan = SUBSCRIPTION_PLANS[tenant.subscriptionPlan as keyof typeof SUBSCRIPTION_PLANS]
     const extraUsers = (tenant.customFields as any)?.extraUsers || 0
     const maxAllowed = plan.maxUsers + extraUsers
 

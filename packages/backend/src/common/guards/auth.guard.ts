@@ -11,6 +11,7 @@ declare global {
     interface Request {
       user?: JwtPayload
       tenantId?: string
+      subscriptionRestricted?: boolean
     }
   }
 }
@@ -27,8 +28,13 @@ export async function authGuard(req: Request, _res: Response, next: NextFunction
     req.user = payload
     req.tenantId = payload.tenantId
 
+    // Super Admin doesn't need tenantId; all others must have one
+    if (payload.globalRole !== 'super_admin' && !payload.tenantId) {
+      return next(new AppError(401, 'INVALID_TOKEN', 'Token missing tenant association'))
+    }
+
     const headerTenantId = req.headers['x-tenant-id'] as string | undefined
-    if (headerTenantId && payload.role !== 'super_admin' && headerTenantId !== payload.tenantId) {
+    if (headerTenantId && payload.globalRole !== 'super_admin' && headerTenantId !== payload.tenantId) {
       return next(new AppError(403, 'TENANT_MISMATCH', 'x-tenant-id does not match your tenant'))
     }
 
@@ -38,16 +44,54 @@ export async function authGuard(req: Request, _res: Response, next: NextFunction
   }
 }
 
+/**
+ * Ensures the authenticated user is an admin of the tenant in the request.
+ * Blocks super_admin (who must use super-admin routes) and non-admin roles.
+ */
+export async function requireTenantAdmin(req: Request, _res: Response, next: NextFunction) {
+  try {
+    const user = req.user
+    if (!user) {
+      return next(new AppError(401, 'UNAUTHORIZED', 'Authentication required'))
+    }
+    if (user.globalRole === 'super_admin') {
+      return next(new AppError(403, 'FORBIDDEN', 'Super Admin cannot manage tenant employees. Use Super Admin panel.'))
+    }
+    if (user.tenantRole !== 'admin') {
+      return next(new AppError(403, 'FORBIDDEN', `Role '${user.tenantRole}' is not allowed to manage employees`))
+    }
+    if (!user.tenantId) {
+      return next(new AppError(403, 'FORBIDDEN', 'Admin without tenant association'))
+    }
+    const headerTenant = req.headers['x-tenant-id'] as string | undefined
+    if (headerTenant && headerTenant !== user.tenantId) {
+      return next(new AppError(403, 'TENANT_MISMATCH', 'x-tenant-id does not match your tenant'))
+    }
+    req.tenantId = user.tenantId
+    next()
+  } catch (err) {
+    return next(err)
+  }
+}
+
 export async function tenantGuard(req: Request, _res: Response, next: NextFunction) {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string
+    const tenantId = req.headers['x-tenant-id'] as string | undefined
     if (!tenantId) {
       return next(new AppError(400, 'TENANT_REQUIRED', 'x-tenant-id header is required'))
     }
 
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
-    if (!tenant || tenant.subscriptionStatus === 'canceled') {
-      return next(new AppError(403, 'TENANT_INACTIVE', 'Tenant is not active'))
+    if (!tenant) {
+      return next(new AppError(404, 'TENANT_NOT_FOUND', 'Tenant not found'))
+    }
+
+    if (tenant.subscriptionStatus === 'canceled' || tenant.subscriptionStatus === 'paused') {
+      return next(new AppError(403, 'TENANT_INACTIVE', `Tenant is inactive (status: ${tenant.subscriptionStatus})`))
+    }
+
+    if (tenant.subscriptionStatus === 'past_due') {
+      req.subscriptionRestricted = true
     }
 
     req.tenantId = tenantId

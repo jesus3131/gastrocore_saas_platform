@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../../../lib/api'
 import { Modal, EmptyState, ErrorState } from '../../../shared/components/ui'
 import { LoadingSkeleton } from '../../../shared/components/ui/loading'
-import { CreditCard, Banknote, Smartphone, QrCode, ArrowLeft, CheckCircle } from 'lucide-react'
+import { CreditCard, Banknote, Smartphone, QrCode, ArrowLeft, CheckCircle, ExternalLink } from 'lucide-react'
+import { StripeCardForm } from '../components/StripeCardForm'
 
 const paymentMethods = [
   { id: 'cash', label: 'Efectivo', icon: Banknote, color: 'text-success bg-success/10 border-success/20' },
@@ -20,6 +21,7 @@ export function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('')
   const [splitMode, setSplitMode] = useState<'none' | 'equal' | 'items'>('none')
   const [splitCount, setSplitCount] = useState(2)
+  const [paymentResult, setPaymentResult] = useState<any>(null)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -31,12 +33,40 @@ export function CheckoutPage() {
   const processPayment = useMutation({
     mutationFn: (data: any) => api.post('/pos/payments', data),
     onSuccess: () => {
-      toast.success('Pago procesado exitosamente')
       queryClient.invalidateQueries({ queryKey: ['pos'] })
       setSelectedOrder(null)
       setPaymentMethod('')
     },
     onError: (err: any) => toast.error(err.response?.data?.message || 'Error al procesar pago'),
+  })
+
+  const createIntent = useMutation({
+    mutationFn: (data: any) => api.post('/integrations/payments/create-intent', data),
+    onSuccess: (res: any, vars: any) => {
+      const intent = res.data.data
+      setPaymentResult({ type: 'stripe', clientSecret: intent.clientSecret, id: intent.id, amount: vars.amount, pendingPayment: true })
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Error al crear intent'),
+  })
+
+  const createPreference = useMutation({
+    mutationFn: (data: any) => api.post('/integrations/payments/create-preference', data),
+    onSuccess: (res: any) => {
+      const pref = res.data.data
+      window.open(pref.initPoint, '_blank')
+      setPaymentResult({ type: 'mercadopago', initPoint: pref.initPoint, id: pref.id, pendingPayment: true })
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Error al crear preferencia'),
+  })
+
+  const confirmPayment = useMutation({
+    mutationFn: (data: any) => api.post('/pos/payments/confirm', data),
+    onSuccess: () => {
+      toast.success('Pago confirmado exitosamente')
+      queryClient.invalidateQueries({ queryKey: ['pos'] })
+      setPaymentResult(null)
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Error al confirmar pago'),
   })
 
   const splitPayment = useMutation({
@@ -63,12 +93,44 @@ export function CheckoutPage() {
         method: paymentMethod,
         parts: splitMode === 'equal' ? splitCount : undefined,
       })
+    } else if (paymentMethod === 'stripe') {
+      const total = Number(selectedOrder.total)
+      processPayment.mutate(
+        { orderId: selectedOrder.id, method: 'stripe', amount: total },
+        {
+          onSuccess: () => {
+            createIntent.mutate({
+              amount: total,
+              orderId: selectedOrder.id,
+              description: `Orden #${selectedOrder.orderNumber || selectedOrder.id.slice(0, 6)}`,
+            })
+          },
+        }
+      )
+    } else if (paymentMethod === 'mercadopago') {
+      const total = Number(selectedOrder.total)
+      processPayment.mutate(
+        { orderId: selectedOrder.id, method: 'mercadopago', amount: total },
+        {
+          onSuccess: () => {
+            createPreference.mutate({
+              items: selectedOrder.items?.map((i: any) => ({
+                title: i.name,
+                quantity: i.quantity,
+                unitPrice: Number(i.unitPrice || i.price || 0),
+              })) || [{ title: `Orden #${selectedOrder.orderNumber || selectedOrder.id.slice(0, 6)}`, quantity: 1, unitPrice: total }],
+              successUrl: `${window.location.origin}/pos/checkout?success=true`,
+              failureUrl: `${window.location.origin}/pos/checkout?success=false`,
+              pendingUrl: `${window.location.origin}/pos/checkout`,
+            })
+          },
+        }
+      )
     } else {
-      processPayment.mutate({
-        orderId: selectedOrder.id,
-        method: paymentMethod,
-        amount: selectedOrder.total,
-      })
+      processPayment.mutate(
+        { orderId: selectedOrder.id, method: paymentMethod, amount: selectedOrder.total },
+        { onSuccess: () => toast.success('Pago procesado exitosamente') }
+      )
     }
   }
 
@@ -197,6 +259,49 @@ export function CheckoutPage() {
           action={<button onClick={() => navigate('/pos')} className="btn-primary btn-sm">Ir a POS</button>}
         />
       )}
+
+      <Modal open={!!paymentResult} onClose={() => setPaymentResult(null)} title={paymentResult?.type === 'stripe' ? 'Pago con Stripe' : 'Pago en Línea'}>
+        {paymentResult?.type === 'stripe' ? (
+          <StripeCardForm
+            clientSecret={paymentResult.clientSecret}
+            amount={paymentResult.amount}
+            onSuccess={() => confirmPayment.mutate(
+              { orderId: selectedOrder?.id, transactionId: paymentResult?.id },
+              { onSuccess: () => setPaymentResult(null) }
+            )}
+            onError={(msg) => toast.error(msg)}
+            onCancel={() => setPaymentResult(null)}
+          />
+        ) : (
+          <>
+            <div className="space-y-4">
+              {paymentResult?.type === 'mercadopago' && (
+                <>
+                  <p className="text-sm text-on-surface-muted">
+                    Preferencia de Mercado Pago creada. Se abrió una nueva ventana.
+                  </p>
+                  <div className="bg-surface-container p-3 rounded-lg break-all">
+                    <p className="text-xs text-on-surface-muted mb-1">Init Point</p>
+                    <a href={paymentResult?.initPoint} target="_blank" rel="noopener noreferrer" className="text-sm text-primary underline flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3" /> Abrir checkout
+                    </a>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setPaymentResult(null)} className="btn-secondary flex-1">Cancelar</button>
+              <button
+                onClick={() => confirmPayment.mutate({ orderId: selectedOrder?.id, transactionId: paymentResult?.id }, { onSuccess: () => setPaymentResult(null) })}
+                disabled={confirmPayment.isPending}
+                className="btn-primary flex-1"
+              >
+                {confirmPayment.isPending ? 'Confirmando...' : 'Confirmar Pago'}
+              </button>
+            </div>
+          </>
+        )}
+      </Modal>
     </div>
   )
 }

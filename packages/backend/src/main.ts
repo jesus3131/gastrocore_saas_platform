@@ -18,10 +18,11 @@ const [{ createApp }, { logger }, { env }, { disconnectDatabase }, { disconnectR
   import('./config/redis/redis.js'),
 ])
 
-const [{ container }, { WebSocketGateway }, { EventPersister }, { EventBroadcaster }] = await Promise.all([
+const [{ container }, { WebSocketGateway }, { OutboxProcessor }, { OutboxEventBus }, { EventBroadcaster }] = await Promise.all([
   import('./infrastructure/di/container.js'),
   import('./infrastructure/websocket/websocket-gateway.js'),
-  import('./infrastructure/events/event-persister.js'),
+  import('./infrastructure/events/outbox-processor.js'),
+  import('./infrastructure/events/outbox-event-bus.js'),
   import('./infrastructure/websocket/event-broadcaster.js'),
 ])
 
@@ -36,9 +37,10 @@ async function bootstrap() {
 
   const eventStore = container.resolve<import('./core/ports/event-store.js').EventStore>('EventStore')
   const eventBus = container.resolve<import('./core/ports/event-bus.js').EventBus>('EventBus')
+  const outboxEventBus = container.resolve(OutboxEventBus)
 
-  new EventPersister(eventStore, eventBus).start()
   new EventBroadcaster(eventBus, gateway).start()
+  new OutboxProcessor(outboxEventBus).start()
 
   server.listen(env.PORT, () => {
     logger.info({ port: env.PORT, env: env.NODE_ENV }, 'GastroCore API started')

@@ -29,9 +29,9 @@ export class WebSocketGateway {
       try {
         const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload
         ;(socket as any).user = {
-          tenantId: payload.tenantId,
+          tenantId: payload.tenantId as string,
           userId: payload.sub,
-          role: payload.role,
+          role: payload.tenantRole || payload.globalRole || payload.role || 'user',
         } satisfies AuthenticatedSocket
         next()
       } catch {

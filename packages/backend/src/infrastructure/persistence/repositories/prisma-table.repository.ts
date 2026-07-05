@@ -7,13 +7,33 @@ function getClient(): any {
 }
 
 export class PrismaTableRepository implements TableRepository {
-  async updateStatus(id: string, status: string): Promise<any> {
+  async updateStatus(tenantId: string, id: string, status: string): Promise<any> {
     const client = getClient()
-    return client.table.update({ where: { id }, data: { status } })
+    return client.table.update({ where: { id, branch: { tenantId } }, data: { status } })
   }
 
-  async findById(id: string): Promise<any> {
+  async findById(tenantId: string, id: string): Promise<any> {
     const client = getClient()
-    return client.table.findUnique({ where: { id } })
+    return client.table.findFirst({ where: { id, branch: { tenantId } } })
+  }
+
+  async findBranchByTable(tableId: string): Promise<any> {
+    const client = getClient()
+    const table = await client.table.findUnique({ where: { id: tableId }, select: { branchId: true } })
+    if (!table?.branchId) return null
+    return client.branch.findUnique({ where: { id: table.branchId }, select: { id: true, tenantId: true } })
+  }
+
+  async findAllWithBranches(tenantId: string): Promise<any[]> {
+    const client = getClient()
+    return client.branch.findMany({
+      where: { tenantId, isActive: true },
+      include: {
+        areas: {
+          include: { tables: { orderBy: { label: 'asc' } } },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    })
   }
 }

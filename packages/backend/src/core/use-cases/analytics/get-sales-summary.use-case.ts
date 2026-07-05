@@ -7,12 +7,16 @@ export class GetSalesSummaryUseCase {
     @inject('AnalyticsRepository') private readonly analyticsRepo: AnalyticsRepository,
   ) {}
 
-  async execute(tenantId: string) {
-    const orders = await this.analyticsRepo.findOrders(tenantId, {
-      status: 'paid',
-      createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-      include: { items: true },
-    })
+  async execute(tenantId: string, from?: string, to?: string) {
+    const dateFilter: any = {}
+    if (from) dateFilter.gte = new Date(from)
+    if (to) dateFilter.lte = new Date(to)
+    if (!from && !to) dateFilter.gte = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+    const orders = await this.analyticsRepo.findOrders(tenantId,
+      { status: 'paid', createdAt: dateFilter },
+      { include: { items: true } },
+    )
 
     const totalRevenue = orders.reduce((sum: number, o: any) => sum + Number(o.total), 0)
     const totalOrders = orders.length

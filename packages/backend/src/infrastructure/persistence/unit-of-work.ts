@@ -1,4 +1,4 @@
-import { prisma } from '../../config/database/prisma.js'
+import { prisma, createScopedTransactionClient } from '../../config/database/prisma.js'
 import type { Prisma } from '@prisma/client'
 import type { UnitOfWork } from '../../core/ports/unit-of-work.js'
 
@@ -16,7 +16,8 @@ export class PrismaUnitOfWork implements UnitOfWork {
     }) as Promise<T>
   }
 
-  static getTransaction(): Prisma.TransactionClient | null {
-    return PrismaUnitOfWork.currentTx
+  static getTransaction(): any {
+    if (!PrismaUnitOfWork.currentTx) return null
+    return createScopedTransactionClient(PrismaUnitOfWork.currentTx as any) || PrismaUnitOfWork.currentTx
   }
 }

@@ -58,7 +58,7 @@ const superAdminBottomNav = [
 
 export function DashboardLayout() {
   const { user, waiter } = useAuthStore()
-  const isSuperAdmin = user?.role === 'super_admin'
+  const isSuperAdmin = user?.globalRole === 'super_admin'
   const flags: string[] = user?.featureFlags || []
   const navItems: NavItem[] = useMemo(() => isSuperAdmin
     ? superAdminNavItems

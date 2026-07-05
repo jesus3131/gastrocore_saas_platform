@@ -1,24 +1,25 @@
 import { Router } from 'express'
-import { HrController } from './hr.controller.js'
-import { authGuard, tenantGuard } from '../../common/guards/auth.guard.js'
+import { hrController } from './hr.controller.js'
+import { authGuard, tenantGuard, requireTenantAdmin } from '../../common/guards/auth.guard.js'
+import { requirePermission, requireRole, requireFullAuth } from '../../common/guards/permission.guard.js'
 import { validate } from '../../common/decorators/validate.js'
 import { createEmployeeSchema, updateEmployeeSchema, createShiftSchema, updateShiftStatusSchema, verifyPinSchema } from './hr.validation.js'
 
 const router = Router()
-const controller = new HrController()
 
-// Public PIN verification for waiters (requires tenant header but not full auth)
-router.post('/employees/verify-pin', tenantGuard, validate(verifyPinSchema), controller.verifyPin.bind(controller))
-
+router.post('/employees/verify-pin', tenantGuard, validate(verifyPinSchema), hrController.verifyPin)
 router.use(authGuard)
 
-router.get('/employees', controller.getEmployees.bind(controller))
-router.post('/employees', validate(createEmployeeSchema), controller.createEmployee.bind(controller))
-router.put('/employees/:id', validate(updateEmployeeSchema), controller.updateEmployee.bind(controller))
-router.get('/shifts', controller.getShifts.bind(controller))
-router.post('/shifts', validate(createShiftSchema), controller.createShift.bind(controller))
-router.put('/shifts/:id/status', validate(updateShiftStatusSchema), controller.updateShiftStatus.bind(controller))
-router.get('/roles', controller.getRoles.bind(controller))
-router.get('/commissions', controller.getCommissions.bind(controller))
+router.get('/employees', requirePermission('hr:read'), hrController.getEmployees)
+router.post('/employees', requirePermission('hr:write'), requireTenantAdmin, requireFullAuth, validate(createEmployeeSchema), hrController.createEmployee)
+router.put('/employees/:id', requirePermission('hr:write'), requireTenantAdmin, requireFullAuth, validate(updateEmployeeSchema), hrController.updateEmployee)
+router.delete('/employees/:id', requirePermission('hr:delete'), requireTenantAdmin, requireFullAuth, hrController.deleteEmployee)
+
+router.get('/shifts', requirePermission('hr:read'), hrController.getShifts)
+router.post('/shifts', requirePermission('hr:write'), validate(createShiftSchema), hrController.createShift)
+router.put('/shifts/:id/status', requirePermission('hr:write'), validate(updateShiftStatusSchema), hrController.updateShiftStatus)
+
+router.get('/roles', requirePermission('hr:read'), hrController.getRoles)
+router.get('/commissions', requirePermission('hr:read'), hrController.getCommissions)
 
 export { router as hrRouter }

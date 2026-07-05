@@ -71,7 +71,7 @@ export class CreateOrderUseCase {
       const order = await this.orderRepo.create(orderData)
 
       if (input.tableId) {
-        await this.tableRepo.updateStatus(input.tableId, 'occupied')
+        await this.tableRepo.updateStatus(input.tenantId, input.tableId, 'occupied')
       }
 
       await this.deductInventory(input.tenantId, input.items)
@@ -91,28 +91,43 @@ export class CreateOrderUseCase {
   }
 
   private async deductInventory(tenantId: string, items: CreateOrderInput['items']) {
+    const accum = new Map<string, { ingredientId: string; qty: number; itemName: string }>()
+
     for (const item of items) {
       const recipe = await this.menuRepo.findRecipeByMenuItem(item.menuItemId)
       if (!recipe) continue
 
       for (const ingredient of recipe.ingredients) {
         const qtyToDeduct = ingredient.quantity * item.quantity
-
-        await this.inventoryRepo.deductStock(ingredient.ingredientId, tenantId, qtyToDeduct)
-        await this.inventoryRepo.createMovement(
-          ingredient.ingredientId,
-          'out',
-          qtyToDeduct,
-          `order-${item.menuItemId}`,
-        )
-
-        const updated = await this.inventoryRepo.findById(ingredient.ingredientId)
-        if (updated && updated.currentStock <= updated.minimumStock) {
-          logger.warn(
-            { ingredient: updated.name, stock: updated.currentStock, unit: updated.unit },
-            'Low stock alert',
-          )
+        const existing = accum.get(ingredient.ingredientId)
+        if (existing) {
+          existing.qty += qtyToDeduct
+        } else {
+          accum.set(ingredient.ingredientId, {
+            ingredientId: ingredient.ingredientId,
+            qty: qtyToDeduct,
+            itemName: item.name,
+          })
         }
+      }
+    }
+
+    for (const entry of accum.values()) {
+      await this.inventoryRepo.deductStock(entry.ingredientId, tenantId, entry.qty)
+      await this.inventoryRepo.createMovement(
+        entry.ingredientId,
+        tenantId,
+        'out',
+        entry.qty,
+        `order-${entry.itemName}`,
+      )
+
+      const updated = await this.inventoryRepo.findById(entry.ingredientId)
+      if (updated && updated.currentStock <= updated.minimumStock) {
+        logger.warn(
+          { ingredient: updated.name, stock: updated.currentStock, unit: updated.unit },
+          'Low stock alert',
+        )
       }
     }
   }

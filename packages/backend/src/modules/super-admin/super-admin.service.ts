@@ -1,22 +1,32 @@
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
-import { prisma } from '../../config/database/prisma.js'
+import { inject, injectable } from 'tsyringe'
 import { AppError } from '../../common/filters/error-handler.js'
+import { logger } from '../../config/logger.js'
 import { sendWelcomeEmail } from '../notifications/email.service.js'
-import { SUBSCRIPTION_PLANS } from '@gastrocore/shared'
+import { SUBSCRIPTION_PLANS, FEATURE_LABELS } from '@gastrocore/shared'
 import { CreateCompanyUseCase } from '../../core/use-cases/super-admin/create-company.use-case.js'
+import type { TenantRepository } from '../../core/ports/repositories/tenant.repository.js'
+import type { UserRepository } from '../../core/ports/repositories/user.repository.js'
+import type { SubscriptionRepository } from '../../core/ports/repositories/subscription.repository.js'
 
+@injectable()
 export class SuperAdminService {
   private readonly saltRounds = 12
 
-  constructor(private readonly createCompanyUseCase?: CreateCompanyUseCase) {}
+  constructor(
+    @inject('TenantRepository') private readonly tenantRepo: TenantRepository,
+    @inject('UserRepository') private readonly userRepo: UserRepository,
+    @inject('SubscriptionRepository') private readonly subscriptionRepo: SubscriptionRepository,
+    private readonly createCompanyUseCase?: CreateCompanyUseCase,
+  ) {}
 
   async getCompanies() {
-    const tenants = await prisma.tenant.findMany({
+    const tenants = await this.tenantRepo.findManyTenants({
       orderBy: { createdAt: 'desc' },
       include: {
         users: {
-          where: { role: 'admin' },
+          where: { tenantRole: 'admin' },
           select: { id: true, email: true, name: true, createdAt: true },
           take: 1,
         },
@@ -24,7 +34,7 @@ export class SuperAdminService {
         _count: { select: { users: true, branches: true } },
       },
     })
-    return tenants.map((t) => ({
+    return tenants.map((t: any) => ({
       id: t.id,
       name: t.name,
       businessType: t.businessType,
@@ -46,25 +56,30 @@ export class SuperAdminService {
   }
 
   async getCompany(id: string) {
-    const tenant = await prisma.tenant.findUnique({
+    const tenant = await this.tenantRepo.findById(id)
+    if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
+
+    // Need to fetch with includes separately since findById doesn't support it
+    const tenantFull = await this.tenantRepo.findManyTenants({
       where: { id },
       include: {
         users: {
-          where: { role: 'admin' },
-          select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true, lastLoginAt: true },
+          where: { tenantRole: 'admin' },
+          select: { id: true, email: true, name: true, tenantRole: true, globalRole: true, isActive: true, createdAt: true, lastLoginAt: true },
         },
         subscriptions: { orderBy: { createdAt: 'desc' }, take: 3, include: { invoices: true } },
         featureFlags: { select: { feature: true, enabled: true } },
         _count: { select: { users: true, branches: true, orders: true, customers: true } },
       },
     })
-    if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
+
+    const full = tenantFull[0]
     return {
-      ...tenant,
-      taxId: (tenant.customFields as any)?.taxId || null,
-      address: (tenant.customFields as any)?.address || null,
-      phone: (tenant.customFields as any)?.phone || null,
-      extraUsers: (tenant.customFields as any)?.extraUsers || 0,
+      ...full,
+      taxId: (full.customFields as any)?.taxId || null,
+      address: (full.customFields as any)?.address || null,
+      phone: (full.customFields as any)?.phone || null,
+      extraUsers: (full.customFields as any)?.extraUsers || 0,
     }
   }
 
@@ -83,15 +98,15 @@ export class SuperAdminService {
 
       sendWelcomeEmail(data.adminEmail, data.adminName, data.adminEmail, result.credentials.password)
         .then((sent) => {
-          if (sent) console.log(`[SuperAdmin] Welcome email sent to ${data.adminEmail}`)
-          else console.warn(`[SuperAdmin] Could not send welcome email to ${data.adminEmail}`)
+          if (sent) logger.info({ email: data.adminEmail }, 'SuperAdmin: welcome email sent')
+          else logger.warn({ email: data.adminEmail }, 'SuperAdmin: could not send welcome email')
         })
-        .catch((err) => console.warn(`[SuperAdmin] Email error:`, err.message))
+        .catch((err) => logger.warn({ err, email: data.adminEmail }, 'SuperAdmin: email error'))
 
       return result
     }
 
-    const existing = await prisma.user.findFirst({ where: { email: data.adminEmail } })
+    const existing = await this.userRepo.findFirst({ where: { email: data.adminEmail } })
     if (existing) throw new AppError(409, 'EMAIL_EXISTS', 'Email already registered')
 
     const rawPassword = this.generatePassword()
@@ -105,61 +120,62 @@ export class SuperAdminService {
     if (data.address) customFields.address = data.address
     if (data.phone) customFields.phone = data.phone
 
-    const tenant = await prisma.tenant.create({
-      data: {
-        name: data.companyName,
-        slug: data.companyName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-        businessType: data.businessType as never,
-        subscriptionPlan: planId,
-        subscriptionStatus: 'trial',
-        customFields: customFields as any,
-      },
+    const tenant = await this.tenantRepo.create({
+      name: data.companyName,
+      slug: data.companyName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+      businessType: data.businessType as never,
+      subscriptionPlan: planId,
+      subscriptionStatus: 'trial',
+      customFields: customFields as any,
     })
 
-    const user = await prisma.user.create({
+    const { prisma } = await import('../../config/database/prisma.js')
+    const employee = await prisma.employee.create({
       data: {
         tenantId: tenant.id,
-        email: data.adminEmail,
-        passwordHash,
         name: data.adminName,
+        email: data.adminEmail,
         role: 'admin',
       },
     })
 
+    const user = await this.userRepo.create({
+      tenantId: tenant.id,
+      employeeId: employee.id,
+      email: data.adminEmail,
+      passwordHash,
+      name: data.adminName,
+      tenantRole: 'admin',
+    })
+
     if (plan) {
-      const subscription = await prisma.subscription.create({
-        data: {
-          tenantId: tenant.id,
-          plan: planId as any,
-          status: 'trial',
-          currentPeriodStart: new Date(),
-          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        },
+      const subscription = await this.subscriptionRepo.create({
+        tenantId: tenant.id,
+        plan: planId as any,
+        status: 'trial',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       })
 
-      await prisma.subscriptionInvoice.create({
-        data: {
-          subscriptionId: subscription.id,
-          amount: plan.priceMonthly,
-          status: 'pending',
-          periodStart: subscription.currentPeriodStart,
-          periodEnd: subscription.currentPeriodEnd,
-        },
+      await this.subscriptionRepo.createInvoice({
+        subscriptionId: subscription.id,
+        amount: plan.priceMonthly,
+        status: 'pending',
+        periodStart: subscription.currentPeriodStart,
+        periodEnd: subscription.currentPeriodEnd,
       })
 
       for (const feature of plan.features) {
-        await prisma.tenantFeatureFlag.create({
-          data: { tenantId: tenant.id, feature, enabled: true },
-        })
+        await this.tenantRepo.upsertFeatureFlag(tenant.id, feature, true)
       }
     }
 
     sendWelcomeEmail(data.adminEmail, data.adminName, data.adminEmail, rawPassword)
       .then((sent) => {
-        if (sent) console.log(`[SuperAdmin] Welcome email sent to ${data.adminEmail}`)
-        else console.warn(`[SuperAdmin] Could not send welcome email to ${data.adminEmail}`)
+        if (sent) logger.info({ email: data.adminEmail }, 'SuperAdmin: welcome email sent')
+        else logger.warn({ email: data.adminEmail }, 'SuperAdmin: could not send welcome email')
       })
-      .catch((err) => console.warn(`[SuperAdmin] Email error:`, err.message))
+      .catch((err) => logger.warn({ err, email: data.adminEmail }, 'SuperAdmin: email error'))
 
     return {
       company: { id: tenant.id, name: tenant.name },
@@ -177,7 +193,7 @@ export class SuperAdminService {
     phone?: string
     extraUsers?: number
   }) {
-    const tenant = await prisma.tenant.findUnique({ where: { id } })
+    const tenant = await this.tenantRepo.findById(id)
     if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
 
     const customFields = { ...(tenant.customFields as Record<string, unknown>) }
@@ -194,24 +210,22 @@ export class SuperAdminService {
 
     updateData.customFields = customFields
 
-    const updated = await prisma.tenant.update({ where: { id }, data: updateData as any })
+    const updated = await this.tenantRepo.update(id, updateData as any)
 
     if (data.planId) {
       const plan = SUBSCRIPTION_PLANS[data.planId as keyof typeof SUBSCRIPTION_PLANS]
       if (plan) {
-        await prisma.subscription.create({
-          data: {
-            tenantId: id,
-            plan: data.planId as any,
-            status: 'active',
-            currentPeriodStart: new Date(),
-            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          },
+        await this.subscriptionRepo.create({
+          tenantId: id,
+          plan: data.planId as any,
+          status: 'active',
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         })
 
-        await prisma.tenantFeatureFlag.deleteMany({ where: { tenantId: id } })
+        await this.tenantRepo.deleteFeatureFlags({ tenantId: id })
         for (const feature of plan.features) {
-          await prisma.tenantFeatureFlag.create({ data: { tenantId: id, feature, enabled: true } })
+          await this.tenantRepo.upsertFeatureFlag(id, feature, true)
         }
       }
     }
@@ -220,41 +234,506 @@ export class SuperAdminService {
   }
 
   async updateModules(companyId: string, features: { feature: string; enabled: boolean }[]) {
-    const tenant = await prisma.tenant.findUnique({ where: { id: companyId } })
+    const tenant = await this.tenantRepo.findById(companyId)
     if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
 
     for (const f of features) {
-      await prisma.tenantFeatureFlag.upsert({
-        where: { tenantId_feature: { tenantId: companyId, feature: f.feature } },
-        create: { tenantId: companyId, feature: f.feature, enabled: f.enabled },
-        update: { enabled: f.enabled },
-      })
+      await this.tenantRepo.upsertFeatureFlag(companyId, f.feature, f.enabled)
     }
 
     return { message: 'Modules updated successfully' }
   }
 
   async resendCredentials(companyId: string) {
-    const admin = await prisma.user.findFirst({ where: { tenantId: companyId, role: 'admin', isActive: true } })
-    if (!admin) throw new AppError(404, 'ADMIN_NOT_FOUND', 'No active admin found for this company')
+    const admin = await this.tenantRepo.findUsersByTenant(companyId, { tenantRole: 'admin', isActive: true })
+    if (!admin.length) throw new AppError(404, 'ADMIN_NOT_FOUND', 'No active admin found for this company')
 
     const rawPassword = this.generatePassword()
     const passwordHash = await bcrypt.hash(rawPassword, this.saltRounds)
 
-    await prisma.user.update({ where: { id: admin.id }, data: { passwordHash } })
+    await this.tenantRepo.updateAdminPassword(admin[0].id, passwordHash)
 
-    sendWelcomeEmail(admin.email, admin.name, admin.email, rawPassword)
+    sendWelcomeEmail(admin[0].email, admin[0].name, admin[0].email, rawPassword)
       .then((sent) => {
-        if (sent) console.log(`[SuperAdmin] Credentials re-sent to ${admin.email}`)
-        else console.warn(`[SuperAdmin] Could not resend credentials to ${admin.email}`)
+        if (sent) logger.info({ email: admin[0].email }, 'SuperAdmin: credentials re-sent')
+        else logger.warn({ email: admin[0].email }, 'SuperAdmin: could not resend credentials')
       })
-      .catch((err) => console.warn(`[SuperAdmin] Email error:`, err.message))
+      .catch((err) => logger.warn({ err, email: admin[0].email }, 'SuperAdmin: email error'))
 
-    return { message: 'Credentials re-sent successfully', email: admin.email }
+    return { message: 'Credentials re-sent successfully', email: admin[0].email }
   }
 
   private generatePassword(length = 12): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*'
     return Array.from(crypto.randomBytes(length), (byte) => chars[byte % chars.length]).join('')
+  }
+
+  // ─── TENANT MANAGEMENT ─────────────────────────────────────────
+
+  async deleteCompany(id: string, adminId: string) {
+    const tenant = await this.tenantRepo.findById(id)
+    if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
+
+    const { prisma } = await import('../../config/database/prisma.js')
+    await prisma.tenant.delete({ where: { id } })
+
+    await this.logAction(adminId, 'tenant.delete', 'warning',
+      `Deleted company "${tenant.name}" (${id})`)
+
+    return { message: 'Company deleted successfully' }
+  }
+
+  async migratePlan(id: string, newPlan: string) {
+    const tenant = await this.tenantRepo.findById(id)
+    if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
+
+    const plan = SUBSCRIPTION_PLANS[newPlan as keyof typeof SUBSCRIPTION_PLANS]
+    if (!plan) throw new AppError(400, 'INVALID_PLAN', `Plan "${newPlan}" not found`)
+
+    const updated = await this.tenantRepo.update(id, { subscriptionPlan: newPlan } as any)
+
+    await this.subscriptionRepo.create({
+      tenantId: id,
+      plan: newPlan as any,
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    })
+
+    await this.tenantRepo.deleteFeatureFlags({ tenantId: id })
+    for (const feature of plan.features) {
+      await this.tenantRepo.upsertFeatureFlag(id, feature, true)
+    }
+
+    return {
+      id: updated.id,
+      name: updated.name,
+      subscriptionPlan: updated.subscriptionPlan,
+      mrr: plan.priceMonthly,
+      features: plan.features,
+    }
+  }
+
+  async toggleTenantStatus(id: string) {
+    const tenant = await this.tenantRepo.findById(id)
+    if (!tenant) throw new AppError(404, 'COMPANY_NOT_FOUND', 'Company not found')
+
+    const newStatus = tenant.subscriptionStatus === 'active' ? 'suspended' : 'active'
+    const updated = await this.tenantRepo.update(id, { subscriptionStatus: newStatus } as any)
+
+    return { id: updated.id, name: updated.name, status: updated.subscriptionStatus }
+  }
+
+  // ─── BILLING / INVOICES ────────────────────────────────────────
+
+  async getInvoices(opts?: { tenantId?: string; status?: string }) {
+    const { prisma } = await import('../../config/database/prisma.js')
+
+    const where: Record<string, unknown> = {}
+    if (opts?.tenantId) where.tenantId = opts.tenantId
+    if (opts?.status) where.status = opts.status
+
+    const invoices = await prisma.invoice.findMany({
+      where,
+      include: { tenant: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    return invoices.map((inv: any) => ({
+      id: inv.id,
+      tenantId: inv.tenantId,
+      tenantName: inv.tenant?.name || null,
+      description: inv.description,
+      amount: Number(inv.amount),
+      currency: inv.currency,
+      status: inv.status,
+      paymentMethod: inv.paymentMethod,
+      dueDate: inv.dueDate,
+      paidAt: inv.paidAt,
+      createdAt: inv.createdAt,
+    }))
+  }
+
+  async markInvoicePaid(invoiceId: string, adminId: string, paymentMethod?: string) {
+    const { prisma } = await import('../../config/database/prisma.js')
+
+    const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } })
+    if (!invoice) throw new AppError(404, 'INVOICE_NOT_FOUND', 'Invoice not found')
+    if (invoice.status === 'paid') throw new AppError(409, 'ALREADY_PAID', 'Invoice is already paid')
+
+    const updated = await prisma.invoice.update({
+      where: { id: invoiceId },
+      data: { status: 'paid', paidAt: new Date(), paymentMethod: paymentMethod || null },
+    })
+
+    await this.logAction(adminId, 'invoice.mark-paid', 'success',
+      `Marked invoice ${invoiceId} as paid (${Number(invoice.amount)} ${invoice.currency})`)
+
+    return {
+      id: updated.id,
+      status: updated.status,
+      paidAt: updated.paidAt,
+      amount: Number(updated.amount),
+      currency: updated.currency,
+    }
+  }
+
+  async createManualInvoice(data: {
+    tenantId: string
+    description: string
+    amount: number
+    currency?: string
+    dueDate: string
+    adminId: string
+  }) {
+    const { prisma } = await import('../../config/database/prisma.js')
+
+    const invoice = await prisma.invoice.create({
+      data: {
+        tenantId: data.tenantId,
+        description: data.description,
+        amount: data.amount,
+        currency: data.currency || 'MXN',
+        dueDate: new Date(data.dueDate),
+      },
+    })
+
+    await this.logAction(data.adminId, 'invoice.create', 'info',
+      `Created manual invoice for tenant ${data.tenantId}: ${data.description} (${data.amount})`)
+
+    return {
+      id: invoice.id,
+      description: invoice.description,
+      amount: Number(invoice.amount),
+      currency: invoice.currency,
+      dueDate: invoice.dueDate,
+      status: invoice.status,
+    }
+  }
+
+  // ─── CALENDAR EVENTS ───────────────────────────────────────────
+
+  async getCalendarEvents(dateFrom?: string, dateTo?: string) {
+    const { prisma } = await import('../../config/database/prisma.js')
+
+    const where: Record<string, unknown> = {}
+    if (dateFrom || dateTo) {
+      where.eventDate = {}
+      if (dateFrom) (where.eventDate as Record<string, unknown>).gte = new Date(dateFrom)
+      if (dateTo) (where.eventDate as Record<string, unknown>).lte = new Date(dateTo)
+    }
+
+    const events = await prisma.calendarEvent.findMany({
+      where,
+      include: { tenant: { select: { id: true, name: true } } },
+      orderBy: { eventDate: 'asc' },
+    })
+
+    return events.map((ev: any) => ({
+      id: ev.id,
+      tenantId: ev.tenantId,
+      tenantName: ev.tenant?.name || null,
+      title: ev.title,
+      description: ev.description,
+      category: ev.category,
+      eventDate: ev.eventDate,
+      startTime: ev.startTime,
+      endTime: ev.endTime,
+      color: ev.color,
+      allDay: ev.allDay,
+      createdBy: ev.createdBy,
+      createdAt: ev.createdAt,
+    }))
+  }
+
+  async createCalendarEvent(data: {
+    tenantId?: string
+    title: string
+    description?: string
+    category: string
+    eventDate: string
+    startTime?: string
+    endTime?: string
+    color?: string
+    allDay?: boolean
+    createdBy: string
+  }) {
+    const { prisma } = await import('../../config/database/prisma.js')
+
+    const event = await prisma.calendarEvent.create({
+      data: {
+        tenantId: data.tenantId || null,
+        title: data.title,
+        description: data.description || null,
+        category: data.category as any,
+        eventDate: new Date(data.eventDate),
+        startTime: data.startTime || null,
+        endTime: data.endTime || null,
+        color: data.color || '#f59e0b',
+        allDay: data.allDay || false,
+        createdBy: data.createdBy,
+      },
+    })
+
+    await this.logAction(data.createdBy, 'calendar.create', 'info',
+      `Created calendar event "${data.title}" on ${data.eventDate}`)
+
+    return event
+  }
+
+  async deleteCalendarEvent(eventId: string, adminId: string) {
+    const { prisma } = await import('../../config/database/prisma.js')
+
+    const event = await prisma.calendarEvent.findUnique({ where: { id: eventId } })
+    if (!event) throw new AppError(404, 'EVENT_NOT_FOUND', 'Calendar event not found')
+
+    await prisma.calendarEvent.delete({ where: { id: eventId } })
+
+    await this.logAction(adminId, 'calendar.delete', 'warning',
+      `Deleted calendar event "${event.title}"`)
+
+    return { message: 'Event deleted successfully' }
+  }
+
+  // ─── AUDIT LOGS ────────────────────────────────────────────────
+
+  async getAuditLogs(opts?: {
+    severity?: string
+    action?: string
+    adminId?: string
+    limit?: number
+    offset?: number
+  }) {
+    const { prisma } = await import('../../config/database/prisma.js')
+
+    const where: Record<string, unknown> = {}
+    if (opts?.severity) where.severity = opts.severity
+    if (opts?.action) where.action = opts.action
+    if (opts?.adminId) where.adminId = opts.adminId
+
+    const [logs, total] = await Promise.all([
+      prisma.systemLog.findMany({
+        where,
+        include: { admin: { select: { id: true, name: true, email: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: opts?.limit || 100,
+        skip: opts?.offset || 0,
+      }),
+      prisma.systemLog.count({ where }),
+    ])
+
+    return {
+      logs: logs.map((log: any) => ({
+        id: log.id,
+        adminName: log.admin?.name || 'Unknown',
+        adminEmail: log.admin?.email || null,
+        action: log.action,
+        severity: log.severity,
+        message: log.message,
+        metadata: log.metadata,
+        ipAddress: log.ipAddress,
+        createdAt: log.createdAt,
+      })),
+      total,
+    }
+  }
+
+  async getDashboardMetrics() {
+    const { prisma } = await import('../../config/database/prisma.js')
+
+    const [
+      totalTenants,
+      activeTenants,
+      totalUsers,
+      totalOrders,
+      totalRevenue,
+      recentActivity,
+    ] = await Promise.all([
+      prisma.tenant.count(),
+      prisma.tenant.count({ where: { subscriptionStatus: 'active' } }),
+      prisma.user.count({ where: { tenantRole: { not: undefined } } }),
+      prisma.order.count(),
+      prisma.payment.aggregate({ _sum: { amount: true } }),
+      prisma.systemLog.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: { admin: { select: { name: true } } },
+      }),
+    ])
+
+    const planDistribution = await prisma.tenant.groupBy({
+      by: ['subscriptionPlan'],
+      _count: true,
+    })
+
+    // MRR trend (monthly revenue from invoices)
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5)
+    sixMonthsAgo.setDate(1)
+
+    const invoices = await prisma.invoice.findMany({
+      where: { status: 'paid', paidAt: { gte: sixMonthsAgo } },
+      select: { amount: true, paidAt: true },
+    })
+
+    const mrrTrend: { month: string; mrr: number; transactions: number }[] = []
+    for (let i = 0; i < 6; i++) {
+      const d = new Date()
+      d.setMonth(d.getMonth() - (5 - i))
+      const month = d.toLocaleString('es-MX', { month: 'short', year: 'numeric' })
+      const monthStart = new Date(d.getFullYear(), d.getMonth(), 1)
+      const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1)
+      const monthInvoices = invoices.filter((inv) => {
+        const paid = new Date(inv.paidAt!)
+        return paid >= monthStart && paid < monthEnd
+      })
+      const mrr = monthInvoices.reduce((s, inv) => s + Number(inv.amount), 0)
+      mrrTrend.push({ month, mrr, transactions: monthInvoices.length })
+    }
+
+    return {
+      totalTenants,
+      activeTenants,
+      suspendedTenants: totalTenants - activeTenants,
+      totalUsers,
+      totalOrders,
+      totalRevenue: Number(totalRevenue._sum.amount || 0),
+      planDistribution: planDistribution.map((p: any) => ({
+        plan: p.subscriptionPlan,
+        count: p._count,
+      })),
+      mrrTrend,
+      recentActivity: recentActivity.map((a: any) => ({
+        id: a.id,
+        adminName: a.admin?.name || 'System',
+        action: a.action,
+        message: a.message,
+        createdAt: a.createdAt,
+      })),
+    }
+  }
+
+  // ─── PLANS ─────────────────────────────────────────────────────
+
+  async getPlans() {
+    return Object.entries(SUBSCRIPTION_PLANS).map(([id, plan]) => ({
+      id,
+      name: plan.name,
+      priceMonthly: plan.priceMonthly,
+      priceYearly: plan.priceYearly,
+      maxUsers: plan.maxUsers,
+      maxBranches: plan.maxBranches,
+      maxTransactions: plan.maxTransactions,
+      storageGb: plan.storageGb,
+      features: plan.features.map((f) => ({
+        id: f,
+        label: FEATURE_LABELS[f] || f,
+      })),
+    }))
+  }
+
+  // ─── SYSTEM HEALTH ─────────────────────────────────────────────
+
+  async getSystemHealth() {
+    const checks: Record<string, string> = {}
+
+    try {
+      const { prisma } = await import('../../config/database/prisma.js')
+      await prisma.$queryRaw`SELECT 1`
+      checks.database = 'healthy'
+    } catch {
+      checks.database = 'unhealthy'
+    }
+
+    try {
+      const { getRedis } = await import('../../config/redis/redis.js')
+      const redis = getRedis()
+      await redis.ping()
+      checks.redis = 'healthy'
+    } catch {
+      checks.redis = 'unhealthy'
+    }
+
+    checks.api = 'healthy'
+
+    const overall = Object.values(checks).every((s) => s === 'healthy') ? 'healthy' : 'degraded'
+
+    return { overall, checks, timestamp: new Date().toISOString() }
+  }
+
+  // ─── ANNOUNCEMENTS ─────────────────────────────────────────────
+
+  async createAnnouncement(data: {
+    title: string
+    message: string
+    severity: string
+    audience?: string
+    adminId: string
+  }) {
+    await this.logAction(data.adminId, 'announcement.create', data.severity,
+      `[${data.audience || 'all'}] ${data.title}: ${data.message}`,
+      { title: data.title, audience: data.audience || 'all' })
+
+    return {
+      title: data.title,
+      message: data.message,
+      severity: data.severity,
+      audience: data.audience || 'all',
+      createdAt: new Date().toISOString(),
+    }
+  }
+
+  // ─── FEATURE FLAGS ──────────────────────────────────────────────
+
+  async getFeatureFlags() {
+    const { prisma } = await import('../../config/database/prisma.js')
+    const flags = await prisma.systemFeatureFlag.findMany({
+      orderBy: { feature: 'asc' },
+    })
+    return flags.map((f: any) => ({
+      id: f.id,
+      feature: f.feature,
+      enabled: f.enabled,
+      description: f.description,
+      updatedAt: f.updatedAt,
+    }))
+  }
+
+  async updateFeatureFlag(data: { feature: string; enabled: boolean; description?: string }) {
+    const { prisma } = await import('../../config/database/prisma.js')
+    const flag = await prisma.systemFeatureFlag.upsert({
+      where: { feature: data.feature },
+      update: { enabled: data.enabled, description: data.description ?? undefined },
+      create: { feature: data.feature, enabled: data.enabled, description: data.description ?? null },
+    })
+    return { id: flag.id, feature: flag.feature, enabled: flag.enabled }
+  }
+
+  async toggleAllFeatureFlags(enabled: boolean) {
+    const { prisma } = await import('../../config/database/prisma.js')
+    const result = await prisma.systemFeatureFlag.updateMany({
+      where: {},
+      data: { enabled },
+    })
+    return { enabled, count: result.count }
+  }
+
+  // ─── SYSTEM LOGGING ────────────────────────────────────────────
+
+  private async logAction(adminId: string, action: string, severity: string, message: string, metadata?: Record<string, unknown>) {
+    try {
+      const { prisma } = await import('../../config/database/prisma.js')
+      await prisma.systemLog.create({
+        data: {
+          adminId,
+          action,
+          severity: severity as any,
+          message,
+          metadata: (metadata || {}) as any,
+        },
+      })
+    } catch (err) {
+      logger.error({ err }, 'SuperAdmin: failed to write system log')
+    }
   }
 }
