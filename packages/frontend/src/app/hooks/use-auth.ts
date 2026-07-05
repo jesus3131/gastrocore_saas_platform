@@ -17,9 +17,12 @@ export function useLogin() {
       navigate('/dashboard')
     },
     onError: (err: any) => {
+      const code = err.response?.data?.error?.code
       const message = err.response?.data?.error?.message || 'Error al iniciar sesión'
       if (message === 'Use super admin login endpoint') {
         toast.error('Usa el botón "Super Admin" debajo del formulario')
+      } else if (code === 'WAITER_LOGIN_BLOCKED') {
+        toast.error('Los meseros deben acceder desde /waiter')
       } else {
         toast.error(message)
       }

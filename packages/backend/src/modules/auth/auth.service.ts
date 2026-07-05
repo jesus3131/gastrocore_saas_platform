@@ -65,6 +65,9 @@ export class AuthService {
     if (!user.tenantId) {
       throw new AppError(401, 'INVALID_CREDENTIALS', 'Use super admin login endpoint')
     }
+    if (user.tenantRole === 'waiter') {
+      throw new AppError(403, 'WAITER_LOGIN_BLOCKED', 'Access restricted. Waiters must use /waiter app.')
+    }
 
     const valid = await bcrypt.compare(password, user.passwordHash)
     if (!valid) {
