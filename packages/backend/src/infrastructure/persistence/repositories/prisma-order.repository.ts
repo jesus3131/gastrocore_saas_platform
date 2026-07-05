@@ -62,7 +62,7 @@ export class PrismaOrderRepository implements OrderRepository {
     if (query?.status) where.status = query.status
     return client.order.findMany({
       where,
-      include: { items: { include: { modifiers: true } }, table: true, customer: true },
+      include: { items: { include: { modifiers: true } }, table: true, customer: true, user: { select: { name: true, tenantRole: true } } },
       orderBy: { createdAt: 'desc' },
       take: query?.limit || 50,
       skip: query?.offset || 0,
