@@ -48,6 +48,13 @@ function getHeaders(token: string) {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 }
 
+function clearSession() {
+  localStorage.removeItem('waiter_session')
+  localStorage.removeItem('waiter_tables')
+  localStorage.removeItem('waiter_menu')
+  window.location.reload()
+}
+
 function formatCurrency(n: number) {
   return '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
@@ -141,6 +148,7 @@ function TablePanel({ state, onStartOrder, onRequestBill }: { state: WaiterState
   const fetchTables = useCallback(async () => {
     try {
       const res = await fetch(`${API}/tables`, { headers: getHeaders(state.token) })
+      if (res.status === 401) { clearSession(); return }
       const json = await res.json()
       if (json.success) {
         const all: TableData[] = json.data.flatMap((b: any) => (b.areas ?? []).flatMap((a: any) => (a.tables ?? [])))
