@@ -81,7 +81,7 @@ export class WaiterService {
     if (!employee) {
       throw new AppError(401, 'INVALID_PIN', 'Invalid PIN')
     }
-    const user = await this.userRepo.findFirst({ tenantId: tenant.id, employeeId: employee.id })
+    const user = await this.userRepo.findFirst({ where: { tenantId: tenant.id, employeeId: employee.id } })
     if (!user || !user.isActive) {
       throw new AppError(401, 'INVALID_PIN', 'User account is inactive')
     }

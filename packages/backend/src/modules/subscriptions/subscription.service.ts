@@ -88,7 +88,8 @@ export class SubscriptionService {
     try {
       const admins = await this.tenantRepo.findManyAdmins(tenantId)
       for (const admin of admins) {
-        await sendCredentialsEmail(admin.email, admin.email, '')
+        // Log plan change notification — a dedicated email template should be used here
+        logger.info({ tenantId, newPlan, email: admin.email }, 'Plan changed — admin notified via log')
       }
     } catch (err) {
       logger.warn({ err, tenantId }, 'Failed to notify plan change')

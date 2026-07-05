@@ -51,4 +51,9 @@ export class PrismaMenuRepository implements MenuRepository {
       orderBy: { sortOrder: 'asc' },
     })
   }
+
+  async updateMenuItem(id: string, data: any): Promise<any> {
+    const client = getClient()
+    return client.menuItem.update({ where: { id }, data })
+  }
 }

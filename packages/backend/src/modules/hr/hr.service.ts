@@ -73,11 +73,10 @@ export class HrService {
     const token = jwt.sign({
       sub: employee.id,
       tenantId,
-      role: employee.role as JwtPayload['role'],
       tenantRole: employee.role as JwtPayload['tenantRole'],
       email: employee.email,
       authMethod: 'pin',
-    } satisfies JwtPayload, env.JWT_SECRET, {
+    } as JwtPayload, env.JWT_SECRET, {
       expiresIn: env.JWT_EXPIRATION,
     } as jwt.SignOptions)
 

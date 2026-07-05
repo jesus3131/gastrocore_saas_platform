@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
+import path from 'path'
 import { env } from './env.js'
 import { connectDatabase } from './database/prisma.js'
 import { connectRedis } from './redis/redis.js'
@@ -30,6 +31,9 @@ export async function createApp() {
   app.use(correlationId)
   app.use(requestLogger)
   app.use(tenantIsolationMiddleware)
+
+  // ─── Static uploads ────────────────────────────────────
+  app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')))
 
   // ─── Routes ─────────────────────────────────────────────
   registerRoutes(app)

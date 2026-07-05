@@ -551,7 +551,7 @@ export class SuperAdminService {
     ] = await Promise.all([
       prisma.tenant.count(),
       prisma.tenant.count({ where: { subscriptionStatus: 'active' } }),
-      prisma.user.count({ where: { tenantRole: { not: undefined } } }),
+      prisma.user.count({ where: { tenantRole: { not: null } } }),
       prisma.order.count(),
       prisma.payment.aggregate({ _sum: { amount: true } }),
       prisma.systemLog.findMany({

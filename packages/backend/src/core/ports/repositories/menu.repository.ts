@@ -19,4 +19,5 @@ export interface MenuRepository {
   findRecipeByMenuItem(menuItemId: string): Promise<RecipeWithIngredients | null>
   getMenu(tenantId: string): Promise<MenuCategory[]>
   getMenuItems(tenantId: string, categoryId: string): Promise<MenuItem[]>
+  updateMenuItem(id: string, data: Partial<MenuItem>): Promise<MenuItem>
 }
