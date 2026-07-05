@@ -87,9 +87,10 @@ function SuperAdminBlock({ children }: { children: React.ReactNode }) {
 }
 
 function WaiterBlock({ children }: { children: React.ReactNode }) {
-  const waiter = useAuthStore((s) => s.waiter)
+  const { waiter, user } = useAuthStore()
   const location = useLocation()
   if (waiter && location.pathname !== '/pos/service') return <Navigate to="/pos/service" replace />
+  if (user?.tenantRole === 'waiter') return <Navigate to="/waiter" replace />
   return <>{children}</>
 }
 

@@ -22,7 +22,7 @@ export function useLogin() {
       if (message === 'Use super admin login endpoint') {
         toast.error('Usa el botón "Super Admin" debajo del formulario')
       } else if (code === 'WAITER_LOGIN_BLOCKED') {
-        toast.error('Los meseros deben acceder desde /waiter')
+        navigate('/waiter')
       } else {
         toast.error(message)
       }
