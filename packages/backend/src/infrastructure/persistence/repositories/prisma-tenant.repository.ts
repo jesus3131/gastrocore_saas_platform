@@ -11,6 +11,10 @@ export class PrismaTenantRepository implements TenantRepository {
     return getClient().tenant.findUnique({ where: { id }, ...(select ? { select } : {}) })
   }
 
+  async findBySlug(slug: string, select?: any) {
+    return getClient().tenant.findUnique({ where: { slug }, ...(select ? { select } : {}) })
+  }
+
   async update(id: string, data: any) {
     return getClient().tenant.update({ where: { id }, data })
   }

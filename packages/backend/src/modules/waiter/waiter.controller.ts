@@ -12,6 +12,16 @@ class WaiterController {
     res.json({ success: true, data: result })
   }
 
+  async loginWithPin(req: Request, res: Response) {
+    const result = await this.service.loginWithPin(req.body.pin, req.body.tenantSlug)
+    res.json({ success: true, data: result })
+  }
+
+  async listTenants(_req: Request, res: Response) {
+    const tenants = await this.service.listTenants()
+    res.json({ success: true, data: tenants })
+  }
+
   async getMenu(req: Request, res: Response) {
     const menu = await this.service.getMenu(req.tenantId!)
     res.json({ success: true, data: menu })

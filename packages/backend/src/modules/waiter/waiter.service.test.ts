@@ -46,6 +46,10 @@ function makeSut() {
   const mockCreateOrderUseCase = {
     execute: vi.fn(),
   }
+  const mockTenantRepo = {
+    findBySlug: vi.fn(),
+    findManyTenants: vi.fn(),
+  }
 
   const service = new WaiterService(
     mockCreateOrderUseCase as any,
@@ -55,6 +59,7 @@ function makeSut() {
     mockMenuRepo as any,
     mockTableRepo as any,
     mockPaymentRepo as any,
+    mockTenantRepo as any,
   )
 
   return { service, mockUserRepo, mockEmployeeRepo, mockOrderRepo, mockMenuRepo, mockTableRepo, mockPaymentRepo, mockCreateOrderUseCase }

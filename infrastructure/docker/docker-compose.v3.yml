@@ -86,8 +86,19 @@ services:
     image: gastrocore-v3-analytics:latest
     container_name: gastrocore-v3-analytics
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ANALYTICS_API_PREFIX: /api/v1/analytics
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: gastrocore
+      DB_USER: gastrocore
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-gastrocore}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8081}
     ports:
-      - "8001:8000"
+      - "8010:8000"
 
   adminer:
     image: adminer:latest

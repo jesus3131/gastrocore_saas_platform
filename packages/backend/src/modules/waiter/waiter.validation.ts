@@ -5,6 +5,11 @@ export const waiterLoginSchema = z.object({
   password: z.string().min(1),
 })
 
+export const waiterPinLoginSchema = z.object({
+  pin: z.string().length(4),
+  tenantSlug: z.string().min(1).max(100),
+})
+
 export const createWaiterOrderSchema = z.object({
   tableId: z.string().uuid(),
   type: z.enum(['dine_in', 'takeout', 'delivery']).default('dine_in'),

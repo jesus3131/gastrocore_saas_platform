@@ -7,6 +7,7 @@ import type { OrderRepository } from '../../core/ports/repositories/order.reposi
 import type { MenuRepository } from '../../core/ports/repositories/menu.repository.js'
 import type { TableRepository } from '../../core/ports/repositories/table.repository.js'
 import type { PaymentRepository } from '../../core/ports/repositories/payment.repository.js'
+import type { TenantRepository } from '../../core/ports/repositories/tenant.repository.js'
 import type { CreateOrderInput } from '../../core/use-cases/pos/create-order.use-case.js'
 import { CreateOrderUseCase } from '../../core/use-cases/pos/create-order.use-case.js'
 import { AppError } from '../../common/filters/error-handler.js'
@@ -22,6 +23,7 @@ export class WaiterService {
     @inject('MenuRepository') private readonly menuRepo: MenuRepository,
     @inject('TableRepository') private readonly tableRepo: TableRepository,
     @inject('PaymentRepository') private readonly paymentRepo: PaymentRepository,
+    @inject('TenantRepository') private readonly tenantRepo: TenantRepository,
   ) {}
 
   async login(email: string, password: string, tenantId?: string) {
@@ -68,6 +70,56 @@ export class WaiterService {
       user: { ...safeUser, branchId },
       token,
     }
+  }
+
+  async loginWithPin(pin: string, tenantSlug: string) {
+    const tenant = await this.tenantRepo.findBySlug(tenantSlug, { id: true, name: true })
+    if (!tenant) {
+      throw new AppError(404, 'TENANT_NOT_FOUND', 'Restaurant not found')
+    }
+    const employee = await this.employeeRepo.findByPin(tenant.id, pin, 'waiter')
+    if (!employee) {
+      throw new AppError(401, 'INVALID_PIN', 'Invalid PIN')
+    }
+    const user = await this.userRepo.findFirst({ tenantId: tenant.id, employeeId: employee.id })
+    if (!user || !user.isActive) {
+      throw new AppError(401, 'INVALID_PIN', 'User account is inactive')
+    }
+
+    const token = jwt.sign(
+      {
+        sub: user.id,
+        tenantId: tenant.id,
+        branchId: employee.branchId,
+        globalRole: user.globalRole,
+        tenantRole: 'waiter',
+        email: user.email,
+        authMethod: 'pin',
+        employeeId: employee.id,
+      },
+      env.JWT_SECRET,
+      { expiresIn: env.JWT_EXPIRATION } as jwt.SignOptions,
+    )
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        tenantId: tenant.id,
+        branchId: employee.branchId,
+        employeeId: employee.id,
+        tenantRole: 'waiter',
+      },
+      token,
+    }
+  }
+
+  async listTenants() {
+    return this.tenantRepo.findManyTenants({
+      select: { id: true, name: true, slug: true },
+      where: { subscriptionStatus: { not: 'canceled' } },
+    })
   }
 
   async getMenu(tenantId: string) {

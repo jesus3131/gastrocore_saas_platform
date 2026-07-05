@@ -2,6 +2,7 @@ import type { Tenant, TenantFeatureFlagEntity, Branch, AuthUser, PaginationOpts 
 
 export interface TenantRepository {
   findById(id: string, select?: any): Promise<Tenant | null>
+  findBySlug(slug: string, select?: any): Promise<Tenant | null>
   update(id: string, data: any): Promise<Tenant>
   create(data: any): Promise<Tenant>
   getFeatureFlags(tenantId: string, opts?: { enabled?: boolean }): Promise<TenantFeatureFlagEntity[]>

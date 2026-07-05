@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { UtensilsCrossed, ArrowLeft, ShoppingCart, Plus, Minus, Trash2, Search, Check, Circle, LogOut, CreditCard, Banknote, Smartphone, ChevronRight, ChefHat, ClipboardList, Receipt, X, RefreshCw, Clock, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { UtensilsCrossed, ArrowLeft, ShoppingCart, Plus, Minus, Trash2, Search, Check, Circle, LogOut, CreditCard, Banknote, Smartphone, ChevronRight, ChefHat, ClipboardList, Receipt, X, RefreshCw, Clock, AlertCircle, CheckCircle2, Fingerprint, Mail } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { io, type Socket } from 'socket.io-client'
 
@@ -60,12 +60,25 @@ function formatCurrency(n: number) {
 }
 
 function WaiterLogin({ onLogin }: { onLogin: (state: WaiterState) => void }) {
+  const [tab, setTab] = useState<'email' | 'pin'>('email')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [pin, setPin] = useState('')
+  const [tenants, setTenants] = useState<{ id: string; name: string; slug: string }[]>([])
+  const [tenantSlug, setTenantSlug] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (tab === 'pin') {
+      fetch(`${API}/tenants`)
+        .then((r) => r.json())
+        .then((j) => { if (j.success) { setTenants(j.data); if (j.data.length === 1) setTenantSlug(j.data[0].slug) } })
+        .catch(() => {})
+    }
+  }, [tab])
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -88,6 +101,36 @@ function WaiterLogin({ onLogin }: { onLogin: (state: WaiterState) => void }) {
     }
   }
 
+  const handlePinDigit = (digit: string) => {
+    setError('')
+    const next = pin + digit
+    setPin(next)
+    if (next.length === 4) submitPin(next)
+  }
+
+  const submitPin = async (fullPin: string) => {
+    if (!tenantSlug) { setError('Selecciona un restaurante'); setPin(''); return }
+    setLoading(true)
+    try {
+      const res = await fetch(`${API}/auth/login-pin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: fullPin, tenantSlug }),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error?.message || 'PIN inválido')
+      const { user, token } = json.data
+      onLogin({ token, user })
+      localStorage.setItem('waiter_session', JSON.stringify({ token, user }))
+      toast.success(`Bienvenido, ${user.name}`)
+    } catch (err: any) {
+      setError(err.message)
+      setPin('')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-dvh bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-sm animate-fade-in">
@@ -98,26 +141,77 @@ function WaiterLogin({ onLogin }: { onLogin: (state: WaiterState) => void }) {
           <h1 className="text-2xl font-bold text-white tracking-tight">Acceso Meseros</h1>
           <p className="text-slate-400 mt-1 text-sm">GastroCore POS</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4 bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 shadow-xl">
+
+        <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 shadow-xl">
+          <div className="flex mb-6 bg-slate-900/60 rounded-xl p-1">
+            <button onClick={() => { setTab('email'); setError('') }} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'email' ? 'bg-amber-500 text-slate-900 shadow-md' : 'text-slate-400 hover:text-white'}`}>
+              <Mail className="w-4 h-4 inline mr-1.5" /> Email
+            </button>
+            <button onClick={() => { setTab('pin'); setError('') }} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'pin' ? 'bg-amber-500 text-slate-900 shadow-md' : 'text-slate-400 hover:text-white'}`}>
+              <Fingerprint className="w-4 h-4 inline mr-1.5" /> PIN
+            </button>
+          </div>
+
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-red-400 text-sm flex items-center gap-2">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-red-400 text-sm flex items-center gap-2 mb-4">
               <AlertCircle className="w-4 h-4 shrink-0" /> {error}
             </div>
           )}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">Correo electrónico</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="mesero@restaurante.com" className="input w-full bg-slate-900/60 border-slate-600/50 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all rounded-xl" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">Contraseña</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="input w-full bg-slate-900/60 border-slate-600/50 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all rounded-xl" />
-          </div>
-          <button type="submit" disabled={loading} className="btn w-full py-3 text-base bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-900 font-bold disabled:opacity-50 rounded-xl shadow-lg shadow-amber-500/20 transition-all active:scale-[0.98]">
-            {loading ? (
-              <span className="flex items-center justify-center gap-2"><RefreshCw className="w-4 h-4 animate-spin" /> Entrando...</span>
-            ) : 'Entrar'}
-          </button>
-        </form>
+
+          {tab === 'email' ? (
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Correo electrónico</label>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="mesero@restaurante.com" className="input w-full bg-slate-900/60 border-slate-600/50 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all rounded-xl" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Contraseña</label>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="input w-full bg-slate-900/60 border-slate-600/50 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all rounded-xl" />
+              </div>
+              <button type="submit" disabled={loading} className="btn w-full py-3 text-base bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-900 font-bold disabled:opacity-50 rounded-xl shadow-lg shadow-amber-500/20 transition-all active:scale-[0.98]">
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2"><RefreshCw className="w-4 h-4 animate-spin" /> Entrando...</span>
+                ) : 'Entrar'}
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Restaurante</label>
+                {tenants.length === 0 ? (
+                  <div className="h-11 rounded-xl bg-slate-900/60 border border-slate-600/50 flex items-center justify-center">
+                    <RefreshCw className="w-4 h-4 animate-spin text-slate-500" />
+                  </div>
+                ) : (
+                  <select value={tenantSlug} onChange={(e) => setTenantSlug(e.target.value)} className="input w-full bg-slate-900/60 border-slate-600/50 text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 rounded-xl">
+                    <option value="">Seleccionar restaurante</option>
+                    {tenants.map((t) => <option key={t.id} value={t.slug}>{t.name}</option>)}
+                  </select>
+                )}
+              </div>
+              <div className="text-center">
+                <label className="block text-sm font-medium text-slate-300 mb-3">PIN de mesero</label>
+                <div className="flex justify-center gap-3 mb-5">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className={`w-5 h-5 rounded-full border-2 transition-all ${i < pin.length ? 'border-amber-400 bg-amber-400' : loading && i === pin.length ? 'border-amber-400 border-dashed animate-pulse' : 'border-slate-500/30'}`} />
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-3 max-w-[240px] mx-auto">
+                  {['1','2','3','4','5','6','7','8','9','','0',''].map((d, i) => (
+                    d ? (
+                      <button key={i} onClick={() => handlePinDigit(d)} disabled={loading || pin.length >= 4} className="h-14 rounded-xl bg-slate-700/50 text-xl font-bold text-white hover:bg-slate-600/50 active:scale-90 transition-all disabled:opacity-30 shadow-sm border border-slate-600/30">
+                        {d}
+                      </button>
+                    ) : <div key={i} />
+                  ))}
+                </div>
+                <button onClick={() => { setPin(''); setError('') }} disabled={pin.length === 0 || loading} className="mt-3 h-10 px-5 rounded-xl bg-slate-700/30 text-slate-400 hover:text-white hover:bg-slate-700/50 active:scale-90 transition-all disabled:opacity-30 text-sm font-medium">
+                  Borrar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
