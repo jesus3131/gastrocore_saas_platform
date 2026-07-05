@@ -93,13 +93,13 @@ describe('InventoryService', () => {
     it('updates existing ingredient', async () => {
       const { service, mockInventoryRepo } = makeSut()
       mockInventoryRepo.findIngredientByTenant.mockResolvedValue(mockIngredient)
-      mockInventoryRepo.updateIngredient.mockResolvedValue({ ...mockIngredient, stock: 30 })
+      mockInventoryRepo.updateIngredient.mockResolvedValue({ ...mockIngredient, currentStock: 30 })
 
-      const result = await service.updateIngredient('tenant-1', 'ing-1', { stock: 30 })
+      const result = await service.updateIngredient('tenant-1', 'ing-1', { currentStock: 30 })
 
       expect(mockInventoryRepo.findIngredientByTenant).toHaveBeenCalledWith('tenant-1', 'ing-1')
-      expect(mockInventoryRepo.updateIngredient).toHaveBeenCalledWith('ing-1', { stock: 30 })
-      expect(result.stock).toBe(30)
+      expect(mockInventoryRepo.updateIngredient).toHaveBeenCalledWith('ing-1', { currentStock: 30 })
+      expect(result.currentStock).toBe(30)
     })
 
     it('throws 404 when ingredient not found', async () => {

@@ -59,6 +59,10 @@ import { CrmService } from '../../modules/crm/crm.service.js'
 import { HrService } from '../../modules/hr/hr.service.js'
 import { InventoryService } from '../../modules/inventory/inventory.service.js'
 import { IntegrationService } from '../../modules/integrations/integration.service.js'
+import { StripeProvider } from '../../modules/integrations/providers/stripe.provider.js'
+import { MercadoPagoProvider } from '../../modules/integrations/providers/mercadopago.provider.js'
+import { RappiProvider } from '../../modules/integrations/providers/rappi.provider.js'
+import { UberEatsProvider } from '../../modules/integrations/providers/ubereats.provider.js'
 import { OnboardingService } from '../../modules/onboarding/onboarding.service.js'
 import { SubscriptionService } from '../../modules/subscriptions/subscription.service.js'
 import { SuperAdminService } from '../../modules/super-admin/super-admin.service.js'
@@ -99,6 +103,10 @@ export function registerDependencies() {
   container.registerSingleton(HrService)
   container.registerSingleton(InventoryService)
   container.registerSingleton(IntegrationService)
+  if (process.env.STRIPE_SECRET_KEY) container.registerSingleton(StripeProvider)
+  if (process.env.MERCADOPAGO_ACCESS_TOKEN) container.registerSingleton(MercadoPagoProvider)
+  if (process.env.RAPPI_API_URL) container.registerSingleton(RappiProvider)
+  if (process.env.UBER_EATS_API_URL) container.registerSingleton(UberEatsProvider)
   container.registerSingleton(OnboardingService)
   container.registerSingleton(SubscriptionService)
   container.registerSingleton(SuperAdminService)

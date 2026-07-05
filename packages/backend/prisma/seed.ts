@@ -208,7 +208,7 @@ async function main() {
     data: [
       { tenantId: tenant.id, provider: 'rappi', type: 'delivery', enabled: true, config: { apiKey: 'test_rappi_key', commission: 0.15 } },
       { tenantId: tenant.id, provider: 'uber_eats', type: 'delivery', enabled: true, config: { apiKey: 'test_uber_key', commission: 0.18 } },
-      { tenantId: tenant.id, provider: 'mercado_pago', type: 'payment', enabled: true, config: { publicKey: 'test_mp_key' } },
+      { tenantId: tenant.id, provider: 'mercadopago', type: 'payment', enabled: true, config: { publicKey: 'test_mp_key' } },
     ],
   })
 

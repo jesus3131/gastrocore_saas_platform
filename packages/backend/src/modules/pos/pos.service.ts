@@ -91,16 +91,41 @@ export class PosService {
     const order = await this.orderRepo.findById(tenantId, data.orderId)
     if (!order) throw new AppError(404, 'ORDER_NOT_FOUND', 'Order not found')
 
+    const isOnline = data.method === 'stripe' || data.method === 'mercadopago'
+
     const payment = await this.paymentRepo.create({
       tenantId,
       orderId: data.orderId,
       method: data.method,
       amount: data.amount,
       reference: data.reference,
-      status: 'completed',
+      status: isOnline ? 'pending' : 'completed',
     })
 
+    if (isOnline) {
+      return payment
+    }
+
     await this.orderRepo.updatePaymentMethod(data.orderId, data.method)
+    await this.orderRepo.updateStatus(data.orderId, 'paid')
+
+    if (order.tableId) {
+      await this.tableRepo.updateStatus(tenantId, order.tableId, 'available')
+    }
+
+    return payment
+  }
+
+  async confirmPayment(tenantId: string, data: { orderId: string; transactionId: string }) {
+    const order = await this.orderRepo.findById(tenantId, data.orderId)
+    if (!order) throw new AppError(404, 'ORDER_NOT_FOUND', 'Order not found')
+
+    const payment = await this.paymentRepo.updateByOrder(data.orderId, {
+      status: 'completed',
+      reference: data.transactionId,
+    })
+
+    await this.orderRepo.updatePaymentMethod(data.orderId, order.paymentMethod || 'card')
     await this.orderRepo.updateStatus(data.orderId, 'paid')
 
     if (order.tableId) {

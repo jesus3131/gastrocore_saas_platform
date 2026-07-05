@@ -56,6 +56,11 @@ services:
       LOG_LEVEL: info
       PRISMA_AUTO_MIGRATE: ${PRISMA_AUTO_MIGRATE:-true}
       SEED_DATABASE: ${SEED_DATABASE:-true}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
+      RAPPI_API_URL: ${RAPPI_API_URL:-https://api.rappi.com/v1}
+      UBER_EATS_API_URL: ${UBER_EATS_API_URL:-https://api.uber.com/v1/eats}
     ports:
       - "4001:4000"
 
@@ -64,6 +69,8 @@ services:
       context: ../..
       dockerfile: infrastructure/docker/Dockerfile.frontend
       target: production
+      args:
+        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-}
     image: gastrocore-v3-frontend:latest
     container_name: gastrocore-v3-web
     restart: unless-stopped

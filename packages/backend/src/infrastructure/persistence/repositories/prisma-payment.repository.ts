@@ -32,4 +32,11 @@ export class PrismaPaymentRepository implements PaymentRepository {
     const client = getClient()
     return Promise.all(data.map((d) => client.payment.create({ data: d })))
   }
+
+  async updateByOrder(orderId: string, data: { status: string; reference?: string }): Promise<any> {
+    const client = getClient()
+    const payment = await client.payment.findFirst({ where: { orderId }, orderBy: { createdAt: 'desc' } })
+    if (!payment) throw new Error(`No payment found for order ${orderId}`)
+    return client.payment.update({ where: { id: payment.id }, data })
+  }
 }

@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { api } from '../../../lib/api'
 import { MetricCard, EmptyState, ErrorState, Modal } from '../../../shared/components/ui'
 import { LoadingSkeleton } from '../../../shared/components/ui/loading'
-import { Truck, Clock, CheckCircle, XCircle, ChevronRight, RefreshCw } from 'lucide-react'
+import { Truck, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 
 const statusColumns = ['pending', 'preparing', 'in_transit', 'delivered', 'canceled']
 const statusLabels: Record<string, string> = {
@@ -25,24 +25,49 @@ export function DeliveryHubPage() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
   const queryClient = useQueryClient()
 
-  const { data: deliveries, isLoading, error, refetch } = useQuery({
+  const { data: channels, isLoading: chLoading, error: chError, refetch: chRefetch } = useQuery({
     queryKey: ['integrations', 'delivery'],
     queryFn: () => api.get('/integrations/delivery').then((r) => r.data.data),
   })
 
+  const providers = useMemo(() => {
+    if (!channels) return []
+    return channels
+      .filter((c: any) => c.isActive !== false && ['rappi', 'uber_eats'].includes(c.channel))
+      .map((c: any) => c.channel)
+  }, [channels])
+
+  const { data: allOrders, isLoading: ordersLoading, refetch: ordersRefetch } = useQuery({
+    queryKey: ['integrations', 'delivery', 'orders', providers],
+    queryFn: async () => {
+      const results: any[] = []
+      for (const provider of providers) {
+        try {
+          const res = await api.get(`/integrations/delivery/${provider}/orders`)
+          results.push(...(res.data.data || []))
+        } catch { /* provider not configured */ }
+      }
+      return results
+    },
+    enabled: providers.length > 0,
+  })
+
   const updateStatus = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      api.put(`/integrations/delivery/${id}/status`, { status }),
+    mutationFn: ({ provider, orderId, status }: { provider: string; orderId: string; status: string }) =>
+      api.put(`/integrations/delivery/${provider}/orders/${orderId}/status`, { status }),
     onSuccess: () => {
       toast.success('Estado actualizado')
-      queryClient.invalidateQueries({ queryKey: ['integrations', 'delivery'] })
+      queryClient.invalidateQueries({ queryKey: ['integrations', 'delivery', 'orders'] })
       setSelectedOrder(null)
     },
     onError: (err: any) => toast.error(err.response?.data?.message || 'Error'),
   })
 
+  const isLoading = chLoading || ordersLoading
+  const deliveries = allOrders || []
+
   if (isLoading) return <LoadingSkeleton rows={6} />
-  if (error) return <ErrorState message="Error al cargar entregas" onRetry={refetch} />
+  if (chError) return <ErrorState message="Error al cargar canales" onRetry={chRefetch} />
 
   const grouped = statusColumns.reduce((acc, status) => {
     acc[status] = deliveries?.filter((d: any) => d.status === status) || []
@@ -56,7 +81,7 @@ export function DeliveryHubPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-on-surface">Delivery Hub</h1>
-        <button onClick={() => refetch()} className="btn-secondary btn-sm"><RefreshCw className="w-3 h-3" /> Actualizar</button>
+        <button onClick={() => ordersRefetch()} className="btn-secondary btn-sm"><RefreshCw className="w-3 h-3" /> Actualizar</button>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -141,7 +166,7 @@ export function DeliveryHubPage() {
                 {['pending', 'preparing', 'in_transit', 'delivered', 'canceled'].map((s) => (
                   <button
                     key={s}
-                    onClick={() => updateStatus.mutate({ id: selectedOrder.id, status: s })}
+                    onClick={() => updateStatus.mutate({ provider: selectedOrder.provider, orderId: selectedOrder.id, status: s })}
                     disabled={s === selectedOrder.status || updateStatus.isPending}
                     className={`btn-sm text-xs ${s === selectedOrder.status ? 'btn-primary' : 'btn-secondary'}`}
                   >

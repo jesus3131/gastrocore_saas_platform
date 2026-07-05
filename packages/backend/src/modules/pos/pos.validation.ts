@@ -31,3 +31,8 @@ export const paymentSchema = z.object({
   amount: z.number().positive(),
   reference: z.string().optional(),
 })
+
+export const confirmPaymentSchema = z.object({
+  orderId: z.string().uuid(),
+  transactionId: z.string().min(1),
+})

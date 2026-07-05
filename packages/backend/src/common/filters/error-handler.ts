@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from 'express'
 import { ZodError } from 'zod'
 import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library'
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
+const { JsonWebTokenError, TokenExpiredError } = jwt
 import { logger } from '../../config/logger.js'
 
 export class AppError extends Error {

@@ -3,7 +3,7 @@ import { posController } from './pos.controller.js'
 import { authGuard } from '../../common/guards/auth.guard.js'
 import { requirePermission } from '../../common/guards/permission.guard.js'
 import { validate } from '../../common/decorators/validate.js'
-import { createOrderSchema, paymentSchema } from './pos.validation.js'
+import { createOrderSchema, paymentSchema, confirmPaymentSchema } from './pos.validation.js'
 
 const router = Router()
 
@@ -18,6 +18,7 @@ router.post('/orders', requirePermission('pos:write'), validate(createOrderSchem
 router.get('/orders/:id', requirePermission('pos:read'), posController.getOrder)
 router.put('/orders/:id/status', requirePermission('pos:write'), posController.updateOrderStatus)
 router.post('/payments', requirePermission('pos:write'), validate(paymentSchema), posController.processPayment)
+router.post('/payments/confirm', requirePermission('pos:write'), validate(confirmPaymentSchema), posController.confirmPayment)
 router.post('/payments/split', requirePermission('pos:write'), posController.splitBill)
 
 export { router as posRouter }

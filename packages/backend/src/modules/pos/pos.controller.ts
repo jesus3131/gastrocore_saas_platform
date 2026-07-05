@@ -51,6 +51,11 @@ class PosController {
     res.json({ success: true, data: payment })
   }
 
+  async confirmPayment(req: Request, res: Response) {
+    const result = await this.service.confirmPayment(req.tenantId!, req.body)
+    res.json({ success: true, data: result })
+  }
+
   async splitBill(req: Request, res: Response) {
     const result = await this.service.splitBill(req.tenantId!, req.body)
     res.json({ success: true, data: result })

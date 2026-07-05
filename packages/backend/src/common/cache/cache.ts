@@ -29,14 +29,14 @@ async function redisSet(key: string, value: string, ttlMs: number): Promise<void
     const r = getRedis()
     if (r.status !== 'ready') return
     await r.set(key, value, 'PX', ttlMs)
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 export async function getCache<T>(key: string): Promise<T | undefined> {
   if (!globalEnabled) return undefined
   const raw = await redisGet(key)
   if (raw !== null) {
-    try { return JSON.parse(raw) as T } catch {}
+    try { return JSON.parse(raw) as T } catch { /* ignore */ }
   }
   const entry = memoryStore.get(key)
   if (!entry) return undefined

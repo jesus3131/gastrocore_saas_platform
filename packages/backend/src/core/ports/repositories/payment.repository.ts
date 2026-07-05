@@ -19,4 +19,5 @@ export interface PaymentRepository {
     status?: string
     metadata?: any
   }>): Promise<PosPayment[]>
+  updateByOrder(orderId: string, data: { status: string; reference?: string }): Promise<PosPayment>
 }

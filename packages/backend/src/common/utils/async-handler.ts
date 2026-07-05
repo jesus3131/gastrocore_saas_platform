@@ -8,8 +8,10 @@ export function asyncHandler(fn: (req: Request, res: Response) => Promise<void>)
 
 export function wrapAsync<T extends Record<string, any>>(target: T): T {
   const wrapped: any = {}
-  for (const key of Object.keys(target)) {
-    const val = target[key]
+  const proto = Object.getPrototypeOf(target)
+  const keys = new Set([...Object.keys(target), ...Object.getOwnPropertyNames(proto).filter(k => k !== 'constructor')])
+  for (const key of keys) {
+    const val = target[key as keyof T]
     if (typeof val === 'function') {
       wrapped[key] = asyncHandler(val.bind(target))
     } else {

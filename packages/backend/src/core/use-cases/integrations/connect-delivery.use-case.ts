@@ -12,7 +12,7 @@ export class ConnectDeliveryUseCase {
     const { AppError } = await import('../../../common/filters/error-handler.js')
 
     const existing = await this.integrationRepo.findUnique({
-      where: { tenantId_provider: { tenantId, provider: data.provider } },
+      tenantId_provider: { tenantId, provider: data.provider },
     })
     if (existing) throw new AppError(409, 'INTEGRATION_EXISTS', `Already connected to ${data.provider}`)
 
