@@ -4,9 +4,11 @@ import type { OrderRepository } from '../../core/ports/repositories/order.reposi
 import type { MenuRepository } from '../../core/ports/repositories/menu.repository.js'
 import type { TableRepository } from '../../core/ports/repositories/table.repository.js'
 import type { PaymentRepository } from '../../core/ports/repositories/payment.repository.js'
+import type { EventBus } from '../../core/ports/event-bus.js'
 import { AppError } from '../../common/filters/error-handler.js'
 import type { CreateOrderInput } from '../../core/use-cases/pos/create-order.use-case.js'
 import { CreateOrderUseCase } from '../../core/use-cases/pos/create-order.use-case.js'
+import { TableStatusChangedEvent } from '../../core/domain/events/order-events.js'
 
 @injectable()
 export class PosService {
@@ -16,6 +18,7 @@ export class PosService {
     @inject('MenuRepository') private readonly menuRepo: MenuRepository,
     @inject('TableRepository') private readonly tableRepo: TableRepository,
     @inject('PaymentRepository') private readonly paymentRepo: PaymentRepository,
+    @inject('EventBus') private readonly eventBus: EventBus,
   ) {}
 
   async getMenu(tenantId: string) {
@@ -50,7 +53,23 @@ export class PosService {
     const table = await this.tableRepo.findById(tenantId, id)
     if (!table) throw new AppError(404, 'TABLE_NOT_FOUND', 'Table not found')
 
-    return this.tableRepo.updateStatus(tenantId, id, status)
+    const previousStatus = table.status
+    const updated = await this.tableRepo.updateStatus(tenantId, id, status)
+
+    if (status === 'available') {
+      await this.tableRepo.clearWaiter(tenantId, id)
+    }
+
+    const event = new TableStatusChangedEvent(id, {
+      tenantId,
+      tableId: id,
+      tableLabel: table.label,
+      status,
+      previousStatus,
+    })
+    await this.eventBus.publish(event)
+
+    return updated
   }
 
   async getOrders(tenantId: string, query?: { status?: string; limit?: number; offset?: number }) {
@@ -84,7 +103,18 @@ export class PosService {
   async updateOrderStatus(tenantId: string, id: string, status: OrderStatus) {
     const order = await this.orderRepo.findById(tenantId, id)
     if (!order) throw new AppError(404, 'ORDER_NOT_FOUND', 'Order not found')
-    return this.orderRepo.updateStatus(id, status)
+
+    const updated = await this.orderRepo.updateStatus(id, status)
+
+    await this.eventBus.publish({
+      eventName: 'order.status_updated',
+      aggregateId: id,
+      aggregateType: 'Order',
+      occurredOn: new Date(),
+      payload: { tenantId, orderId: id, status, tableId: order.tableId },
+    } as any)
+
+    return updated
   }
 
   async processPayment(tenantId: string, data: { orderId: string; method: PaymentMethod; amount: number; reference?: string }) {

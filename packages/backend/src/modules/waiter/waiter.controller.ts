@@ -32,6 +32,11 @@ class WaiterController {
     res.json({ success: true, data: tables })
   }
 
+  async openTable(req: Request, res: Response) {
+    const result = await this.service.openTable(req.tenantId!, req.params.tableId as string, req.user!.sub)
+    res.json({ success: true, data: result })
+  }
+
   async createOrder(req: Request, res: Response) {
     const order = await this.service.createOrder(req.tenantId!, req.body, req.user!.sub)
     res.status(201).json({ success: true, data: order })

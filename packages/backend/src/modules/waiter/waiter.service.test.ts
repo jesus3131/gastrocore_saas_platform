@@ -21,6 +21,7 @@ import jwt from 'jsonwebtoken'
 function makeSut() {
   const mockUserRepo = {
     findByEmail: vi.fn(),
+    findById: vi.fn(),
   }
   const mockEmployeeRepo = {
     findById: vi.fn(),
@@ -39,6 +40,8 @@ function makeSut() {
     findAllWithBranches: vi.fn(),
     findById: vi.fn(),
     updateStatus: vi.fn(),
+    assignWaiter: vi.fn(),
+    clearWaiter: vi.fn(),
   }
   const mockPaymentRepo = {
     create: vi.fn(),
@@ -50,6 +53,12 @@ function makeSut() {
     findBySlug: vi.fn(),
     findManyTenants: vi.fn(),
   }
+  const mockEventBus = {
+    publish: vi.fn(),
+    subscribe: vi.fn(),
+    getHandlers: vi.fn(() => []),
+    hasSubscribers: vi.fn(() => false),
+  }
 
   const service = new WaiterService(
     mockCreateOrderUseCase as any,
@@ -60,9 +69,10 @@ function makeSut() {
     mockTableRepo as any,
     mockPaymentRepo as any,
     mockTenantRepo as any,
+    mockEventBus as any,
   )
 
-  return { service, mockUserRepo, mockEmployeeRepo, mockOrderRepo, mockMenuRepo, mockTableRepo, mockPaymentRepo, mockCreateOrderUseCase }
+  return { service, mockUserRepo, mockEmployeeRepo, mockOrderRepo, mockMenuRepo, mockTableRepo, mockPaymentRepo, mockCreateOrderUseCase, mockEventBus }
 }
 
 const mockUser = {

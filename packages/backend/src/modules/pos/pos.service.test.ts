@@ -22,11 +22,18 @@ function makeSut() {
     findAllWithBranches: vi.fn(),
     findById: vi.fn(),
     updateStatus: vi.fn(),
+    clearWaiter: vi.fn(),
   }
   const mockPaymentRepo = {
     create: vi.fn(),
     updateByOrder: vi.fn(),
     createMany: vi.fn(),
+  }
+  const mockEventBus = {
+    publish: vi.fn(),
+    subscribe: vi.fn(),
+    getHandlers: vi.fn(() => []),
+    hasSubscribers: vi.fn(() => false),
   }
 
   const service = new PosService(
@@ -35,9 +42,10 @@ function makeSut() {
     mockMenuRepo as any,
     mockTableRepo as any,
     mockPaymentRepo as any,
+    mockEventBus as any,
   )
 
-  return { service, mockCreateOrderUseCase, mockOrderRepo, mockMenuRepo, mockTableRepo, mockPaymentRepo }
+  return { service, mockCreateOrderUseCase, mockOrderRepo, mockMenuRepo, mockTableRepo, mockPaymentRepo, mockEventBus }
 }
 
 const mockOrder = {
