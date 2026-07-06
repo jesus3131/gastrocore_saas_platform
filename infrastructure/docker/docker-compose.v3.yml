@@ -55,7 +55,8 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8081}
       LOG_LEVEL: info
       PRISMA_AUTO_MIGRATE: ${PRISMA_AUTO_MIGRATE:-true}
-      SEED_DATABASE: ${SEED_DATABASE:-true}
+      # Seed runs automatically on empty DB (see main.ts). Never set to true on restarts.
+      SEED_DATABASE: false
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
