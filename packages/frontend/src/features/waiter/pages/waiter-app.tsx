@@ -477,7 +477,7 @@ function OrderTaking({ state, table, onBack }: { state: WaiterState; table: Tabl
     setCart((prev) => {
       const existing = prev.find((ci) => ci.menuItemId === item.id)
       if (existing) return prev.map((ci) => ci.menuItemId === item.id ? { ...ci, quantity: ci.quantity + 1 } : ci)
-      return [...prev, { menuItemId: item.id, name: item.name, quantity: 1, unitPrice: item.price, notes: '' }]
+      return [...prev, { menuItemId: item.id, name: item.name, quantity: 1, unitPrice: Number(item.price), notes: '' }]
     })
   }
 

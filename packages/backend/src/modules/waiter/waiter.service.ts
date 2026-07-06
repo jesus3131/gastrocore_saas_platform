@@ -126,7 +126,15 @@ export class WaiterService {
   }
 
   async getMenu(tenantId: string) {
-    return this.menuRepo.getMenu(tenantId)
+    const menu = await this.menuRepo.getMenu(tenantId)
+    return menu.map((cat: any) => ({
+      ...cat,
+      menuItems: cat.menuItems?.map((item: any) => ({
+        ...item,
+        price: Number(item.price),
+        cost: item.cost != null ? Number(item.cost) : undefined,
+      })),
+    }))
   }
 
   async getTables(tenantId: string, branchId?: string) {
