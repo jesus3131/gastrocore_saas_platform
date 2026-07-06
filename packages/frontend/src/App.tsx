@@ -32,6 +32,7 @@ const AccountingSettingsPage = lazy(() => import('./features/accounting/pages/ac
 const SuperAdminPage = lazy(() => import('./features/super-admin/pages/super-admin.page').then(m => ({ default: m.SuperAdminPage })))
 const CompanyDetailPage = lazy(() => import('./features/super-admin/pages/company-detail.page').then(m => ({ default: m.CompanyDetailPage })))
 const WaiterApp = lazy(() => import('./features/waiter/pages/waiter-app').then(m => ({ default: m.WaiterApp })))
+const MenuManagementPage = lazy(() => import('./features/menu/pages/menu-management.page').then(m => ({ default: m.MenuManagementPage })))
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-full min-h-[200px]">
@@ -131,6 +132,7 @@ export function App() {
       }>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
+        <Route path="menu" element={<Suspense fallback={<PageLoader />}><MenuManagementPage /></Suspense>} />
         <Route path="pos" element={<Suspense fallback={<PageLoader />}><PosOrderPage /></Suspense>} />
         <Route path="pos/tables" element={<Suspense fallback={<PageLoader />}><TableMapPage /></Suspense>} />
         <Route path="pos/checkout" element={<Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense>} />

@@ -4,6 +4,7 @@ import {
   Settings, LogOut, User, Bell, Table2, Gift,
   Truck, CreditCard, ChefHat, UtensilsCrossed, BookOpen,
   FileSpreadsheet, ScrollText, Menu, X, Sun, Moon, Building2,
+  NotebookText,
 } from 'lucide-react'
 import { useAuthStore } from '../app/store/auth.store'
 import { useThemeStore } from '../app/store/theme.store'
@@ -16,6 +17,7 @@ interface NavItem { to: string; icon: any; label: string; feature?: string }
 
 const navItemsAll: NavItem[] = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/menu', icon: NotebookText, label: 'Menú / Carta' },
   { to: '/pos/service', icon: UtensilsCrossed, label: 'Servicio Mesas', feature: 'pos' },
   { to: '/pos/tables', icon: Table2, label: 'Mapa de Mesas', feature: 'pos' },
   { to: '/pos', icon: ShoppingCart, label: 'POS', feature: 'pos' },

@@ -2,6 +2,7 @@ import { inject, injectable } from 'tsyringe'
 import { AppError } from '../../common/filters/error-handler.js'
 import { CreateIngredientUseCase } from '../../core/use-cases/inventory/create-ingredient.use-case.js'
 import type { InventoryRepository } from '../../core/ports/repositories/inventory.repository.js'
+import { prisma } from '../../config/database/prisma.js'
 
 @injectable()
 export class InventoryService {
@@ -19,6 +20,16 @@ export class InventoryService {
       return this.createIngredientUseCase.execute(tenantId, data)
     }
     return this.inventoryRepo.createIngredient(tenantId, data)
+  }
+
+  async deleteIngredient(tenantId: string, id: string) {
+    const ingredient = await this.inventoryRepo.findIngredientByTenant(tenantId, id)
+    if (!ingredient) throw new AppError(404, 'INGREDIENT_NOT_FOUND', 'Ingredient not found')
+    return prisma.ingredient.update({ where: { id }, data: { isActive: false } })
+  }
+
+  async deleteRecipe(id: string) {
+    return prisma.recipe.delete({ where: { id } })
   }
 
   async updateIngredient(tenantId: string, id: string, data: any) {

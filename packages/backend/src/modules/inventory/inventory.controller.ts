@@ -17,6 +17,11 @@ class InventoryController {
     res.status(201).json({ success: true, data: ingredient })
   }
 
+  async deleteIngredient(req: Request, res: Response) {
+    await this.service.deleteIngredient(req.tenantId!, req.params.id as string)
+    res.json({ success: true, data: null })
+  }
+
   async updateIngredient(req: Request, res: Response) {
     const ingredient = await this.service.updateIngredient(req.tenantId!, req.params.id as string, req.body)
     res.json({ success: true, data: ingredient })
@@ -31,6 +36,11 @@ class InventoryController {
   async createRecipe(req: Request, res: Response) {
     const recipe = await this.service.createRecipe(req.tenantId!, req.body)
     res.status(201).json({ success: true, data: recipe })
+  }
+
+  async deleteRecipe(req: Request, res: Response) {
+    await this.service.deleteRecipe(req.params.id as string)
+    res.json({ success: true, data: null })
   }
 
   async updateRecipe(req: Request, res: Response) {
