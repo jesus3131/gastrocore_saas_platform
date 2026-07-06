@@ -72,7 +72,7 @@ export function DashboardPage() {
         />
         <MetricCard
           label="Platos Vendidos"
-          value={summary?.totalItems || 0}
+          value={summary?.totalItems ?? 0}
           icon={UtensilsCrossed}
           color="text-warning bg-warning/10"
         />

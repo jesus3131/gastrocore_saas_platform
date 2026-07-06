@@ -50,6 +50,11 @@ export function AnalyticsPage() {
     queryFn: () => api.get('/analytics/peak-hours').then((r) => r.data.data),
   })
 
+  const { data: dailyTrends } = useQuery({
+    queryKey: ['analytics', 'daily-trends'],
+    queryFn: () => api.get('/analytics/daily-trends').then((r) => r.data.data),
+  })
+
   const { data: multiBranch } = useQuery({
     queryKey: ['analytics', 'multi-branch'],
     queryFn: () => api.get('/analytics/multi-branch').then((r) => r.data.data),
@@ -260,6 +265,37 @@ export function AnalyticsPage() {
 
       {/* Flow Diagram */}
       <FlowDiagram />
+
+      {/* Daily Trends */}
+      <div className="rounded-2xl border border-on-surface-muted/10 bg-surface p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-bold text-on-surface">Tendencia Diaria (7 días)</h3>
+            <p className="text-xs text-on-surface-muted">Órdenes e ingresos diarios de los últimos 7 días</p>
+          </div>
+        </div>
+        {dailyTrends && dailyTrends.length > 0 ? (
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dailyTrends}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                <XAxis dataKey="day" tick={{ fontSize: 10 }} tickFormatter={(d) => new Date(d).toLocaleDateString('es', { weekday: 'short' })} />
+                <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12 }}
+                  labelFormatter={(d) => new Date(d).toLocaleDateString('es', { weekday: 'long', month: 'short', day: 'numeric' })}
+                />
+                <Legend iconType="circle" />
+                <Line yAxisId="left" type="monotone" dataKey="orders" name="Órdenes" stroke="#6366f1" strokeWidth={2} dot={{ fill: '#6366f1', r: 3 }} />
+                <Line yAxisId="right" type="monotone" dataKey="revenue" name="Ingresos" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <EmptyState title="Sin tendencia diaria" message="No hay datos de los últimos 7 días" />
+        )}
+      </div>
 
       {/* Bottom Row: Top Items + Peak Hours Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
