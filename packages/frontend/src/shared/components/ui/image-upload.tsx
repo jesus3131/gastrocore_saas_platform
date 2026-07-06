@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { Upload, X, ImageOff } from 'lucide-react'
+import { useAuthStore } from '../../../app/store/auth.store'
 
 interface ImageUploadProps {
   currentUrl?: string | null
@@ -27,9 +28,10 @@ export function ImageUpload({ currentUrl, entityType, entityId, onUploaded, onRe
       formData.append('entityType', entityType)
       formData.append('entityId', entityId)
 
+      const token = useAuthStore.getState().tokens?.accessToken
       const res = await fetch('/api/v1/images/upload', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       })
       const data = await res.json()
@@ -46,9 +48,10 @@ export function ImageUpload({ currentUrl, entityType, entityId, onUploaded, onRe
   const handleRemove = async () => {
     setUploading(true)
     try {
+      const token = useAuthStore.getState().tokens?.accessToken
       await fetch(`/api/v1/images/${entityType}/${entityId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${token}` },
       })
       setPreview(null)
       onRemoved()

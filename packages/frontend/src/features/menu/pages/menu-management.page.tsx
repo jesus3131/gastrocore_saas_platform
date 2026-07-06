@@ -104,6 +104,7 @@ export function MenuManagementPage() {
       cost: d.cost ? Number(d.cost) : undefined,
       sortOrder: Number(d.sortOrder) || 0,
       available: d.available === true || d.available === 'true',
+      imageUrl: editingItem ? (editingItem.imageUrl ?? null) : undefined,
     }
     if (editingItem) updateItem.mutate(payload); else createItem.mutate(payload)
   }
@@ -167,10 +168,9 @@ export function MenuManagementPage() {
                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-surface-alt border border-border shrink-0 flex items-center justify-center">
                               {item.imageUrl ? (
                                 <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover"
-                                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.querySelector('div')!.style.display = 'flex' }} />
-                              ) : (
-                                <ImageOff className="w-4 h-4 text-on-surface-muted" />
-                              )}
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.querySelector('.fallback-icon')?.classList.remove('hidden') }} />
+                              ) : null}
+                              <ImageOff className="fallback-icon w-4 h-4 text-on-surface-muted hidden" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
@@ -260,8 +260,8 @@ export function MenuManagementPage() {
               currentUrl={editingItem.imageUrl}
               entityType="menu-item"
               entityId={editingItem.id}
-              onUploaded={(url) => setEditingItem({ ...editingItem, imageUrl: url })}
-              onRemoved={() => setEditingItem({ ...editingItem, imageUrl: null })}
+              onUploaded={(url) => { setEditingItem({ ...editingItem, imageUrl: url }); itemForm.setValue('imageUrl', url) }}
+              onRemoved={() => { setEditingItem({ ...editingItem, imageUrl: null }); itemForm.setValue('imageUrl', null) }}
             />
           )}
           <div className="flex gap-2 pt-2">

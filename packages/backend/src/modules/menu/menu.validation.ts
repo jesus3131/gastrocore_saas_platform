@@ -15,10 +15,10 @@ export const updateCategorySchema = z.object({
 export const createMenuItemSchema = z.object({
   categoryId: z.string().uuid(),
   name: z.string().min(1).max(255),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   price: z.number().positive(),
   cost: z.number().min(0).optional(),
-  imageUrl: z.string().max(500).optional(),
+  imageUrl: z.string().max(500).optional().nullable(),
   available: z.boolean().optional(),
   sortOrder: z.number().int().min(0).default(0),
 })
@@ -26,10 +26,10 @@ export const createMenuItemSchema = z.object({
 export const updateMenuItemSchema = z.object({
   categoryId: z.string().uuid().optional(),
   name: z.string().min(1).max(255).optional(),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   price: z.number().positive().optional(),
   cost: z.number().min(0).optional(),
-  imageUrl: z.string().max(500).optional(),
+  imageUrl: z.string().max(500).optional().nullable(),
   available: z.boolean().optional(),
   sortOrder: z.number().int().min(0).optional(),
 })
