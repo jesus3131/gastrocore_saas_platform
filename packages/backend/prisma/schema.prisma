@@ -260,7 +260,9 @@ model Table {
   areaId    String   @db.Uuid
   label     String   @db.VarChar(50)
   capacity  Int      @default(2)
-  status    String   @default("available") @db.VarChar(20) // available, occupied, reserved, closed
+  status    String   @default("available") @db.VarChar(20) // available, taking_order, occupied, bill_requested, cleaning, reserved, closed
+  waiterId  String?  @db.Uuid
+  waiterName String? @db.VarChar(255)
   xPos      Float?
   yPos      Float?
   createdAt DateTime @default(now())
@@ -449,6 +451,7 @@ model Ingredient {
   minimumStock Decimal  @default(0) @db.Decimal(10, 3)
   unitCost     Decimal  @default(0) @db.Decimal(10, 4)
   supplier     String?  @db.VarChar(255)
+  imageUrl     String?  @db.VarChar(500)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

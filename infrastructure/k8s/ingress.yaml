@@ -21,6 +21,13 @@ spec:
     - host: restopro.example.com
       http:
         paths:
+          - path: /api/v1/analytics
+            pathType: Prefix
+            backend:
+              service:
+                name: restopro-analytics
+                port:
+                  number: 8000
           - path: /api
             pathType: Prefix
             backend:

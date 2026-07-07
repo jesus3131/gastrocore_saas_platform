@@ -32,6 +32,20 @@ async function bootstrap() {
   const app = await createApp()
   server = createServer(app)
 
+  // Auto-seed on first-ever deployment (empty database)
+  try {
+    const { prisma } = await import('./config/database/prisma.js')
+    const tenantCount = await prisma.tenant.count()
+    if (tenantCount === 0) {
+      logger.info('Empty database detected — running seed...')
+      const { execSync } = await import('child_process')
+      execSync('pnpm exec tsx prisma/seed.ts', { stdio: 'inherit', cwd: process.cwd() })
+      logger.info('Seed completed')
+    }
+  } catch (err) {
+    logger.warn({ err }, 'Auto-seed skipped or failed (non-fatal)')
+  }
+
   const gateway = new WebSocketGateway()
   gateway.initialize(server)
 

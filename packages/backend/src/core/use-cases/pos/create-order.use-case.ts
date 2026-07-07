@@ -5,7 +5,7 @@ import type { OrderRepository, CreateOrderData } from '../../ports/repositories/
 import type { MenuRepository } from '../../ports/repositories/menu.repository.js'
 import type { InventoryRepository } from '../../ports/repositories/inventory.repository.js'
 import type { TableRepository } from '../../ports/repositories/table.repository.js'
-import { OrderCreatedEvent } from '../../domain/events/order-events.js'
+import { OrderCreatedEvent, TableStatusChangedEvent } from '../../domain/events/order-events.js'
 import { logger } from '../../../config/logger.js'
 import { TenantId } from '../../domain/value-objects/tenant-id.js'
 import { Money } from '../../domain/value-objects/money.js'
@@ -71,7 +71,18 @@ export class CreateOrderUseCase {
       const order = await this.orderRepo.create(orderData)
 
       if (input.tableId) {
+        const table = await this.tableRepo.findById(input.tenantId, input.tableId)
+        const previousStatus = table?.status || 'available'
         await this.tableRepo.updateStatus(input.tenantId, input.tableId, 'occupied')
+
+        const tableEvent = new TableStatusChangedEvent(input.tableId, {
+          tenantId: input.tenantId,
+          tableId: input.tableId,
+          tableLabel: table?.label || '',
+          status: 'occupied',
+          previousStatus,
+        })
+        await this.eventBus.publish(tableEvent)
       }
 
       await this.deductInventory(input.tenantId, input.items)

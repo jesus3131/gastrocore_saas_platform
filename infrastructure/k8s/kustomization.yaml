@@ -11,6 +11,7 @@ resources:
   - redis-deployment.yaml
   - backend-deployment.yaml
   - frontend-deployment.yaml
+  - analytics-deployment.yaml
   - ingress.yaml
 
 labels:
@@ -23,4 +24,6 @@ images:
   - name: ghcr.io/restopro/backend
     newTag: latest
   - name: ghcr.io/restopro/frontend
+    newTag: latest
+  - name: ghcr.io/restopro/analytics
     newTag: latest

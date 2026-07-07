@@ -1,17 +1,15 @@
 #!/bin/sh
 
-if [ "${PRISMA_AUTO_MIGRATE:-false}" = "true" ]; then
-  echo "Running Prisma migrations..."
-  npx prisma db push --accept-data-loss --skip-generate 2>&1 || true
-fi
+set -e
 
-if [ "${SEED_DATABASE:-false}" = "true" ]; then
-  if [ -f prisma/seed.ts ]; then
-    echo "Seeding database..."
-    pnpm exec tsx prisma/seed.ts 2>&1 || echo "Seed completed (may have already been seeded)"
-  elif [ -f prisma/seed.js ]; then
-    echo "Seeding database..."
-    node prisma/seed.js 2>&1 || echo "Seed completed (may have already been seeded)"
+# ─── Schema sync ────────────────────────────────────────────
+if [ "${PRISMA_AUTO_MIGRATE:-false}" = "true" ]; then
+  if [ "$NODE_ENV" = "production" ]; then
+    echo "Running production migrations..."
+    npx prisma migrate deploy 2>&1 || true
+  else
+    echo "Running dev schema sync..."
+    npx prisma db push --skip-generate 2>&1 || true
   fi
 fi
 

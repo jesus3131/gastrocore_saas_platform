@@ -16,6 +16,9 @@ const envSchema = z.object({
   JWT_EXPIRATION: z.string().default('15m'),
   JWT_REFRESH_EXPIRATION: z.string().default('7d'),
 
+  // Encryption
+  ENCRYPTION_KEY: z.string().min(32),
+
   // Storage
   STORAGE_PROVIDER: z.enum(['s3', 'local']).default('local'),
   STORAGE_BUCKET: z.string().default('gastrocore-assets'),

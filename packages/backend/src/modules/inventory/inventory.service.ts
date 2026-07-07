@@ -2,6 +2,7 @@ import { inject, injectable } from 'tsyringe'
 import { AppError } from '../../common/filters/error-handler.js'
 import { CreateIngredientUseCase } from '../../core/use-cases/inventory/create-ingredient.use-case.js'
 import type { InventoryRepository } from '../../core/ports/repositories/inventory.repository.js'
+import { prisma } from '../../config/database/prisma.js'
 
 @injectable()
 export class InventoryService {
@@ -21,6 +22,20 @@ export class InventoryService {
     return this.inventoryRepo.createIngredient(tenantId, data)
   }
 
+  async deleteIngredient(tenantId: string, id: string) {
+    const ingredient = await this.inventoryRepo.findIngredientByTenant(tenantId, id)
+    if (!ingredient) throw new AppError(404, 'INGREDIENT_NOT_FOUND', 'Ingredient not found')
+    return prisma.ingredient.update({ where: { id }, data: { isActive: false } })
+  }
+
+  async deleteRecipe(tenantId: string, id: string) {
+    const recipe = await prisma.recipe.findFirst({
+      where: { id, menuItem: { tenantId } },
+    })
+    if (!recipe) throw new AppError(404, 'RECIPE_NOT_FOUND', 'Recipe not found')
+    return prisma.recipe.delete({ where: { id } })
+  }
+
   async updateIngredient(tenantId: string, id: string, data: any) {
     const ingredient = await this.inventoryRepo.findIngredientByTenant(tenantId, id)
     if (!ingredient) throw new AppError(404, 'INGREDIENT_NOT_FOUND', 'Ingredient not found')
@@ -32,10 +47,14 @@ export class InventoryService {
   }
 
   async createRecipe(tenantId: string, data: any) {
-    return this.inventoryRepo.createRecipe(data)
+    return this.inventoryRepo.createRecipe({ ...data, tenantId })
   }
 
   async updateRecipe(tenantId: string, id: string, data: any) {
+    const recipe = await prisma.recipe.findFirst({
+      where: { id, menuItem: { tenantId } },
+    })
+    if (!recipe) throw new AppError(404, 'RECIPE_NOT_FOUND', 'Recipe not found')
     return this.inventoryRepo.updateRecipe(id, data)
   }
 

@@ -36,4 +36,14 @@ export class PrismaTableRepository implements TableRepository {
       },
     })
   }
+
+  async assignWaiter(tenantId: string, id: string, waiterId: string, waiterName: string): Promise<any> {
+    const client = getClient()
+    return client.table.update({ where: { id, branch: { tenantId } }, data: { waiterId, waiterName } })
+  }
+
+  async clearWaiter(tenantId: string, id: string): Promise<any> {
+    const client = getClient()
+    return client.table.update({ where: { id, branch: { tenantId } }, data: { waiterId: null, waiterName: null } })
+  }
 }

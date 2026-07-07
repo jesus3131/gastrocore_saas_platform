@@ -6,6 +6,7 @@ import { DataTable, Modal, FormField, ConfirmDialog, MetricCard, EmptyState, Err
 import { LoadingSkeleton } from '../../../shared/components/ui/loading'
 import { Plus, Edit, Trash2, Package, AlertTriangle, DollarSign, TrendingUp } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { ImageUpload } from '../../../shared/components/ui/image-upload'
 
 interface Ingredient {
   id: string
@@ -16,6 +17,7 @@ interface Ingredient {
   minimumStock: number
   unitCost: number
   unit: string
+  imageUrl?: string | null
 }
 
 export function InventoryPage() {
@@ -48,7 +50,7 @@ export function InventoryPage() {
   })
 
   const openCreate = () => { setEditing(null); reset({ name: '', sku: '', category: 'produce', currentStock: 0, minimumStock: 10, unitCost: 0, unit: 'kg' }); setModalOpen(true) }
-  const openEdit = (item: Ingredient) => { setEditing(item); reset(item); setModalOpen(true) }
+  const openEdit = (item: Ingredient) => { setEditing(item); reset({ ...item }); setModalOpen(true) }
 
   const onSubmit = (data: any) => {
     if (editing) updateMutation.mutate(data)
@@ -140,6 +142,15 @@ export function InventoryPage() {
             ]} />
           </div>
           <FormField label="Costo por Unidad" type="number" registration={register('unitCost')} />
+          {editing && (
+            <ImageUpload
+              currentUrl={editing.imageUrl}
+              entityType="ingredient"
+              entityId={editing.id}
+              onUploaded={(url) => setEditing({ ...editing, imageUrl: url })}
+              onRemoved={() => setEditing({ ...editing, imageUrl: null })}
+            />
+          )}
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={() => { setModalOpen(false); setEditing(null) }} className="btn-secondary flex-1">Cancelar</button>
             <button type="submit" className="btn-primary flex-1" disabled={createMutation.isPending || updateMutation.isPending}>

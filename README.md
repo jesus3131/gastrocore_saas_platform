@@ -1,8 +1,36 @@
 # GastroCore
 
+<p align="center">
+  <a href="https://github.com/jesus3131/gastrocore_saas_platform/actions">
+    <img src="https://github.com/jesus3131/gastrocore_saas_platform/actions/workflows/ci.yml/badge.svg" alt="CI">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+  </a>
+  <img src="https://img.shields.io/badge/Node.js-20+-339933?logo=node.js" alt="Node">
+  <img src="https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/pnpm-9.15-F69220?logo=pnpm" alt="pnpm">
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React">
+  <img src="https://img.shields.io/badge/Express-4-000000?logo=express" alt="Express">
+  <img src="https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma" alt="Prisma">
+  <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker" alt="Docker">
+</p>
+
 **Plataforma SaaS todo-en-uno para gestión integral de restaurantes.**
 
 Multi-tenant · Multi-sucursal · Multi-nicho (alta cocina, fast food, cafeterías, food trucks, bares, franquicias, bakery, ghost kitchen). Incluye POS, KDS, inventario, RRHH, CRM/loyalty, contabilidad de doble entrada, integraciones de pago y delivery, analítica con BCG Matrix, y panel de Super Admin.
+
+## Organización del repositorio
+
+El proyecto está estructurado como un monorepo claro y escalable:
+
+- [docs/README.md](docs/README.md): mapa general de documentación y navegación del repositorio.
+- [packages/backend/README.md](packages/backend/README.md): API, módulos y lógica del servidor.
+- [packages/frontend/README.md](packages/frontend/README.md): aplicación web React + Vite.
+- [packages/shared/README.md](packages/shared/README.md): tipos y utilidades compartidas.
+- [packages/analytics/README.md](packages/analytics/README.md): servicio Python para analítica.
+- [infrastructure/README.md](infrastructure/README.md): despliegue y recursos operativos.
 
 ---
 
@@ -33,22 +61,22 @@ Multi-tenant · Multi-sucursal · Multi-nicho (alta cocina, fast food, cafeterí
 
 ## Stack Tecnológico
 
-| Componente | Tecnología |
-|---|---|
-| **Backend** | Node.js 20+, Express, TypeScript, Prisma ORM, Zod, Socket.IO |
-| **Frontend** | React 19, Vite 6, TypeScript, Tailwind CSS 3, Zustand, React Query |
-| **Base de datos** | PostgreSQL 16 (vía Prisma ORM) |
-| **Cache** | Redis 7 (ioredis) + fallback in-memory |
-| **DI** | tsyringe (contenedor con 60+ registrations) |
-| **Eventos** | Outbox Pattern (DB) + WebSocket broadcasting |
-| **Observabilidad** | OpenTelemetry + Pino logger |
-| **Pagos** | Stripe SDK + MercadoPago SDK |
-| **Delivery** | Rappi API + Uber Eats API (+ Didi) |
-| **Analítica** | Python 3.12+ / FastAPI (Pandas, scikit-learn) — BCG Matrix, forecasting |
-| **Infra** | Docker + Docker Compose + Kubernetes (Kustomize) |
-| **CI/CD** | GitHub Actions |
-| **Monorepo** | pnpm workspaces + Turborepo v2 |
-| **Autenticación** | JWT + bcrypt + refresh tokens (rotación SHA-256) |
+| Componente         | Tecnología                                                              |
+| ------------------ | ----------------------------------------------------------------------- |
+| **Backend**        | Node.js 20+, Express, TypeScript, Prisma ORM, Zod, Socket.IO            |
+| **Frontend**       | React 19, Vite 6, TypeScript, Tailwind CSS 3, Zustand, React Query      |
+| **Base de datos**  | PostgreSQL 16 (vía Prisma ORM)                                          |
+| **Cache**          | Redis 7 (ioredis) + fallback in-memory                                  |
+| **DI**             | tsyringe (contenedor con 60+ registrations)                             |
+| **Eventos**        | Outbox Pattern (DB) + WebSocket broadcasting                            |
+| **Observabilidad** | OpenTelemetry + Pino logger                                             |
+| **Pagos**          | Stripe SDK + MercadoPago SDK                                            |
+| **Delivery**       | Rappi API + Uber Eats API (+ Didi)                                      |
+| **Analítica**      | Python 3.12+ / FastAPI (Pandas, scikit-learn) — BCG Matrix, forecasting |
+| **Infra**          | Docker + Docker Compose + Kubernetes (Kustomize)                        |
+| **CI/CD**          | GitHub Actions                                                          |
+| **Monorepo**       | pnpm workspaces + Turborepo v2                                          |
+| **Autenticación**  | JWT + bcrypt + refresh tokens (rotación SHA-256)                        |
 
 ---
 
@@ -159,7 +187,23 @@ gastrocore_saas_platform/
 │   ├── docker/                    # Docker Compose + Nginx + Dockerfiles multi-stage
 │   └── k8s/                       # Manifiestos Kubernetes (Kustomize)
 │
-├── .github/workflows/             # Pipeline CI
+├── .github/                       # Community health + CI/CD
+│   ├── workflows/                 # 7 pipelines (CI, CodeQL, stale, release-drafter, etc.)
+│   ├── ISSUE_TEMPLATE/            # Bug report + feature request templates
+│   ├── dependabot.yml             # Auto-dependency updates
+│   ├── settings.yml               # Repo settings as code
+│   └── PULL_REQUEST_TEMPLATE.md   # PR checklist
+├── .husky/                        # Git hooks (pre-commit lint-staged, commit-msg commitlint)
+│   ├── pre-commit
+│   └── commit-msg
+├── .vscode/                       # Recommended extensions + settings
+│   ├── extensions.json
+│   └── settings.json
+├── .editorconfig                  # Editor consistency
+├── .prettierrc                    # Formatting rules
+├── .prettierignore
+├── commitlint.config.ts           # Conventional commit enforcement
+├── setup.sh / setup.ps1           # Dev environment bootstrap
 ├── prisma.config.ts               # Config Prisma con dotenv
 ├── turbo.json                     # Turborepo v2 pipeline
 ├── pnpm-workspace.yaml
@@ -173,59 +217,70 @@ gastrocore_saas_platform/
 
 ### Enums principales
 
-| Enum | Valores |
-|---|---|
-| `BusinessType` | fine_dining, fast_food, cafe, food_truck, bar, franchise, bakery, ghost_kitchen |
-| `SubscriptionPlan` | basic, pro, enterprise |
-| `OrderStatus` | pending, preparing, ready, served, paid, canceled |
-| `PaymentMethod` | cash, card, transfer, mercadopago, stripe |
-| `EmployeeRole` | admin, manager, chef, waiter, cashier, host, delivery, accountant |
-| `AccountType` | asset, liability, equity, income, expense |
+| Enum               | Valores                                                                         |
+| ------------------ | ------------------------------------------------------------------------------- |
+| `BusinessType`     | fine_dining, fast_food, cafe, food_truck, bar, franchise, bakery, ghost_kitchen |
+| `SubscriptionPlan` | basic, pro, enterprise                                                          |
+| `OrderStatus`      | pending, preparing, ready, served, paid, canceled                               |
+| `PaymentMethod`    | cash, card, transfer, mercadopago, stripe                                       |
+| `EmployeeRole`     | admin, manager, chef, waiter, cashier, host, delivery, accountant               |
+| `AccountType`      | asset, liability, equity, income, expense                                       |
 
 ### Modelos (25+ tablas)
 
 **Core / Multi-tenencia**
+
 - `Tenant` — Empresa/restaurante. Raíz del multi-tenant: configuración, moneda, zona horaria, plan y estado de suscripción.
 - `User` — Usuarios con `tenantRole` (admin, manager, chef, waiter, cashier, accountant, host, delivery) o `globalRole` (super_admin).
 - `Branch` — Sucursales del tenant.
 - `TenantFeatureFlag` / `SystemFeatureFlag` — Feature flags por tenant y globales.
 
 **POS & Menú**
+
 - `ServiceArea` → `Table` → `Order` → `OrderItem` → `OrderItemModifier`
 - `MenuCategory` → `MenuItem`
 - `ModifierGroup` → `ModifierOption`
 - `Payment` — Pagos con split de cuenta.
 
 **Inventario**
+
 - `Ingredient` → `Recipe` → `RecipeIngredient` (escandallos con costeo)
 - `StockMovement` — Trazabilidad de entradas/salidas.
 
 **RRHH**
+
 - `Employee` → `Shift`, `Commission`
 
 **CRM**
+
 - `Customer` → `LoyaltyProgram` → `LoyaltyRedemption`
 
 **Integraciones**
+
 - `Integration` — Credenciales por tenant (Stripe, MercadoPago, Rappi, UberEats, Didi).
 
 **Contabilidad**
+
 - `Account` (jerárquico, `parentId`)
 - `JournalEntry` → `JournalLine` (partida doble)
 - `AccountingPeriod` — con cierre.
 
 **Eventos**
+
 - `Event` — Event store (domain events).
 - `OutboxMessage` — Transactional outbox.
 
 **Auth**
+
 - `RefreshToken` — Rotación de tokens (SHA-256 hashed, familia de tokens).
 
 **Auditoría**
+
 - `AuditLog` — Por tenant.
 - `SystemLog` — Super Admin (inmutable).
 
 **Facturación**
+
 - `Subscription` / `SubscriptionInvoice` — Plan actual, ciclos y facturas.
 - `Invoice` — Facturas B2B manuales (Super Admin).
 
@@ -235,18 +290,19 @@ gastrocore_saas_platform/
 
 ### 1. Auth (Autenticación)
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| POST | `/auth/login` | Login con email + password → JWT (15m) + refresh (7d) |
-| POST | `/auth/super-admin/login` | Login para super_admin |
-| POST | `/auth/register` | Registro de nuevo tenant + admin |
-| POST | `/auth/refresh` | Rotación de refresh token |
-| POST | `/auth/logout` | Revoca refresh token |
-| GET | `/auth/me` | Perfil del usuario autenticado |
-| PATCH | `/auth/profile` | Actualizar perfil |
-| PATCH | `/auth/change-password` | Cambiar contraseña |
+| Método | Ruta                      | Descripción                                           |
+| ------ | ------------------------- | ----------------------------------------------------- |
+| POST   | `/auth/login`             | Login con email + password → JWT (15m) + refresh (7d) |
+| POST   | `/auth/super-admin/login` | Login para super_admin                                |
+| POST   | `/auth/register`          | Registro de nuevo tenant + admin                      |
+| POST   | `/auth/refresh`           | Rotación de refresh token                             |
+| POST   | `/auth/logout`            | Revoca refresh token                                  |
+| GET    | `/auth/me`                | Perfil del usuario autenticado                        |
+| PATCH  | `/auth/profile`           | Actualizar perfil                                     |
+| PATCH  | `/auth/change-password`   | Cambiar contraseña                                    |
 
 **Flujo:**
+
 1. Login → JWT payload: `sub`, `tenantId`, `globalRole`, `tenantRole`, `email`.
 2. Middleware `authGuard` verifica JWT + header `x-tenant-id`.
 3. Refresh token rotado (SHA-256, familia de tokens).
@@ -256,21 +312,22 @@ gastrocore_saas_platform/
 
 ### 2. POS (Punto de Venta)
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/pos/menu` | Menú completo con categorías y modificadores |
-| GET | `/pos/menu/:categoryId` | Items de una categoría |
-| GET | `/pos/tables` | Mapa de mesas con órdenes activas embebidas |
-| PUT | `/pos/tables/:id/status` | Cambiar estado de mesa |
-| GET | `/pos/orders` | Órdenes del día (paginado, filtro por status) |
-| POST | `/pos/orders` | Crear orden (items, modificadores) |
-| GET | `/pos/orders/:id` | Detalle de orden |
-| PUT | `/pos/orders/:id/status` | Cambiar estado de orden |
-| POST | `/pos/payments` | Procesar pago (cash/card/transfer/stripe/mercadopago) |
-| POST | `/pos/payments/confirm` | Confirmar pago online tras webhook |
-| POST | `/pos/payments/split` | Split de cuenta entre comensales |
+| Método | Ruta                     | Descripción                                           |
+| ------ | ------------------------ | ----------------------------------------------------- |
+| GET    | `/pos/menu`              | Menú completo con categorías y modificadores          |
+| GET    | `/pos/menu/:categoryId`  | Items de una categoría                                |
+| GET    | `/pos/tables`            | Mapa de mesas con órdenes activas embebidas           |
+| PUT    | `/pos/tables/:id/status` | Cambiar estado de mesa                                |
+| GET    | `/pos/orders`            | Órdenes del día (paginado, filtro por status)         |
+| POST   | `/pos/orders`            | Crear orden (items, modificadores)                    |
+| GET    | `/pos/orders/:id`        | Detalle de orden                                      |
+| PUT    | `/pos/orders/:id/status` | Cambiar estado de orden                               |
+| POST   | `/pos/payments`          | Procesar pago (cash/card/transfer/stripe/mercadopago) |
+| POST   | `/pos/payments/confirm`  | Confirmar pago online tras webhook                    |
+| POST   | `/pos/payments/split`    | Split de cuenta entre comensales                      |
 
 **Creación de orden:**
+
 ```
 PosService.createOrder()
   → CreateOrderUseCase.execute() (transaction)
@@ -282,6 +339,7 @@ PosService.createOrder()
 ```
 
 **Procesamiento de pago:**
+
 ```
 PosService.processPayment()
   ├── cash/card/transfer → Payment.create() (completed)
@@ -300,16 +358,17 @@ PosService.processPayment()
 
 App independiente para meseros con tablet.
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| POST | `/waiter/auth/login` | Login con PIN + email |
-| GET | `/waiter/menu` | Menú completo |
-| GET | `/waiter/tables` | Mesas disponibles |
-| POST | `/waiter/create-order` | Crear orden simplificada |
-| POST | `/waiter/request-bill` | Solicitar cuenta |
-| POST | `/waiter/process-payment` | Procesar pago simplificado |
+| Método | Ruta                      | Descripción                |
+| ------ | ------------------------- | -------------------------- |
+| POST   | `/waiter/auth/login`      | Login con PIN + email      |
+| GET    | `/waiter/menu`            | Menú completo              |
+| GET    | `/waiter/tables`          | Mesas disponibles          |
+| POST   | `/waiter/create-order`    | Crear orden simplificada   |
+| POST   | `/waiter/request-bill`    | Solicitar cuenta           |
+| POST   | `/waiter/process-payment` | Procesar pago simplificado |
 
 **Autenticación del mesero:**
+
 1. Ingresa email + PIN.
 2. Se busca `Employee` por email y se verifica el PIN.
 3. Se crea/actualiza el `User` asociado.
@@ -331,19 +390,20 @@ Gestionado vía POS y seed data.
 
 ### 5. Inventario
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/inventory/ingredients` | Listar ingredientes |
-| POST | `/inventory/ingredients` | Crear ingrediente |
-| PUT | `/inventory/ingredients/:id` | Actualizar ingrediente |
-| GET | `/inventory/recipes` | Listar recetas con costeo |
-| POST | `/inventory/recipes` | Crear receta (asocia ingredientes a menu item) |
-| PUT | `/inventory/recipes/:id` | Actualizar receta |
-| GET | `/inventory/recipes/by-item/:menuItemId` | Receta por item |
-| GET | `/inventory/stock-alerts` | Alertas de stock bajo (`currentStock < minimumStock`) |
-| GET | `/inventory/stock-movements` | Historial de movimientos de stock |
+| Método | Ruta                                     | Descripción                                           |
+| ------ | ---------------------------------------- | ----------------------------------------------------- |
+| GET    | `/inventory/ingredients`                 | Listar ingredientes                                   |
+| POST   | `/inventory/ingredients`                 | Crear ingrediente                                     |
+| PUT    | `/inventory/ingredients/:id`             | Actualizar ingrediente                                |
+| GET    | `/inventory/recipes`                     | Listar recetas con costeo                             |
+| POST   | `/inventory/recipes`                     | Crear receta (asocia ingredientes a menu item)        |
+| PUT    | `/inventory/recipes/:id`                 | Actualizar receta                                     |
+| GET    | `/inventory/recipes/by-item/:menuItemId` | Receta por item                                       |
+| GET    | `/inventory/stock-alerts`                | Alertas de stock bajo (`currentStock < minimumStock`) |
+| GET    | `/inventory/stock-movements`             | Historial de movimientos de stock                     |
 
 **Deducción automática de stock (dentro de `CreateOrderUseCase`):**
+
 1. Por cada `OrderItem`, busca la `Recipe` asociada al `MenuItem`.
 2. Por cada `RecipeIngredient`, deduce cantidad × porción.
 3. Crea `StockMovement` (`type: 'out'`).
@@ -353,35 +413,36 @@ Gestionado vía POS y seed data.
 
 ### 6. HR (Recursos Humanos)
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/hr/employees` | Listar empleados |
-| POST | `/hr/employees` | Crear empleado (`CreateEmployeeUseCase`) |
-| GET | `/hr/employees/:id` | Detalle empleado |
-| PUT | `/hr/employees/:id` | Actualizar empleado |
-| GET | `/hr/shifts` | Turnos del día |
-| POST | `/hr/shifts` | Crear turno |
-| PUT | `/hr/shifts/:id` | Actualizar turno |
-| GET | `/hr/roles` | Listar roles disponibles |
-| GET | `/hr/commissions` | Comisiones por empleado |
-| POST | `/hr/verify-pin` | Verificar PIN de empleado |
+| Método | Ruta                | Descripción                              |
+| ------ | ------------------- | ---------------------------------------- |
+| GET    | `/hr/employees`     | Listar empleados                         |
+| POST   | `/hr/employees`     | Crear empleado (`CreateEmployeeUseCase`) |
+| GET    | `/hr/employees/:id` | Detalle empleado                         |
+| PUT    | `/hr/employees/:id` | Actualizar empleado                      |
+| GET    | `/hr/shifts`        | Turnos del día                           |
+| POST   | `/hr/shifts`        | Crear turno                              |
+| PUT    | `/hr/shifts/:id`    | Actualizar turno                         |
+| GET    | `/hr/roles`         | Listar roles disponibles                 |
+| GET    | `/hr/commissions`   | Comisiones por empleado                  |
+| POST   | `/hr/verify-pin`    | Verificar PIN de empleado                |
 
 ---
 
 ### 7. CRM & Loyalty
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/crm/customers` | Listar clientes (búsqueda, filtros) |
-| POST | `/crm/customers` | Crear cliente |
-| GET | `/crm/customers/:id` | Detalle + historial de órdenes |
-| PUT | `/crm/customers/:id` | Actualizar cliente |
-| GET | `/crm/segments` | Segmentación de clientes |
-| GET | `/crm/loyalty/program` | Programa de lealtad actual |
-| POST | `/crm/loyalty/redeem` | Canjear puntos |
-| GET | `/crm/loyalty/rewards` | Historial de recompensas canjeadas |
+| Método | Ruta                   | Descripción                         |
+| ------ | ---------------------- | ----------------------------------- |
+| GET    | `/crm/customers`       | Listar clientes (búsqueda, filtros) |
+| POST   | `/crm/customers`       | Crear cliente                       |
+| GET    | `/crm/customers/:id`   | Detalle + historial de órdenes      |
+| PUT    | `/crm/customers/:id`   | Actualizar cliente                  |
+| GET    | `/crm/segments`        | Segmentación de clientes            |
+| GET    | `/crm/loyalty/program` | Programa de lealtad actual          |
+| POST   | `/crm/loyalty/redeem`  | Canjear puntos                      |
+| GET    | `/crm/loyalty/rewards` | Historial de recompensas canjeadas  |
 
 **Lógica de lealtad:**
+
 - `pointsPerUnit`: puntos por moneda gastada.
 - `unitPerPoint`: moneda necesaria por punto.
 - `tiers`: JSON con niveles (bronze, silver, gold, platinum).
@@ -393,48 +454,48 @@ Gestionado vía POS y seed data.
 
 **Pagos**
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/integrations/payments` | Listar conexiones de pago |
-| POST | `/integrations/payments` | Conectar proveedor de pago |
-| POST | `/integrations/payments/create-intent` | Crear PaymentIntent (Stripe) |
-| POST | `/integrations/payments/create-preference` | Crear preferencia (MercadoPago) |
-| POST | `/integrations/payments/confirm` | Confirmar pago online |
+| Método | Ruta                                       | Descripción                     |
+| ------ | ------------------------------------------ | ------------------------------- |
+| GET    | `/integrations/payments`                   | Listar conexiones de pago       |
+| POST   | `/integrations/payments`                   | Conectar proveedor de pago      |
+| POST   | `/integrations/payments/create-intent`     | Crear PaymentIntent (Stripe)    |
+| POST   | `/integrations/payments/create-preference` | Crear preferencia (MercadoPago) |
+| POST   | `/integrations/payments/confirm`           | Confirmar pago online           |
 
 **Delivery**
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/integrations/delivery` | Listar conexiones delivery |
-| POST | `/integrations/delivery` | Conectar proveedor (Rappi/UberEats/Didi) |
-| GET | `/integrations/delivery/:provider/orders` | Órdenes delivery activas |
-| PUT | `/integrations/delivery/:provider/orders/:orderId/status` | Actualizar estado |
-| POST | `/integrations/delivery/:provider/sync-menu` | Sincronizar menú |
-| POST | `/integrations/delivery/:provider/webhook` | Webhook de delivery |
+| Método | Ruta                                                      | Descripción                              |
+| ------ | --------------------------------------------------------- | ---------------------------------------- |
+| GET    | `/integrations/delivery`                                  | Listar conexiones delivery               |
+| POST   | `/integrations/delivery`                                  | Conectar proveedor (Rappi/UberEats/Didi) |
+| GET    | `/integrations/delivery/:provider/orders`                 | Órdenes delivery activas                 |
+| PUT    | `/integrations/delivery/:provider/orders/:orderId/status` | Actualizar estado                        |
+| POST   | `/integrations/delivery/:provider/sync-menu`              | Sincronizar menú                         |
+| POST   | `/integrations/delivery/:provider/webhook`                | Webhook de delivery                      |
 
 **Webhooks**
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| POST | `/webhooks/stripe` | Webhook Stripe (verifica firma) |
-| POST | `/webhooks/mercadopago` | Webhook MercadoPago (IPN) |
-| POST | `/webhooks` | Webhook genérico |
+| Método | Ruta                    | Descripción                     |
+| ------ | ----------------------- | ------------------------------- |
+| POST   | `/webhooks/stripe`      | Webhook Stripe (verifica firma) |
+| POST   | `/webhooks/mercadopago` | Webhook MercadoPago (IPN)       |
+| POST   | `/webhooks`             | Webhook genérico                |
 
 **Gestión**
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| PUT | `/integrations/:id` | Toggle `enabled`/`isActive` |
-| DELETE | `/integrations/:id` | Desconectar integración |
+| Método | Ruta                | Descripción                 |
+| ------ | ------------------- | --------------------------- |
+| PUT    | `/integrations/:id` | Toggle `enabled`/`isActive` |
+| DELETE | `/integrations/:id` | Desconectar integración     |
 
 **Providers implementados:**
 
-| Provider | SDK / Método | Funciones |
-|---|---|---|
-| **Stripe** | SDK `stripe` | createPaymentIntent, createCheckoutSession, handleWebhook, createCustomer, getPaymentIntent, confirmPayment |
-| **MercadoPago** | SDK `mercadopago` | createPreference, handleWebhook, getPaymentInfo, confirmPayment |
-| **Rappi** | HTTP fetch | handleOrderNotification, updateOrderStatus, syncMenu, getOrders |
-| **UberEats** | HTTP fetch | handleOrderNotification, updateOrderStatus, syncMenu, getOrders |
+| Provider        | SDK / Método      | Funciones                                                                                                   |
+| --------------- | ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Stripe**      | SDK `stripe`      | createPaymentIntent, createCheckoutSession, handleWebhook, createCustomer, getPaymentIntent, confirmPayment |
+| **MercadoPago** | SDK `mercadopago` | createPreference, handleWebhook, getPaymentInfo, confirmPayment                                             |
+| **Rappi**       | HTTP fetch        | handleOrderNotification, updateOrderStatus, syncMenu, getOrders                                             |
+| **UberEats**    | HTTP fetch        | handleOrderNotification, updateOrderStatus, syncMenu, getOrders                                             |
 
 Los providers de delivery usan caché en memoria (Map) para órdenes entrantes vía webhook.
 
@@ -442,26 +503,27 @@ Los providers de delivery usan caché en memoria (Map) para órdenes entrantes v
 
 ### 9. Contabilidad (Doble Entrada)
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/accounting/accounts` | Plan de cuentas (árbol) |
-| POST | `/accounting/accounts` | Crear cuenta contable |
-| PUT | `/accounting/accounts/:id` | Actualizar cuenta |
-| POST | `/accounting/accounts/import` | Importar cuentas batch |
-| GET | `/accounting/journal-entries` | Asientos contables |
-| POST | `/accounting/journal-entries` | Crear asiento manual |
-| PATCH | `/accounting/journal-entries/:id` | Actualizar borrador |
-| POST | `/accounting/journal-entries/:id/post` | Publicar asiento |
-| GET | `/accounting/trial-balance` | Balance de comprobación |
-| GET | `/accounting/balance-sheet` | Balance general |
-| GET | `/accounting/income-statement` | Estado de resultados |
-| GET | `/accounting/general-ledger` | Libro mayor |
-| GET | `/accounting/periods` | Períodos contables |
-| POST | `/accounting/periods` | Crear período |
-| POST | `/accounting/periods/:id/close` | Cerrar período |
-| GET | `/accounting/odata/:entity` | Feed OData |
+| Método | Ruta                                   | Descripción             |
+| ------ | -------------------------------------- | ----------------------- |
+| GET    | `/accounting/accounts`                 | Plan de cuentas (árbol) |
+| POST   | `/accounting/accounts`                 | Crear cuenta contable   |
+| PUT    | `/accounting/accounts/:id`             | Actualizar cuenta       |
+| POST   | `/accounting/accounts/import`          | Importar cuentas batch  |
+| GET    | `/accounting/journal-entries`          | Asientos contables      |
+| POST   | `/accounting/journal-entries`          | Crear asiento manual    |
+| PATCH  | `/accounting/journal-entries/:id`      | Actualizar borrador     |
+| POST   | `/accounting/journal-entries/:id/post` | Publicar asiento        |
+| GET    | `/accounting/trial-balance`            | Balance de comprobación |
+| GET    | `/accounting/balance-sheet`            | Balance general         |
+| GET    | `/accounting/income-statement`         | Estado de resultados    |
+| GET    | `/accounting/general-ledger`           | Libro mayor             |
+| GET    | `/accounting/periods`                  | Períodos contables      |
+| POST   | `/accounting/periods`                  | Crear período           |
+| POST   | `/accounting/periods/:id/close`        | Cerrar período          |
+| GET    | `/accounting/odata/:entity`            | Feed OData              |
 
 **Validación de doble entrada:**
+
 - Débitos = Créditos (tolerancia 0.001).
 - La cuenta debe existir y estar activa.
 - El período no debe estar cerrado.
@@ -471,15 +533,16 @@ Los providers de delivery usan caché en memoria (Map) para órdenes entrantes v
 
 ### 10. Analytics & BCG Matrix
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/analytics/sales-summary` | Resumen de ventas (totalRevenue, totalOrders, avgTicket, peakHours, topItems) |
-| GET | `/analytics/bcg-matrix` | Matriz BCG (proxy a Python/FastAPI o cálculo local) |
-| GET | `/analytics/performance` | Comparativa mes contra mes |
-| GET | `/analytics/peak-hours` | Distribución de horas pico |
-| GET | `/analytics/multi-branch-report` | Reporte multi-sucursal |
+| Método | Ruta                             | Descripción                                                                   |
+| ------ | -------------------------------- | ----------------------------------------------------------------------------- |
+| GET    | `/analytics/sales-summary`       | Resumen de ventas (totalRevenue, totalOrders, avgTicket, peakHours, topItems) |
+| GET    | `/analytics/bcg-matrix`          | Matriz BCG (proxy a Python/FastAPI o cálculo local)                           |
+| GET    | `/analytics/performance`         | Comparativa mes contra mes                                                    |
+| GET    | `/analytics/peak-hours`          | Distribución de horas pico                                                    |
+| GET    | `/analytics/multi-branch-report` | Reporte multi-sucursal                                                        |
 
 **BCG Matrix:**
+
 - Ejes: Market Share vs Revenue Growth.
 - Cuadrantes: Star, Cash Cow, Question Mark, Dog.
 - Cache: 5 minutos.
@@ -489,12 +552,12 @@ Los providers de delivery usan caché en memoria (Map) para órdenes entrantes v
 
 ### 11. Suscripciones y Planes
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/subscriptions/plans` | Planes disponibles (basic/pro/enterprise) |
-| GET | `/subscriptions/current` | Suscripción actual del tenant |
-| PUT | `/subscriptions/change-plan` | Cambiar de plan |
-| GET | `/subscriptions/invoices` | Facturas de suscripción |
+| Método | Ruta                         | Descripción                               |
+| ------ | ---------------------------- | ----------------------------------------- |
+| GET    | `/subscriptions/plans`       | Planes disponibles (basic/pro/enterprise) |
+| GET    | `/subscriptions/current`     | Suscripción actual del tenant             |
+| PUT    | `/subscriptions/change-plan` | Cambiar de plan                           |
+| GET    | `/subscriptions/invoices`    | Facturas de suscripción                   |
 
 **Feature flags por plan:** 15 features controladas (`kds`, `table_management`, `split_bills`, `inventory_auto`, `hr_scheduling`, `bcg_matrix`, `crm_full`, `loyalty_program`, `pos`, `analytics`, `accounting`, etc.).
 
@@ -504,32 +567,32 @@ Los providers de delivery usan caché en memoria (Map) para órdenes entrantes v
 
 Panel de administración global (18+ endpoints).
 
-| Endpoint | Descripción |
-|---|---|
-| `GET /super-admin/companies` | Listar todas las empresas |
-| `POST /super-admin/companies` | Crear empresa (`CreateCompanyUseCase`) |
-| `GET /super-admin/companies/:id` | Detalle empresa |
-| `PUT /super-admin/companies/:id` | Actualizar empresa |
-| `PATCH /super-admin/companies/:id/modules` | Activar/desactivar módulos |
-| `DELETE /super-admin/companies/:id` | Eliminar empresa |
-| `POST /super-admin/companies/:id/resend-credentials` | Reenviar credenciales |
-| `POST /super-admin/companies/:id/migrate-plan` | Migrar plan |
-| `POST /super-admin/companies/:id/toggle-status` | Suspender/activar |
-| `PUT /super-admin/companies/:id/extra-users` | Vender cupos extra de usuarios |
-| `GET /super-admin/invoices` | Facturas B2B |
-| `POST /super-admin/invoices/mark-paid` | Marcar pagada |
-| `POST /super-admin/invoices/manual` | Crear factura manual |
-| `GET /super-admin/calendar-events` | Eventos operativos |
-| `POST /super-admin/calendar-events` | Crear evento |
-| `DELETE /super-admin/calendar-events/:id` | Eliminar evento |
-| `GET /super-admin/audit-logs` | Logs de auditoría |
-| `GET /super-admin/dashboard` | Métricas globales (MRR, distribución de planes) |
-| `GET /super-admin/plans` | Planes del sistema |
-| `GET /super-admin/system-health` | Health checks (DB + Redis) |
-| `POST /super-admin/announcements` | Anuncios |
-| `GET /super-admin/feature-flags` | Feature flags globales |
-| `PUT /super-admin/feature-flags` | Actualizar feature flag |
-| `POST /super-admin/toggle-all-features` | Toggle masivo |
+| Endpoint                                             | Descripción                                     |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| `GET /super-admin/companies`                         | Listar todas las empresas                       |
+| `POST /super-admin/companies`                        | Crear empresa (`CreateCompanyUseCase`)          |
+| `GET /super-admin/companies/:id`                     | Detalle empresa                                 |
+| `PUT /super-admin/companies/:id`                     | Actualizar empresa                              |
+| `PATCH /super-admin/companies/:id/modules`           | Activar/desactivar módulos                      |
+| `DELETE /super-admin/companies/:id`                  | Eliminar empresa                                |
+| `POST /super-admin/companies/:id/resend-credentials` | Reenviar credenciales                           |
+| `POST /super-admin/companies/:id/migrate-plan`       | Migrar plan                                     |
+| `POST /super-admin/companies/:id/toggle-status`      | Suspender/activar                               |
+| `PUT /super-admin/companies/:id/extra-users`         | Vender cupos extra de usuarios                  |
+| `GET /super-admin/invoices`                          | Facturas B2B                                    |
+| `POST /super-admin/invoices/mark-paid`               | Marcar pagada                                   |
+| `POST /super-admin/invoices/manual`                  | Crear factura manual                            |
+| `GET /super-admin/calendar-events`                   | Eventos operativos                              |
+| `POST /super-admin/calendar-events`                  | Crear evento                                    |
+| `DELETE /super-admin/calendar-events/:id`            | Eliminar evento                                 |
+| `GET /super-admin/audit-logs`                        | Logs de auditoría                               |
+| `GET /super-admin/dashboard`                         | Métricas globales (MRR, distribución de planes) |
+| `GET /super-admin/plans`                             | Planes del sistema                              |
+| `GET /super-admin/system-health`                     | Health checks (DB + Redis)                      |
+| `POST /super-admin/announcements`                    | Anuncios                                        |
+| `GET /super-admin/feature-flags`                     | Feature flags globales                          |
+| `PUT /super-admin/feature-flags`                     | Actualizar feature flag                         |
+| `POST /super-admin/toggle-all-features`              | Toggle masivo                                   |
 
 **Métricas de dashboard:** MRR (Monthly Recurring Revenue) con tendencia, distribución de planes, empresas activas vs. totales, ingresos por período.
 
@@ -539,24 +602,24 @@ Panel de administración global (18+ endpoints).
 
 Flujo de 3 pasos para nuevos tenants:
 
-| Método | Ruta | Paso |
-|---|---|---|
-| POST | `/onboarding/profile` | 1. Perfil del restaurante |
-| POST | `/onboarding/areas` | 2. Áreas y mesas |
-| POST | `/onboarding/modules` | 3. Selección de módulos |
-| POST | `/onboarding/launch` | Launch: marca `onboardingCompleted = true` |
-| GET | `/onboarding/status` | Estado del onboarding |
+| Método | Ruta                  | Paso                                       |
+| ------ | --------------------- | ------------------------------------------ |
+| POST   | `/onboarding/profile` | 1. Perfil del restaurante                  |
+| POST   | `/onboarding/areas`   | 2. Áreas y mesas                           |
+| POST   | `/onboarding/modules` | 3. Selección de módulos                    |
+| POST   | `/onboarding/launch`  | Launch: marca `onboardingCompleted = true` |
+| GET    | `/onboarding/status`  | Estado del onboarding                      |
 
 El sistema se auto-configura según el tipo de negocio elegido al registrarse:
 
-| Tipo de negocio | Features activadas |
-|------|-------------------|
+| Tipo de negocio | Features activadas                                                                    |
+| --------------- | ------------------------------------------------------------------------------------- |
 | **Alta Cocina** | POS, mesas, splits, KDS, CRM, loyalty, BCG, inventario, RRHH, analítica, contabilidad |
-| **Fast Food** | POS, KDS, online ordering, delivery, inventario, analítica |
-| **Cafetería** | POS, KDS, online, loyalty, inventario, analítica |
-| **Food Truck** | POS, KDS, online, delivery |
-| **Bar** | POS, mesas, splits, KDS, loyalty, RRHH, analítica, contabilidad |
-| **Franquicia** | POS, multi-sucursal, todo incluido |
+| **Fast Food**   | POS, KDS, online ordering, delivery, inventario, analítica                            |
+| **Cafetería**   | POS, KDS, online, loyalty, inventario, analítica                                      |
+| **Food Truck**  | POS, KDS, online, delivery                                                            |
+| **Bar**         | POS, mesas, splits, KDS, loyalty, RRHH, analítica, contabilidad                       |
+| **Franquicia**  | POS, multi-sucursal, todo incluido                                                    |
 
 ---
 
@@ -668,16 +731,16 @@ WebSocket Gateway:
 
 ## Planes de Suscripción
 
-| Característica | Basic ($499 MXN) | Pro ($999 MXN) | Enterprise ($2,499 MXN) |
-|---|:---:|:---:|:---:|
-| Usuarios | 3 | 10 | ∞ |
-| Sucursales | 1 | 3 | ∞ |
-| Transacciones/mes | 500 | 2,000 | 10,000 |
-| Almacenamiento | 1 GB | 5 GB | 25 GB |
-| **POS / KDS / Mapa de mesas / Split de cuentas** | ✅ | ✅ | ✅ |
-| **Inventario / RRHH / CRM / Analítica / Contabilidad** | — | ✅ | ✅ |
-| **Facturación electrónica / Integración delivery** | — | ✅ | ✅ |
-| **BCG Matrix / Loyalty Program / Multi-sucursal** | — | — | ✅ |
+| Característica                                         | Basic ($499 MXN) | Pro ($999 MXN) | Enterprise ($2,499 MXN) |
+| ------------------------------------------------------ | :--------------: | :------------: | :---------------------: |
+| Usuarios                                               |        3         |       10       |            ∞            |
+| Sucursales                                             |        1         |       3        |            ∞            |
+| Transacciones/mes                                      |       500        |     2,000      |         10,000          |
+| Almacenamiento                                         |       1 GB       |      5 GB      |          25 GB          |
+| **POS / KDS / Mapa de mesas / Split de cuentas**       |        ✅        |       ✅       |           ✅            |
+| **Inventario / RRHH / CRM / Analítica / Contabilidad** |        —         |       ✅       |           ✅            |
+| **Facturación electrónica / Integración delivery**     |        —         |       ✅       |           ✅            |
+| **BCG Matrix / Loyalty Program / Multi-sucursal**      |        —         |       —        |           ✅            |
 
 > Los usuarios extra pueden adquirirse en cualquier plan mediante cupos vendidos desde el panel de Super Admin.
 
@@ -722,12 +785,12 @@ npx prisma db seed    # Datos de prueba
 pnpm dev
 ```
 
-| Servicio | URL |
-|----------|-----|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:4000 |
-| Health Check | http://localhost:4000/health |
-| Prisma Studio | `npx prisma studio` |
+| Servicio      | URL                          |
+| ------------- | ---------------------------- |
+| Frontend      | http://localhost:5173        |
+| Backend API   | http://localhost:4000        |
+| Health Check  | http://localhost:4000/health |
+| Prisma Studio | `npx prisma studio`          |
 
 ### Prototipos HTML
 
@@ -765,7 +828,9 @@ npx prisma studio         # UI de gestión de datos
 ```bash
 pnpm docker:dev           # Entorno completo vía Docker Compose
 ```
+
 o manualmente:
+
 ```bash
 docker compose -f infrastructure/docker/docker-compose.dev.yml up -d
 ```
@@ -776,23 +841,23 @@ docker compose -f infrastructure/docker/docker-compose.dev.yml up -d
 
 Prefijo base: `/api/v1/`. Todas las rutas (excepto login/registro/webhooks) requieren `Authorization: Bearer <token>` y header `x-tenant-id`.
 
-| Módulo | Base Path | Endpoints |
-|---|---|---|
-| Auth | `/auth` | 8 |
-| POS | `/pos` | 11 |
-| Waiter | `/waiter` | 6 |
-| Menú | `/pos/menu` | incluido en POS |
-| Inventory | `/inventory` | 9 |
-| HR | `/hr` | 9 |
-| CRM | `/crm` | 8 |
-| Integrations | `/integrations` | 14 |
-| Accounting | `/accounting` | 15+ |
-| Analytics | `/analytics` | 5 |
-| Subscriptions | `/subscriptions` | 4 |
-| Super Admin | `/super-admin` | 18+ |
-| Onboarding | `/onboarding` | 5 |
-| Webhooks | `/webhooks` | 3 |
-| Health | `/health` | 1 |
+| Módulo        | Base Path        | Endpoints       |
+| ------------- | ---------------- | --------------- |
+| Auth          | `/auth`          | 8               |
+| POS           | `/pos`           | 11              |
+| Waiter        | `/waiter`        | 6               |
+| Menú          | `/pos/menu`      | incluido en POS |
+| Inventory     | `/inventory`     | 9               |
+| HR            | `/hr`            | 9               |
+| CRM           | `/crm`           | 8               |
+| Integrations  | `/integrations`  | 14              |
+| Accounting    | `/accounting`    | 15+             |
+| Analytics     | `/analytics`     | 5               |
+| Subscriptions | `/subscriptions` | 4               |
+| Super Admin   | `/super-admin`   | 18+             |
+| Onboarding    | `/onboarding`    | 5               |
+| Webhooks      | `/webhooks`      | 3               |
+| Health        | `/health`        | 1               |
 
 **Total: ~115+ endpoints.** El detalle completo de cada endpoint está documentado en la sección [Módulos del Sistema](#módulos-del-sistema).
 
@@ -802,35 +867,35 @@ Prefijo base: `/api/v1/`. Todas las rutas (excepto login/registro/webhooks) requ
 
 ### Rutas
 
-| Ruta | Página | Guards |
-|---|---|---|
-| `/login` | Login | AuthLayout |
-| `/register` | Registro | AuthLayout |
-| `/waiter` | Waiter App (mobile) | — |
-| `/onboarding` | Onboarding | SessionGuard + ProtectedRoute |
-| `/dashboard` | Dashboard principal | SessionGuard + ProtectedRoute + OnboardingGuard |
-| `/pos` | POS - Nueva orden | guards |
-| `/pos/tables` | Mapa de mesas | guards |
-| `/pos/checkout` | Checkout / Pago | guards |
-| `/pos/kds` | Kitchen Display System | guards |
-| `/pos/service` | POS modo mesero | guards |
-| `/inventory` | Inventario | guards |
-| `/inventory/recipes` | Recetas | guards |
-| `/hr` | RH / Empleados | guards |
-| `/analytics` | Analytics | guards |
-| `/crm` | Clientes | guards |
-| `/crm/loyalty` | Lealtad | guards |
-| `/integrations` | Delivery Hub | guards |
-| `/integrations/channels` | Config. canales de pago | guards |
-| `/accounting` | Contabilidad | guards |
-| `/accounting/accounts` | Plan de cuentas | guards |
-| `/accounting/journal-entries` | Asientos | guards |
-| `/accounting/statements` | Estados financieros | guards |
-| `/accounting/settings` | Config. contable | guards |
-| `/settings` | Configuración | guards |
-| `/settings/profile` | Perfil | guards |
-| `/super-admin` | Panel Super Admin | guards |
-| `/super-admin/companies/:id` | Detalle empresa | guards |
+| Ruta                          | Página                  | Guards                                          |
+| ----------------------------- | ----------------------- | ----------------------------------------------- |
+| `/login`                      | Login                   | AuthLayout                                      |
+| `/register`                   | Registro                | AuthLayout                                      |
+| `/waiter`                     | Waiter App (mobile)     | —                                               |
+| `/onboarding`                 | Onboarding              | SessionGuard + ProtectedRoute                   |
+| `/dashboard`                  | Dashboard principal     | SessionGuard + ProtectedRoute + OnboardingGuard |
+| `/pos`                        | POS - Nueva orden       | guards                                          |
+| `/pos/tables`                 | Mapa de mesas           | guards                                          |
+| `/pos/checkout`               | Checkout / Pago         | guards                                          |
+| `/pos/kds`                    | Kitchen Display System  | guards                                          |
+| `/pos/service`                | POS modo mesero         | guards                                          |
+| `/inventory`                  | Inventario              | guards                                          |
+| `/inventory/recipes`          | Recetas                 | guards                                          |
+| `/hr`                         | RH / Empleados          | guards                                          |
+| `/analytics`                  | Analytics               | guards                                          |
+| `/crm`                        | Clientes                | guards                                          |
+| `/crm/loyalty`                | Lealtad                 | guards                                          |
+| `/integrations`               | Delivery Hub            | guards                                          |
+| `/integrations/channels`      | Config. canales de pago | guards                                          |
+| `/accounting`                 | Contabilidad            | guards                                          |
+| `/accounting/accounts`        | Plan de cuentas         | guards                                          |
+| `/accounting/journal-entries` | Asientos                | guards                                          |
+| `/accounting/statements`      | Estados financieros     | guards                                          |
+| `/accounting/settings`        | Config. contable        | guards                                          |
+| `/settings`                   | Configuración           | guards                                          |
+| `/settings/profile`           | Perfil                  | guards                                          |
+| `/super-admin`                | Panel Super Admin       | guards                                          |
+| `/super-admin/companies/:id`  | Detalle empresa         | guards                                          |
 
 ### Guards (encadenados)
 
@@ -863,28 +928,28 @@ docker compose -f infrastructure/docker/docker-compose.v3.yml up -d
 
 **Contenedores:**
 
-| Servicio | Puerto | Imagen |
-|---|---|---|
-| PostgreSQL | 5433 (v3) / 5432 | postgres:16-alpine |
-| Redis | 6380 (v3) / 6379 | redis:7-alpine |
-| Backend | 4001 (v3) / 4000 | gastrocore-v3-backend |
-| Frontend | 8081 (v3) / 80 | gastrocore-v3-frontend |
-| Analytics | 8001 | gastrocore-v3-analytics |
+| Servicio   | Puerto           | Imagen                  |
+| ---------- | ---------------- | ----------------------- |
+| PostgreSQL | 5433 (v3) / 5432 | postgres:16-alpine      |
+| Redis      | 6380 (v3) / 6379 | redis:7-alpine          |
+| Backend    | 4001 (v3) / 4000 | gastrocore-v3-backend   |
+| Frontend   | 8081 (v3) / 80   | gastrocore-v3-frontend  |
+| Analytics  | 8001             | gastrocore-v3-analytics |
 
 ### Variables de entorno principales (52 vars en `.env.example`)
 
-| Categoría | Variables clave |
-|---|---|
-| DB | `DATABASE_URL` |
-| Redis | `REDIS_URL` |
-| JWT | `JWT_SECRET`, `JWT_EXPIRES_IN`, `JWT_REFRESH_SECRET`, `JWT_REFRESH_EXPIRATION` |
-| Storage | `STORAGE_*`, `UPLOAD_DIR` |
-| Email | `SMTP_*` |
-| Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
-| MercadoPago | `MERCADOPAGO_ACCESS_TOKEN` |
-| Delivery | `RAPPI_API_URL`, `UBER_EATS_API_URL` |
-| Analytics | `ANALYTICS_API_URL` |
-| Entorno | `NODE_ENV` (`development` / `production` / `test`) |
+| Categoría   | Variables clave                                                                |
+| ----------- | ------------------------------------------------------------------------------ |
+| DB          | `DATABASE_URL`                                                                 |
+| Redis       | `REDIS_URL`                                                                    |
+| JWT         | `JWT_SECRET`, `JWT_EXPIRES_IN`, `JWT_REFRESH_SECRET`, `JWT_REFRESH_EXPIRATION` |
+| Storage     | `STORAGE_*`, `UPLOAD_DIR`                                                      |
+| Email       | `SMTP_*`                                                                       |
+| Stripe      | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`                                   |
+| MercadoPago | `MERCADOPAGO_ACCESS_TOKEN`                                                     |
+| Delivery    | `RAPPI_API_URL`, `UBER_EATS_API_URL`                                           |
+| Analytics   | `ANALYTICS_API_URL`                                                            |
+| Entorno     | `NODE_ENV` (`development` / `production` / `test`)                             |
 
 ### Kubernetes
 
@@ -900,6 +965,7 @@ kubectl apply -k infrastructure/k8s/
 ### CI/CD (GitHub Actions)
 
 4 jobs:
+
 1. `lint-typecheck` — ESLint + TypeScript.
 2. `test` — Vitest con contenedores de servicio PostgreSQL + Redis.
 3. `build` — Compilación.
@@ -932,38 +998,38 @@ cd packages/backend && npx prisma db seed
 
 **Admin**
 
-| Email | Contraseña | Rol |
-|-------|-----------|:---:|
+| Email                     | Contraseña      |     Rol     |
+| ------------------------- | --------------- | :---------: |
 | `superadmin@restopro.com` | `RestoPro2024!` | super_admin |
-| `admin@lacocina.com` | `admin123` | admin |
+| `admin@lacocina.com`      | `admin123`      |    admin    |
 
 **Empleados (acceso PIN en POS)**
 
-| Nombre | Email | PIN | Rol |
-|--------|-------|:---:|:---:|
-| Carlos Hernández | `carlos@lacocina.com` | `1234` | chef |
-| María García | `maria@lacocina.com` | `2345` | waiter |
-| José López | `jose@lacocina.com` | `3456` | waiter |
-| Ana Martínez | `ana@lacocina.com` | `4567` | cashier |
-| Sofía Torres | `sofia@lacocina.com` | — | manager |
-| Luis Mendoza | `luis@lacocina.com` | — | waiter |
-| Diego Ramírez | `diego@lacocina.com` | — | host |
-| Valentina Ruiz | `valentina@lacocina.com` | — | delivery |
+| Nombre           | Email                    |  PIN   |   Rol    |
+| ---------------- | ------------------------ | :----: | :------: |
+| Carlos Hernández | `carlos@lacocina.com`    | `1234` |   chef   |
+| María García     | `maria@lacocina.com`     | `2345` |  waiter  |
+| José López       | `jose@lacocina.com`      | `3456` |  waiter  |
+| Ana Martínez     | `ana@lacocina.com`       | `4567` | cashier  |
+| Sofía Torres     | `sofia@lacocina.com`     |   —    | manager  |
+| Luis Mendoza     | `luis@lacocina.com`      |   —    |  waiter  |
+| Diego Ramírez    | `diego@lacocina.com`     |   —    |   host   |
+| Valentina Ruiz   | `valentina@lacocina.com` |   —    | delivery |
 
 **Mesero (app móvil):** `mesero@lacocina.com` / `mesero123` (PIN: `1234`)
 
 **Clientes CRM**
 
-| Nombre | Email | Segmento | Puntos |
-|--------|-------|:--------:|:------:|
-| Roberto Sánchez | `roberto@email.com` | VIP | 2500 |
-| Laura Fernández | `laura@email.com` | VIP | 1680 |
-| Pedro Ramírez | `pedro@email.com` | regular | 420 |
-| Carmen Díaz | `carmen@email.com` | VIP | 4400 |
-| Miguel Ángel Torres | `miguel@email.com` | nuevo | 109 |
-| Gabriela Ortiz | `gabriela@email.com` | regular | 760 |
-| Jorge Hernández | `jorge@email.com` | nuevo | 0 |
-| Patricia Vega | `patricia@email.com` | regular | 320 |
+| Nombre              | Email                | Segmento | Puntos |
+| ------------------- | -------------------- | :------: | :----: |
+| Roberto Sánchez     | `roberto@email.com`  |   VIP    |  2500  |
+| Laura Fernández     | `laura@email.com`    |   VIP    |  1680  |
+| Pedro Ramírez       | `pedro@email.com`    | regular  |  420   |
+| Carmen Díaz         | `carmen@email.com`   |   VIP    |  4400  |
+| Miguel Ángel Torres | `miguel@email.com`   |  nuevo   |  109   |
+| Gabriela Ortiz      | `gabriela@email.com` | regular  |  760   |
+| Jorge Hernández     | `jorge@email.com`    |  nuevo   |   0    |
+| Patricia Vega       | `patricia@email.com` | regular  |  320   |
 
 ---
 
@@ -973,18 +1039,18 @@ cd packages/backend && npx prisma db seed
 97 tests — 10 archivos de test — Todos pasando
 ```
 
-| Archivo | Tests |
-|---|---|
-| `auth/auth.service.test.ts` | 23 |
-| `waiter/waiter.service.test.ts` | 16 |
-| `guards/permission.guard.test.ts` | 17 |
-| `inventory/inventory.service.test.ts` | 13 |
-| `events/outbox-processor.test.ts` | 8 |
-| `events/outbox-event-bus.test.ts` | 5 |
-| `guards/auth.guard.test.ts` | 5 |
-| `interceptors/correlation-id.test.ts` | 4 |
-| `use-cases/pos/create-order.use-case.test.ts` | 4 |
-| `use-cases/hr/create-employee.use-case.test.ts` | 2 |
+| Archivo                                         | Tests |
+| ----------------------------------------------- | ----- |
+| `auth/auth.service.test.ts`                     | 23    |
+| `waiter/waiter.service.test.ts`                 | 16    |
+| `guards/permission.guard.test.ts`               | 17    |
+| `inventory/inventory.service.test.ts`           | 13    |
+| `events/outbox-processor.test.ts`               | 8     |
+| `events/outbox-event-bus.test.ts`               | 5     |
+| `guards/auth.guard.test.ts`                     | 5     |
+| `interceptors/correlation-id.test.ts`           | 4     |
+| `use-cases/pos/create-order.use-case.test.ts`   | 4     |
+| `use-cases/hr/create-employee.use-case.test.ts` | 2     |
 
 ```bash
 # Ejecutar tests
@@ -1008,10 +1074,10 @@ uvicorn main:app --reload --port 8000
 
 ### Endpoints
 
-| Ruta | Descripción |
-|------|-------------|
-| `GET /api/v2/analytics/bcg-matrix` | Clasifica platos en Estrella / Vaca / Interrogante / Perro |
-| `GET /api/v2/analytics/sales-forecast` | Predicción de ventas (media móvil) |
+| Ruta                                   | Descripción                                                |
+| -------------------------------------- | ---------------------------------------------------------- |
+| `GET /api/v2/analytics/bcg-matrix`     | Clasifica platos en Estrella / Vaca / Interrogante / Perro |
+| `GET /api/v2/analytics/sales-forecast` | Predicción de ventas (media móvil)                         |
 
 ---
 
@@ -1054,4 +1120,4 @@ uvicorn main:app --reload --port 8000
 
 ## Licencia
 
-Proyecto privado — GastroCore SaaS Platform.
+Distribuido bajo la licencia MIT. Ver [LICENSE](LICENSE) para más información.

@@ -49,18 +49,23 @@ services:
       PORT: 4000
       DATABASE_URL: postgresql://gastrocore:${POSTGRES_PASSWORD:-gastrocore}@postgres:5432/gastrocore?schema=public
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-gastrocore-dev-secret-change-in-production}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       JWT_EXPIRATION: 15m
       JWT_REFRESH_EXPIRATION: 7d
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8081}
       LOG_LEVEL: info
       PRISMA_AUTO_MIGRATE: ${PRISMA_AUTO_MIGRATE:-true}
-      SEED_DATABASE: ${SEED_DATABASE:-true}
+      # Seed runs automatically on empty DB (see main.ts). Never set to true on restarts.
+      SEED_DATABASE: false
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
       RAPPI_API_URL: ${RAPPI_API_URL:-https://api.rappi.com/v1}
       UBER_EATS_API_URL: ${UBER_EATS_API_URL:-https://api.uber.com/v1/eats}
+    volumes:
+      - uploads_data_v3:/app/uploads
     ports:
       - "4001:4000"
 
@@ -110,3 +115,4 @@ services:
 
 volumes:
   postgres_data_v3:
+  uploads_data_v3:

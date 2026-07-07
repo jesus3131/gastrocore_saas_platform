@@ -15,7 +15,7 @@ export function useWebsocket() {
 
     const socket = io({
       auth: { token: tokens.accessToken },
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
     })
 
     socket.on('connect', () => {})

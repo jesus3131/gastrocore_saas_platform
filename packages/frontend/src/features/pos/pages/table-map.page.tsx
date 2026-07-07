@@ -1,21 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { api } from '../../../lib/api'
 import { Modal, EmptyState, ErrorState, MetricCard } from '../../../shared/components/ui'
 import { LoadingSkeleton } from '../../../shared/components/ui/loading'
-import { Table2, Users, Clock, Coffee } from 'lucide-react'
+import { Table2, Users, Clock, Coffee, ChefHat } from 'lucide-react'
+import { useWebsocket } from '../../../app/hooks/use-websocket'
 
 const statusColors: Record<string, string> = {
   available: 'border-success bg-success/5 text-success hover:bg-success/10',
+  taking_order: 'border-info bg-info/5 text-info hover:bg-info/10',
   occupied: 'border-error bg-error/5 text-error hover:bg-error/10',
+  bill_requested: 'border-warning bg-warning/5 text-warning hover:bg-warning/10',
   reserved: 'border-warning bg-warning/5 text-warning hover:bg-warning/10',
+  cleaning: 'border-teal-500 bg-teal-50 text-teal-700 hover:bg-teal-100',
   closed: 'border-on-surface-muted/30 bg-surface-container text-on-surface-muted hover:bg-surface-container-high',
 }
 
 const statusLabels: Record<string, string> = {
   available: 'Disponible',
+  taking_order: 'Tomando pedido',
   occupied: 'Ocupada',
+  bill_requested: 'Cuenta',
+  cleaning: 'Limpieza',
   reserved: 'Reservada',
   closed: 'Cerrada',
 }
@@ -23,6 +30,20 @@ const statusLabels: Record<string, string> = {
 export function TableMapPage() {
   const [selectedTable, setSelectedTable] = useState<any>(null)
   const queryClient = useQueryClient()
+  const { subscribe } = useWebsocket()
+
+  useEffect(() => {
+    const unsub1 = subscribe('table.status_changed', () => {
+      queryClient.invalidateQueries({ queryKey: ['pos', 'tables'] })
+    })
+    const unsub2 = subscribe('order.created', () => {
+      queryClient.invalidateQueries({ queryKey: ['pos', 'tables'] })
+    })
+    const unsub3 = subscribe('order.status_updated', () => {
+      queryClient.invalidateQueries({ queryKey: ['pos', 'tables'] })
+    })
+    return () => { unsub1(); unsub2(); unsub3() }
+  }, [subscribe, queryClient])
 
   const { data: branches, isLoading, error, refetch } = useQuery({
     queryKey: ['pos', 'tables'],
@@ -45,6 +66,7 @@ export function TableMapPage() {
 
   const allTables = branches?.flatMap((b: any) => b.areas?.flatMap((a: any) => a.tables || []) || []) || []
   const available = allTables.filter((t: any) => t.status === 'available').length
+  const taking = allTables.filter((t: any) => t.status === 'taking_order').length
   const occupied = allTables.filter((t: any) => t.status === 'occupied').length
   const reserved = allTables.filter((t: any) => t.status === 'reserved').length
 
@@ -54,8 +76,8 @@ export function TableMapPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <MetricCard label="Disponibles" value={available} icon={Coffee} color="text-success bg-success/10" />
+        <MetricCard label="Tomando" value={taking} icon={ChefHat} color="text-info bg-info/10" />
         <MetricCard label="Ocupadas" value={occupied} icon={Users} color="text-error bg-error/10" />
-        <MetricCard label="Reservadas" value={reserved} icon={Clock} color="text-warning bg-warning/10" />
         <MetricCard label="Total" value={allTables.length} icon={Table2} color="text-primary bg-primary/10" />
       </div>
 
@@ -84,6 +106,9 @@ export function TableMapPage() {
                       >
                         <span className="text-sm font-bold">{table.label}</span>
                         <span className="text-2xs">{table.capacity} pax</span>
+                        {table.waiterName && (
+                          <span className="text-2xs mt-0.5 font-medium">{table.waiterName}</span>
+                        )}
                         {table.activeOrder && (
                           <div className="mt-1">
                             <span className="text-2xs font-semibold">${Number(table.activeOrder.total).toFixed(0)}</span>
@@ -121,16 +146,30 @@ export function TableMapPage() {
               </div>
             </div>
 
+            {selectedTable.waiterName && (
+              <div className="p-3 rounded-lg bg-info/5 border border-info/20 text-center">
+                <p className="text-2xs text-on-surface-muted">Mesero asignado</p>
+                <p className="text-sm font-bold text-info">{selectedTable.waiterName}</p>
+              </div>
+            )}
+
+            {selectedTable.activeOrder && (
+              <div className="p-3 rounded-lg bg-surface-container text-center">
+                <p className="text-2xs text-on-surface-muted">Orden activa</p>
+                <p className="text-sm font-bold text-on-surface">${Number(selectedTable.activeOrder.total).toFixed(2)}</p>
+              </div>
+            )}
+
             <p className="text-xs font-semibold text-on-surface">Cambiar Estado:</p>
             <div className="grid grid-cols-2 gap-2">
-              {['available', 'occupied', 'reserved', 'closed'].map((status) => (
+              {['available', 'taking_order', 'occupied', 'bill_requested', 'cleaning', 'reserved', 'closed'].map((status) => (
                 <button
                   key={status}
                   onClick={() => updateTableStatus.mutate({ id: selectedTable.id, status })}
                   disabled={status === selectedTable.status || updateTableStatus.isPending}
                   className={`btn btn-sm ${status === selectedTable.status ? 'btn-primary' : 'btn-secondary'}`}
                 >
-                  {statusLabels[status]}
+                  {statusLabels[status] || status}
                 </button>
               ))}
             </div>

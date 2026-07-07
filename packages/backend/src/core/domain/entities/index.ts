@@ -142,6 +142,7 @@ export interface InventoryIngredient {
   minimumStock: number
   unitCost: number
   supplier?: string | null
+  imageUrl?: string | null
   isActive: boolean
 }
 

@@ -1,0 +1,56 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: America/Mexico_City
+    labels:
+      - chore
+      - area:infra
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    groups:
+      production-deps:
+        dependency-type: production
+        update-types:
+          - patch
+          - minor
+      dev-deps:
+        dependency-type: development
+        update-types:
+          - patch
+          - minor
+      dev-deps:
+        dependency-type: development
+        update-types:
+          - patch
+          - minor
+
+  - package-ecosystem: docker
+    directory: infrastructure/docker
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - chore
+      - area:infra
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - chore
+      - area:infra
+
+  - package-ecosystem: pip
+    directory: packages/analytics
+    schedule:
+      interval: monthly
+    labels:
+      - chore
+      - area:analytics

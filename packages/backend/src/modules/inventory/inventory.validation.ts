@@ -8,6 +8,7 @@ export const createIngredientSchema = z.object({
   unitCost: z.number().positive(),
   currentStock: z.number().min(0).default(0),
   minimumStock: z.number().min(0).default(0),
+  imageUrl: z.string().max(500).optional(),
   isActive: z.boolean().optional(),
 })
 
@@ -19,6 +20,7 @@ export const updateIngredientSchema = z.object({
   unitCost: z.number().positive().optional(),
   currentStock: z.number().min(0).optional(),
   minimumStock: z.number().min(0).optional(),
+  imageUrl: z.string().max(500).optional(),
   isActive: z.boolean().optional(),
 })
 

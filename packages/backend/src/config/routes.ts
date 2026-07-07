@@ -13,12 +13,15 @@ import { integrationRouter } from '../modules/integrations/integration.routes.js
 import { accountingRouter } from '../modules/accounting/accounting.routes.js'
 import { superAdminRouter } from '../modules/super-admin/super-admin.routes.js'
 import { waiterRouter } from '../modules/waiter/waiter.routes.js'
+import { imagesRouter } from '../modules/images/images.routes.js'
+import { menuRouter } from '../modules/menu/menu.routes.js'
 
 export function registerRoutes(app: Express) {
   app.use(`${API_PREFIX}/auth`, authRouter)
   app.use(`${API_PREFIX}/waiter`, waiterRouter)
   app.use(`${API_PREFIX}/tenants`, tenantRouter)
   app.use(`${API_PREFIX}/pos`, posRouter)
+  app.use(`${API_PREFIX}/menu`, menuRouter)
   app.use(`${API_PREFIX}/inventory`, inventoryRouter)
   app.use(`${API_PREFIX}/hr`, hrRouter)
   app.use(`${API_PREFIX}/analytics`, analyticsRouter)
@@ -27,6 +30,7 @@ export function registerRoutes(app: Express) {
   app.use(`${API_PREFIX}/subscriptions`, subscriptionRouter)
   app.use(`${API_PREFIX}/integrations`, integrationRouter)
   app.use(`${API_PREFIX}/accounting`, accountingRouter)
+  app.use(`${API_PREFIX}/images`, imagesRouter)
   app.use(`${API_PREFIX}/super`, superAdminRouter)
 
   // Health check

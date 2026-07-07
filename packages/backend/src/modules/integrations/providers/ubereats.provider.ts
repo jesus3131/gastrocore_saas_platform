@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { injectable } from 'tsyringe'
 import type { DeliveryOrder } from '../integration.types.js'
 

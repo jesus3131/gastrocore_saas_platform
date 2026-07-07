@@ -39,6 +39,7 @@ import { PrismaIntegrationRepository } from '../persistence/repositories/prisma-
 import { PrismaAnalyticsRepository } from '../persistence/repositories/prisma-analytics.repository.js'
 import { PrismaRefreshTokenRepository } from '../persistence/repositories/prisma-refresh-token.repository.js'
 import { PrismaPaymentRepository } from '../persistence/repositories/prisma-payment.repository.js'
+import { LocalStorageProvider, type StorageService } from '../storage/storage.service.js'
 import { CreateOrderUseCase } from '../../core/use-cases/pos/create-order.use-case.js'
 import { CreateEmployeeUseCase } from '../../core/use-cases/hr/create-employee.use-case.js'
 import { UpdateFeaturesUseCase } from '../../core/use-cases/tenants/update-features.use-case.js'
@@ -93,6 +94,8 @@ export function registerDependencies() {
   container.registerSingleton<AnalyticsRepository>('AnalyticsRepository', PrismaAnalyticsRepository)
   container.registerSingleton<RefreshTokenRepository>('RefreshTokenRepository', PrismaRefreshTokenRepository)
   container.registerSingleton<PaymentRepository>('PaymentRepository', PrismaPaymentRepository)
+  container.registerSingleton<StorageService>('StorageService', LocalStorageProvider)
+  container.registerSingleton(LocalStorageProvider)
 
   // Services
   container.registerSingleton(PosService)

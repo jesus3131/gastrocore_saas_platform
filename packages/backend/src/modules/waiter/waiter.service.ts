@@ -8,8 +8,10 @@ import type { MenuRepository } from '../../core/ports/repositories/menu.reposito
 import type { TableRepository } from '../../core/ports/repositories/table.repository.js'
 import type { PaymentRepository } from '../../core/ports/repositories/payment.repository.js'
 import type { TenantRepository } from '../../core/ports/repositories/tenant.repository.js'
+import type { EventBus } from '../../core/ports/event-bus.js'
 import type { CreateOrderInput } from '../../core/use-cases/pos/create-order.use-case.js'
 import { CreateOrderUseCase } from '../../core/use-cases/pos/create-order.use-case.js'
+import { TableStatusChangedEvent } from '../../core/domain/events/order-events.js'
 import { AppError } from '../../common/filters/error-handler.js'
 import { env } from '../../config/env.js'
 
@@ -24,6 +26,7 @@ export class WaiterService {
     @inject('TableRepository') private readonly tableRepo: TableRepository,
     @inject('PaymentRepository') private readonly paymentRepo: PaymentRepository,
     @inject('TenantRepository') private readonly tenantRepo: TenantRepository,
+    @inject('EventBus') private readonly eventBus: EventBus,
   ) {}
 
   async login(email: string, password: string, tenantId?: string) {
@@ -81,7 +84,7 @@ export class WaiterService {
     if (!employee) {
       throw new AppError(401, 'INVALID_PIN', 'Invalid PIN')
     }
-    const user = await this.userRepo.findFirst({ tenantId: tenant.id, employeeId: employee.id })
+    const user = await this.userRepo.findFirst({ where: { tenantId: tenant.id, employeeId: employee.id } })
     if (!user || !user.isActive) {
       throw new AppError(401, 'INVALID_PIN', 'User account is inactive')
     }
@@ -123,7 +126,15 @@ export class WaiterService {
   }
 
   async getMenu(tenantId: string) {
-    return this.menuRepo.getMenu(tenantId)
+    const menu = await this.menuRepo.getMenu(tenantId)
+    return menu.map((cat: any) => ({
+      ...cat,
+      menuItems: cat.menuItems?.map((item: any) => ({
+        ...item,
+        price: Number(item.price),
+        cost: item.cost != null ? Number(item.cost) : undefined,
+      })),
+    }))
   }
 
   async getTables(tenantId: string, branchId?: string) {
@@ -140,6 +151,32 @@ export class WaiterService {
       }
     }
     return filtered
+  }
+
+  async openTable(tenantId: string, tableId: string, userId: string) {
+    const table = await this.tableRepo.findById(tenantId, tableId)
+    if (!table) throw new AppError(404, 'TABLE_NOT_FOUND', 'Mesa no encontrada')
+    if (table.status !== 'available') throw new AppError(409, 'TABLE_NOT_AVAILABLE', 'La mesa no está disponible')
+
+    const user = await this.userRepo.findById(userId)
+    const waiterName = user?.name || 'Mesero'
+
+    const previousStatus = table.status
+    await this.tableRepo.updateStatus(tenantId, tableId, 'taking_order')
+    await this.tableRepo.assignWaiter(tenantId, tableId, userId, waiterName)
+
+    const event = new TableStatusChangedEvent(tableId, {
+      tenantId,
+      tableId,
+      tableLabel: table.label,
+      status: 'taking_order',
+      previousStatus,
+      waiterId: userId,
+      waiterName,
+    })
+    await this.eventBus.publish(event)
+
+    return { id: tableId, label: table.label, status: 'taking_order', waiterId: userId, waiterName }
   }
 
   async createOrder(tenantId: string, data: any, userId: string) {
@@ -164,7 +201,18 @@ export class WaiterService {
     if (!table) throw new AppError(404, 'TABLE_NOT_FOUND', 'Table not found')
     const active = await this.orderRepo.findActiveByTable(tenantId, tableId)
     if (!active) throw new AppError(404, 'NO_ACTIVE_ORDER', 'No active order for this table')
+    const previousStatus = table.status
     await this.tableRepo.updateStatus(tenantId, tableId, 'bill_requested')
+
+    const event = new TableStatusChangedEvent(tableId, {
+      tenantId,
+      tableId,
+      tableLabel: table.label,
+      status: 'bill_requested',
+      previousStatus,
+    })
+    await this.eventBus.publish(event)
+
     return active
   }
 
@@ -188,6 +236,16 @@ export class WaiterService {
     await this.orderRepo.updatePaymentMethod(order.id, data.method)
     await this.orderRepo.updateStatus(order.id, 'paid')
     await this.tableRepo.updateStatus(tenantId, tableId, 'available')
+    await this.tableRepo.clearWaiter(tenantId, tableId)
+
+    const event = new TableStatusChangedEvent(tableId, {
+      tenantId,
+      tableId,
+      tableLabel: table.label,
+      status: 'available',
+      previousStatus: 'occupied',
+    })
+    await this.eventBus.publish(event)
 
     return {
       payment,

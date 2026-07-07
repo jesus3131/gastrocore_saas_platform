@@ -3,7 +3,29 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "GastroCore - All-in-one Restaurant Management SaaS Platform",
+  "description": "All-in-one Restaurant Management SaaS Platform — Multi-tenant, Multi-branch, Multi-niche",
+  "keywords": [
+    "restaurant",
+    "pos",
+    "kds",
+    "saas",
+    "multi-tenant",
+    "inventory",
+    "crm",
+    "accounting",
+    "management",
+    "gastronomy"
+  ],
+  "license": "MIT",
+  "author": "GastroCore Team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jesus3131/gastrocore_saas_platform.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jesus3131/gastrocore_saas_platform/issues"
+  },
+  "homepage": "https://github.com/jesus3131/gastrocore_saas_platform#readme",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
@@ -15,20 +37,35 @@
     "db:push": "pnpm --filter @gastrocore/backend run db:push",
     "db:migrate": "pnpm --filter @gastrocore/backend run db:migrate",
     "db:seed": "pnpm --filter @gastrocore/backend run db:seed",
-    "docker:dev": "docker-compose -f infrastructure/docker/docker-compose.dev.yml up",
-    "docker:prod": "docker-compose -f infrastructure/docker/docker-compose.prod.yml up",
-    "clean": "turbo clean && rimraf node_modules"
+    "docker:dev": "docker compose -f infrastructure/docker/docker-compose.dev.yml up",
+    "docker:prod": "docker compose -f infrastructure/docker/docker-compose.prod.yml up",
+    "clean": "turbo clean && rimraf node_modules",
+    "prepare": "husky",
+    "commitlint": "commitlint --edit"
   },
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   },
   "packageManager": "pnpm@9.15.4",
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,prisma}": [
+      "prettier --write"
+    ]
+  },
   "devDependencies": {
+    "@commitlint/cli": "^19",
+    "@commitlint/config-conventional": "^19",
     "@eslint/js": "^9.22.0",
     "@prisma/client": "^6.1.0",
     "dotenv": "^17.4.2",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "husky": "^9",
+    "lint-staged": "^15",
     "prettier": "^3.4.0",
     "prisma": "^6.1.0",
     "rimraf": "^6.0.0",
