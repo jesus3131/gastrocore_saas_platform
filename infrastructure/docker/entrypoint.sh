@@ -2,10 +2,15 @@
 
 set -e
 
-# ─── Schema sync (safe, does not destroy data) ──────────────
+# ─── Schema sync ────────────────────────────────────────────
 if [ "${PRISMA_AUTO_MIGRATE:-false}" = "true" ]; then
-  echo "Running Prisma schema sync..."
-  npx prisma db push --skip-generate 2>&1 || true
+  if [ "$NODE_ENV" = "production" ]; then
+    echo "Running production migrations..."
+    npx prisma migrate deploy 2>&1 || true
+  else
+    echo "Running dev schema sync..."
+    npx prisma db push --skip-generate 2>&1 || true
+  fi
 fi
 
 echo "Starting application..."

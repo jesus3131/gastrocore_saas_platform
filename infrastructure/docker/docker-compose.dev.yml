@@ -36,6 +36,7 @@ services:
       dockerfile: infrastructure/docker/Dockerfile.backend
       target: development
     container_name: gastrocore-api
+    restart: unless-stopped
     ports:
       - "4000:4000"
     environment:
@@ -43,6 +44,7 @@ services:
       DATABASE_URL: postgresql://gastrocore:gastrocore@postgres:5432/gastrocore?schema=public
       REDIS_URL: redis://redis:6379
       JWT_SECRET: dev-secret-change-in-production-min-32-chars
+      JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production-min-32
       ENCRYPTION_KEY: dev-encryption-key-32-chars-at-least-here
       PORT: 4000
       FRONTEND_URL: http://localhost:5173
@@ -62,6 +64,7 @@ services:
       dockerfile: infrastructure/docker/Dockerfile.frontend
       target: development
     container_name: gastrocore-web
+    restart: unless-stopped
     ports:
       - "5173:5173"
     environment:
@@ -78,6 +81,7 @@ services:
       context: ../../
       dockerfile: infrastructure/docker/Dockerfile.analytics
     container_name: gastrocore-analytics
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
