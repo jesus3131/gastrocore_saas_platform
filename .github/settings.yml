@@ -1,0 +1,149 @@
+_extends: .github
+
+repository:
+  name: gastrocore_saas_platform
+  description: 'All-in-one Restaurant Management SaaS Platform — Multi-tenant, Multi-branch, Multi-niche'
+  homepage: https://github.com/jesus3131/gastrocore_saas_platform#readme
+  topics: restaurant, pos, kds, saas, multi-tenant, inventory, crm, accounting
+
+  private: false
+  has_issues: true
+  has_projects: true
+  has_wiki: false
+
+  default_branch: main
+
+  allow_squash_merge: true
+  allow_merge_commit: false
+  allow_rebase_merge: true
+
+  delete_branch_on_merge: true
+
+labels:
+  # ─── Type ─────────────────────────────────────
+  - name: bug
+    color: d73a4a
+    description: Something isn't working
+  - name: enhancement
+    color: a2eeef
+    description: New feature or request
+  - name: chore
+    color: 7057ff
+    description: Maintenance, deps, config
+  - name: refactor
+    color: fbca04
+    description: Code restructuring without functional change
+  - name: documentation
+    color: 0075ca
+    description: Improvements or additions to docs
+  - name: performance
+    color: 0e8a16
+    description: Performance improvement
+  - name: testing
+    color: c2e0c6
+    description: Adding or fixing tests
+
+  # ─── Module / Area ────────────────────────────
+  - name: area:frontend
+    color: 1d76db
+    description: React / Vite / Tailwind frontend
+  - name: area:backend
+    color: 5319e7
+    description: Express / Prisma / Node.js backend
+  - name: area:shared
+    color: f9d0c4
+    description: Shared types and constants package
+  - name: area:analytics
+    color: bfd4f2
+    description: Python / FastAPI analytics service
+  - name: area:infra
+    color: bfdadc
+    description: Docker / K8s / CI-CD
+  - name: area:db
+    color: c5def5
+    description: Database schema, migrations, seed
+
+  # ─── Priority ─────────────────────────────────
+  - name: priority:critical
+    color: b60205
+    description: Blocker — must fix immediately
+  - name: priority:high
+    color: d93f0b
+    description: Should be addressed soon
+  - name: priority:medium
+    color: fbca04
+    description: Important but not urgent
+  - name: priority:low
+    color: 0e8a16
+    description: Nice to have
+
+  # ─── Size ────────────────────────────────────
+  - name: size:s
+    color: 0e8a16
+    description: Small PR (< 100 lines)
+  - name: size:m
+    color: fbca04
+    description: Medium PR (100-500 lines)
+  - name: size:l
+    color: d93f0b
+    description: Large PR (500-1000 lines)
+  - name: size:xl
+    color: b60205
+    description: Extra large PR (> 1000 lines)
+
+  # ─── Status ──────────────────────────────────
+  - name: blocked
+    color: 000000
+    description: Waiting on something else
+  - name: needs-repro
+    color: cccccc
+    description: Cannot reproduce
+  - name: needs-design
+    color: cccccc
+    description: Requires design spec first
+  - name: good-first-issue
+    color: 7057ff
+    description: Great for new contributors
+  - name: help-wanted
+    color: 008672
+    description: Extra attention needed
+
+  # ─── Release ─────────────────────────────────
+  - name: release
+    color: e99695
+    description: Tracked for next release
+  - name: wontfix
+    color: ffffff
+    description: Will not be addressed
+
+branches:
+  - name: main
+    protection:
+      required_status_checks:
+        strict: true
+        contexts:
+          - 'Lint & Type Check'
+          - 'Test'
+          - 'Build'
+          - 'Docker Build'
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: true
+      enforce_admins: true
+      required_linear_history: true
+      allow_force_pushes: false
+      allow_deletions: false
+
+  - name: develop
+    protection:
+      required_status_checks:
+        strict: true
+        contexts:
+          - 'Lint & Type Check'
+          - 'Test'
+          - 'Build'
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+      required_linear_history: true

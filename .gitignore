@@ -14,7 +14,9 @@ build/
 .env.*.local
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo
@@ -24,6 +26,9 @@ build/
 .DS_Store
 Thumbs.db
 *.log
+
+# Build artifacts
+*.tsbuildinfo
 
 # Testing
 coverage/

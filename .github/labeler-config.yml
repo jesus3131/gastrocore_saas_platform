@@ -1,0 +1,40 @@
+# Auto-label PRs based on changed paths
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**'
+
+area:frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/frontend/**/*
+
+area:backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/backend/**/*
+
+area:shared:
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/shared/**/*
+
+area:analytics:
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/analytics/**/*
+
+area:infra:
+  - changed-files:
+      - any-glob-to-any-file:
+          - infrastructure/**/*
+          - .github/**/*
+          - Dockerfile*
+          - docker-compose*.yml
+
+area:db:
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/backend/prisma/**/*
+          - prisma.config.ts

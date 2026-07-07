@@ -1,0 +1,20 @@
+# Default owners for the entire repository
+* @jesus3131
+
+# Backend
+/packages/backend/ @jesus3131
+
+# Frontend
+/packages/frontend/ @jesus3131
+
+# Shared package
+/packages/shared/ @jesus3131
+
+# Analytics service
+/packages/analytics/ @jesus3131
+
+# Infrastructure / Docker / K8s
+/infrastructure/ @jesus3131
+
+# CI/CD
+/.github/ @jesus3131
