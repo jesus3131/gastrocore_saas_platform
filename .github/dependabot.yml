@@ -1,11 +1,11 @@
 version: 2
 updates:
-  - package-ecosystem: pnpm
+  - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
       day: monday
-      time: '08:00'
+      time: "08:00"
       timezone: America/Mexico_City
     labels:
       - chore
@@ -15,6 +15,11 @@ updates:
     groups:
       production-deps:
         dependency-type: production
+        update-types:
+          - patch
+          - minor
+      dev-deps:
+        dependency-type: development
         update-types:
           - patch
           - minor
