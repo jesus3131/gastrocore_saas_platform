@@ -1,8 +1,8 @@
 import crypto from 'crypto'
+import { env } from '../../config/env.js'
 
 function getEncryptionKey(): Buffer {
-  const secret = process.env.ENCRYPTION_KEY || process.env.JWT_SECRET || 'default-key-change-me'
-  return crypto.createHash('sha256').update(secret).digest()
+  return crypto.createHash('sha256').update(env.ENCRYPTION_KEY).digest()
 }
 
 const ALGORITHM = 'aes-256-cbc'

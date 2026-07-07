@@ -39,7 +39,7 @@ class InventoryController {
   }
 
   async deleteRecipe(req: Request, res: Response) {
-    await this.service.deleteRecipe(req.params.id as string)
+    await this.service.deleteRecipe(req.tenantId!, req.params.id as string)
     res.json({ success: true, data: null })
   }
 

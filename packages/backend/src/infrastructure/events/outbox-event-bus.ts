@@ -12,7 +12,7 @@ export class OutboxEventBus implements EventBus {
     const payload = (event as any).payload || {}
     const tenantId = payload?.tenantId || null
 
-    const handlers = this.getHandlers(event.eventName)
+    const handlers = [...this.getHandlers(event.eventName), ...this.getHandlers('*')]
     let status = 'pending'
     let lastError: string | null = null
 

@@ -50,6 +50,7 @@ services:
       DATABASE_URL: postgresql://gastrocore:${POSTGRES_PASSWORD:-gastrocore}@postgres:5432/gastrocore?schema=public
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-gastrocore-dev-secret-change-in-production}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-gastrocore-dev-encryption-key-change-me}
       JWT_EXPIRATION: 15m
       JWT_REFRESH_EXPIRATION: 7d
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8081}

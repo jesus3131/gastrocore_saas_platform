@@ -50,6 +50,7 @@ services:
       DATABASE_URL: postgresql://gastrocore:${POSTGRES_PASSWORD:-gastrocore}@postgres:5432/gastrocore?schema=public
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-gastrocore-dev-secret-change-in-production}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
       JWT_EXPIRATION: 15m
       JWT_REFRESH_EXPIRATION: 7d
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:80}
@@ -79,6 +80,16 @@ services:
     image: jesus273/gastrocore-analytics:latest
     container_name: gastrocore-analytics
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ANALYTICS_API_PREFIX: /api/v1/analytics
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: gastrocore
+      DB_USER: gastrocore
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-gastrocore}
     ports:
       - "8000:8000"
 

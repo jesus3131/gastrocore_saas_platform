@@ -44,6 +44,9 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 80
+          env:
+            - name: VITE_API_URL
+              value: "https://restopro.example.com/api"
           resources:
             requests:
               cpu: 100m

@@ -28,7 +28,11 @@ export class InventoryService {
     return prisma.ingredient.update({ where: { id }, data: { isActive: false } })
   }
 
-  async deleteRecipe(id: string) {
+  async deleteRecipe(tenantId: string, id: string) {
+    const recipe = await prisma.recipe.findFirst({
+      where: { id, menuItem: { tenantId } },
+    })
+    if (!recipe) throw new AppError(404, 'RECIPE_NOT_FOUND', 'Recipe not found')
     return prisma.recipe.delete({ where: { id } })
   }
 
@@ -43,10 +47,14 @@ export class InventoryService {
   }
 
   async createRecipe(tenantId: string, data: any) {
-    return this.inventoryRepo.createRecipe(data)
+    return this.inventoryRepo.createRecipe({ ...data, tenantId })
   }
 
   async updateRecipe(tenantId: string, id: string, data: any) {
+    const recipe = await prisma.recipe.findFirst({
+      where: { id, menuItem: { tenantId } },
+    })
+    if (!recipe) throw new AppError(404, 'RECIPE_NOT_FOUND', 'Recipe not found')
     return this.inventoryRepo.updateRecipe(id, data)
   }
 

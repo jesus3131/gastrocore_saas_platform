@@ -74,7 +74,6 @@ export class CreateOrderUseCase {
         const table = await this.tableRepo.findById(input.tenantId, input.tableId)
         const previousStatus = table?.status || 'available'
         await this.tableRepo.updateStatus(input.tenantId, input.tableId, 'occupied')
-        await this.tableRepo.clearWaiter(input.tenantId, input.tableId)
 
         const tableEvent = new TableStatusChangedEvent(input.tableId, {
           tenantId: input.tenantId,
